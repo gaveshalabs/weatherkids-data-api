@@ -7,6 +7,7 @@ import {
 } from './entities/weather-datum.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { GetWeatherDatumDto } from './dto/get-weather-datum.dto';
 
 @Injectable()
 export class WeatherDataService {
@@ -22,10 +23,8 @@ export class WeatherDataService {
     return await newWeatherDatum.save();
   }
 
-  async findAll() {
-    const weatherData = await this.weatherDatumModel.find();
-
-    return weatherData;
+  async findAll(): Promise<GetWeatherDatumDto[]> {
+    return this.weatherDatumModel.find();
   }
 
   async findAllWithUserDetails() {
