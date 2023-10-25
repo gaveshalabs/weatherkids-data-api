@@ -4,6 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './entities/user.entity';
+import { GetUserDto } from './dto/get-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -17,8 +18,8 @@ export class UsersService {
     return await newUser.save();
   }
 
-  findAll() {
-    return `This action returns all users`;
+  findAll(): Promise<GetUserDto[]> {
+    return this.userModel.find().exec();
   }
 
   findOne(id: number) {
