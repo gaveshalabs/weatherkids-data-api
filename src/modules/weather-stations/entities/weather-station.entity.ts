@@ -11,7 +11,7 @@ export class WeatherStation {
   name: string;
 
   @Prop({ required: true })
-  coordinates: string;
+  coordinates: ICoordinates;
 
   @Prop({ type: [{ type: 'ObjectId', ref: 'User' }] })
   users: User[];
