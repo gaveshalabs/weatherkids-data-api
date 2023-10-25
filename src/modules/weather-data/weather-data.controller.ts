@@ -1,9 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { WeatherDataService } from './weather-data.service';
 import { CreateWeatherDatumDto } from './dto/create-weather-datum.dto';
 import { UpdateWeatherDatumDto } from './dto/update-weather-datum.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('weather-data')
+@ApiTags('weather-data')
 export class WeatherDataController {
   constructor(private readonly weatherDataService: WeatherDataService) {}
 
@@ -28,7 +38,10 @@ export class WeatherDataController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateWeatherDatumDto: UpdateWeatherDatumDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateWeatherDatumDto: UpdateWeatherDatumDto,
+  ) {
     return this.weatherDataService.update(+id, updateWeatherDatumDto);
   }
 

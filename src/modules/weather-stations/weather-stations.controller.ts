@@ -12,8 +12,10 @@ import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
 import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
 import { GetWeatherStationDto } from './dto/get-weather-station.dto';
 import { AddUsersToWeatherStationDto } from './dto/add-users-to-weather-station.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('weather-stations')
+@ApiTags('weather-stations')
 export class WeatherStationsController {
   constructor(
     private readonly weatherStationsService: WeatherStationsService,
