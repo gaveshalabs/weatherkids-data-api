@@ -28,10 +28,7 @@ export class WeatherDatum {
   };
 
   @Prop({ type: Object })
-  coordinates: {
-    lat: number;
-    long: number;
-  };
+  coordinates: ICoordinates;
 
   @Prop()
   temperature: number;

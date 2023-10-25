@@ -5,10 +5,7 @@ export class CreateWeatherDatumDto {
     source: string;
     topic: string;
   };
-  readonly coordinates: {
-    lat: number;
-    long: number;
-  };
+  readonly coordinates: ICoordinates;
   readonly temperature: number;
   readonly humidity: number;
   readonly pressure: number;
