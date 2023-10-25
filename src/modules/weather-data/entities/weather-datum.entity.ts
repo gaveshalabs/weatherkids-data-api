@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
   timestamps: true,
   collection: 'weather_data',
   timeseries: {
-    timeField: 'timeStamp',
+    timeField: 'updatedAt',
     granularity: 'seconds',
   },
 })
@@ -50,17 +50,7 @@ export class WeatherDatum {
 
   @Prop()
   percentage_light_intensity: number;
-
-  @Prop()
-  timeStamp: Date;
 }
 
 export type WeatherDatumDocument = WeatherDatum & Document;
 export const WeatherDatumSchema = SchemaFactory.createForClass(WeatherDatum);
-
-// This will allow the collection to be a timeseries collection
-// Because we can use this field as the timeField
-WeatherDatumSchema.pre('save', function (next) {
-  this.timeStamp = new Date();
-  next();
-});
