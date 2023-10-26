@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { WeatherDataService } from './weather-data.service';
 import { CreateWeatherDatumDto } from './dto/create-weather-datum.dto';
@@ -35,6 +36,14 @@ export class WeatherDataController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.weatherDataService.findOne(+id);
+  }
+
+  @Get(':weather_station_id')
+  async findAllByWeatherStationId(
+    @Param('weather_station_id', new ParseUUIDPipe({ version: '4' }))
+    weatherStationId: string,
+  ) {
+    return this.weatherDataService.findAllByWeatherStationId(weatherStationId);
   }
 
   @Patch(':id')

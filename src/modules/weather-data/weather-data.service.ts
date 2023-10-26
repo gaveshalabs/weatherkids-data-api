@@ -39,6 +39,14 @@ export class WeatherDataService {
     return `This action returns a #${id} weatherDatum`;
   }
 
+  async findAllByWeatherStationId(
+    weatherStationId: string,
+  ): Promise<GetWeatherDatumDto[]> {
+    return this.weatherDatumModel
+      .find({ weather_station_id: weatherStationId })
+      .exec();
+  }
+
   update(id: number, updateWeatherDatumDto: UpdateWeatherDatumDto) {
     return `This action updates a #${id} weatherDatum`;
   }
