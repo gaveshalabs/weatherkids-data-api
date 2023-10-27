@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class User {
   @Prop({ type: String, default: uuidv4 })
   _id: string;
-  
+
   @Prop({ type: String })
   name: string;
 
