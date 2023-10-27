@@ -1,3 +1,5 @@
+import { ICoordinates } from 'src/modules/common/interfaces/coordinates.interface';
+
 export class CreateWeatherDatumDto {
   readonly author_user_id: string;
   readonly weather_station_id: string;

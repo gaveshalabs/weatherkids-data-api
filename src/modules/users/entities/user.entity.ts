@@ -10,6 +10,9 @@ export class User {
   _id: string;
 
   @Prop({ type: String })
+  sub_id: string;
+
+  @Prop({ type: String })
   name: string;
 
   @Prop({ type: String, unique: true })

@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { ICoordinates } from 'src/modules/common/interfaces/coordinates.interface';
 import { User } from 'src/modules/users/entities/user.entity';
 import { WeatherStation } from 'src/modules/weather-stations/entities/weather-station.entity';
 import { v4 as uuidv4 } from 'uuid';
