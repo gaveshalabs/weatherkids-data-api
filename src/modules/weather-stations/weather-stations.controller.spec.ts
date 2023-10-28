@@ -11,7 +11,9 @@ describe('WeatherStationsController', () => {
       providers: [WeatherStationsService],
     }).compile();
 
-    controller = module.get<WeatherStationsController>(WeatherStationsController);
+    controller = module.get<WeatherStationsController>(
+      WeatherStationsController,
+    );
   });
 
   it('should be defined', () => {

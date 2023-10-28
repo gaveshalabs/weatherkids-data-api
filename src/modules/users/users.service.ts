@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './entities/user.entity';
 import { GetUserDto } from './dto/get-user.dto';
+import { log } from 'console';
 
 @Injectable()
 export class UsersService {
@@ -27,10 +28,16 @@ export class UsersService {
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
+    log(updateUserDto);
     return `This action updates a #${id} user`;
   }
 
   remove(id: number) {
     return `This action removes a #${id} user`;
+  }
+
+  async getUserBySubId(sub: string) {
+    const user = await this.userModel.findOne({ sub_id: sub });
+    return user;
   }
 }
