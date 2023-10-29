@@ -48,6 +48,7 @@ export class WeatherDataService {
   }
 
   update(id: number, updateWeatherDatumDto: UpdateWeatherDatumDto) {
+    console.log('updateWeatherDatumDto', updateWeatherDatumDto);
     return `This action updates a #${id} weatherDatum`;
   }
 
