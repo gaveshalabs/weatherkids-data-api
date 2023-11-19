@@ -7,5 +7,5 @@ export class CreateUserDto {
   readonly nearest_city_postalcode: string;
   readonly photo_url: string;
   readonly is_active: boolean;
-  readonly token: string;
+  readonly idToken: string;
 }

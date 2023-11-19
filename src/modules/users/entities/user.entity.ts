@@ -34,7 +34,7 @@ export class User {
   is_active: boolean;
 
   @Prop({ type: String })
-  token: string;
+  idToken: string;
 }
 
 export type UserDocument = User & Document;

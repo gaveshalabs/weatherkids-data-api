@@ -38,7 +38,7 @@ export class AuthService {
           nearest_city_postalcode: '',
           photo_url: decodeUser.picture,
           is_active: true,
-          token: '',
+          idToken: idToken,
         };
         const result: any = await this.userService.create(createUserDto);
 
