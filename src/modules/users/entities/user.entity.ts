@@ -10,7 +10,10 @@ export class User {
   _id: string;
 
   @Prop({ type: String })
-  sub_id: string;
+  uid: string;
+
+  @Prop({ type: String })
+  gavesha_user_api_key: string;
 
   @Prop({ type: String })
   name: string;
@@ -32,9 +35,6 @@ export class User {
 
   @Prop({ type: Boolean, default: true })
   is_active: boolean;
-
-  @Prop({ type: String })
-  idToken: string;
 }
 
 export type UserDocument = User & Document;

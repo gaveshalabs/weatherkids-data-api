@@ -14,7 +14,6 @@ import { GetWeatherStationDto } from './dto/get-weather-station.dto';
 import { AddUsersToWeatherStationDto } from './dto/add-users-to-weather-station.dto';
 import { ApiTags } from '@nestjs/swagger';
 
-
 @Controller('weather-stations')
 @ApiTags('weather-stations')
 export class WeatherStationsController {

@@ -23,6 +23,11 @@ export class UsersService {
     return this.userModel.find().exec();
   }
 
+  async findUserByEmail(email: string) {
+    const user = await this.userModel.findOne({ email: email });
+    return user;
+  }
+
   findOne(id: number) {
     return `This action returns a #${id} user`;
   }
@@ -36,8 +41,8 @@ export class UsersService {
     return `This action removes a #${id} user`;
   }
 
-  async getUserBySubId(sub: string) {
-    const user = await this.userModel.findOne({ sub_id: sub });
-    return user;
-  }
+  // async getUserBySubId(sub: string) {
+  //   const user = await this.userModel.findOne({ sub_id: sub });
+  //   return user;
+  // }
 }
