@@ -6,11 +6,15 @@ import * as functions from 'firebase-functions';
 
 const server = express();
 
+// This is for prod.
+
 export const createNestServer = async (expressInstance) => {
   const app = await NestFactory.create(
     AppModule,
     new ExpressAdapter(expressInstance),
   );
+
+  app.enableCors();
 
   return app.init();
 };
