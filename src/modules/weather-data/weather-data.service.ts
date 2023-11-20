@@ -25,8 +25,8 @@ export class WeatherDataService {
   ): Promise<WeatherDatum> {
     // Validate client id of request source.
     try {
-      // Because the data can only be added from the web app,
-      await this.sessionService.validateWebClientId(clientId);
+      // Because the data can only be added from the mobile app,
+      await this.sessionService.validateMobileClientId(clientId);
     } catch (error) {
       throw new HttpException(error, 401);
     }
