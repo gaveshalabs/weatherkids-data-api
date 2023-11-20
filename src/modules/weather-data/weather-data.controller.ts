@@ -8,6 +8,9 @@ import {
   Delete,
   ParseUUIDPipe,
   Headers,
+  BadRequestException,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { WeatherDataService } from './weather-data.service';
 import { CreateWeatherDatumDto } from './dto/create-weather-datum.dto';
@@ -20,6 +23,14 @@ export class WeatherDataController {
   constructor(private readonly weatherDataService: WeatherDataService) {}
 
   @Post()
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      exceptionFactory: (errors) => new BadRequestException(errors),
+    }),
+  )
   create(
     @Headers('gavesha-user-api-key') apiKey: string,
     @Headers('client-id') clientId: string,
