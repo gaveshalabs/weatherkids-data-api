@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseUUIDPipe,
+  Headers,
 } from '@nestjs/common';
 import { WeatherDataService } from './weather-data.service';
 import { CreateWeatherDatumDto } from './dto/create-weather-datum.dto';
@@ -19,8 +20,11 @@ export class WeatherDataController {
   constructor(private readonly weatherDataService: WeatherDataService) {}
 
   @Post()
-  create(@Body() createWeatherDatumDto: CreateWeatherDatumDto) {
-    return this.weatherDataService.create(createWeatherDatumDto);
+  create(
+    @Headers('gavesha-user-api-key') apiKey: string,
+    @Body() createWeatherDatumDto: CreateWeatherDatumDto,
+  ) {
+    return this.weatherDataService.create(createWeatherDatumDto, apiKey);
   }
 
   @Get()

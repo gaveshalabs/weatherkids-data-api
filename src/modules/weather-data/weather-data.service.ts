@@ -20,12 +20,11 @@ export class WeatherDataService {
 
   async create(
     createWeatherDatumDto: CreateWeatherDatumDto,
+    apiKey: string,
   ): Promise<WeatherDatum> {
     // Validate user api key.
     try {
-      await this.sessionService.validateGaveshaUserApiKey(
-        createWeatherDatumDto.gavesha_user_api_key,
-      );
+      await this.sessionService.validateGaveshaUserApiKey(apiKey);
     } catch (error) {
       throw new HttpException(error, 401);
     }
