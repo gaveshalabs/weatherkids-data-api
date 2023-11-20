@@ -5,7 +5,6 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './entities/user.entity';
 import { GetUserDto } from './dto/get-user.dto';
-import { log } from 'console';
 
 @Injectable()
 export class UsersService {
