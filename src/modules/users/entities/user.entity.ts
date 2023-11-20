@@ -1,12 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { v4 as uuidv4 } from 'uuid';
 
 @Schema({
   timestamps: true,
   collection: 'users',
 })
 export class User {
-  @Prop({ type: String, default: uuidv4 })
+  @Prop({ type: String })
   _id: string;
 
   @Prop({ type: String })

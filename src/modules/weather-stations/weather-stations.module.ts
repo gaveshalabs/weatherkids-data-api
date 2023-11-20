@@ -7,9 +7,11 @@ import {
   WeatherStationSchema,
 } from './entities/weather-station.entity';
 import { SessionModule } from '../users/session/session.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
+    UsersModule,
     SessionModule,
     MongooseModule.forFeature([
       { name: WeatherStation.name, schema: WeatherStationSchema },

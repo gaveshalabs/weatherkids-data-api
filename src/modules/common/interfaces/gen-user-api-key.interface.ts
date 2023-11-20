@@ -1,4 +1,9 @@
 export interface IGenUserApiKey {
-  payload: { userId: string; email: string };
+  payload: {
+    _id: string;
+    uid: string;
+    email: string;
+    weatherStationIds?: string[];
+  };
   expiresIn?: string;
 }

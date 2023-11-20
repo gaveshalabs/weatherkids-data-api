@@ -12,6 +12,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUserDto } from './dto/get-user.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { v4 as uuidv4 } from 'uuid';
 
 @Controller('users')
 @ApiTags('users')
@@ -21,7 +22,7 @@ export class UsersController {
   // Not directly called in prod, but useful for testing
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+    return this.usersService.create(createUserDto, uuidv4());
   }
 
   @Get()
@@ -36,7 +37,7 @@ export class UsersController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+    return this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')

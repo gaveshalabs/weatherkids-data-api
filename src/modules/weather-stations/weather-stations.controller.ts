@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Headers,
 } from '@nestjs/common';
 import { WeatherStationsService } from './weather-stations.service';
 import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
@@ -26,8 +27,14 @@ export class WeatherStationsController {
 
   @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
   @Post()
-  create(@Body() createWeatherStationDto: CreateWeatherStationDto) {
-    return this.weatherStationsService.create(createWeatherStationDto);
+  create(
+    @Headers('gavesha-user-api-key') gaveshaUserApiKey: string,
+    @Body() createWeatherStationDto: CreateWeatherStationDto,
+  ) {
+    return this.weatherStationsService.create(
+      createWeatherStationDto,
+      gaveshaUserApiKey,
+    );
   }
 
   @Get()

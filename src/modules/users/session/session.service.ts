@@ -6,6 +6,7 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { User } from '../entities/user.entity';
 import { HttpException, Injectable } from '@nestjs/common';
 import { AuthService } from 'src/modules/auth/auth.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class SessionService {
@@ -45,12 +46,14 @@ export class SessionService {
     return user;
   }
 
-  private async generateGaveshaUserApiKey(
+  public async generateGaveshaUserApiKey(
     data: IGenUserApiKey,
   ): Promise<string> {
+    const expiresIn: string = '7300d'; // 20 years
+
     try {
       const apiKey = await this.jwtService.signAsync(data.payload, {
-        expiresIn: data.expiresIn,
+        expiresIn: expiresIn,
       });
       return apiKey;
     } catch (error) {
@@ -78,16 +81,21 @@ export class SessionService {
     // If user exist with the email,
     if (user) {
       console.log('User exists. No need to re-create within Gavesha db.');
+      console.log(`user`, user);
 
       return user;
     }
 
+    // Create a new userId.
+    const uuidV4Id = uuidv4();
+
     const gaveshaUserApiKey: string = await this.generateGaveshaUserApiKey({
       payload: {
+        _id: uuidV4Id,
+        uid: createSessionDto.uid,
         email: createSessionDto.email,
-        userId: createSessionDto.userId,
+        weatherStationIds: [], // Because initially the user will not have any weather stations.
       },
-      expiresIn: '7300d', // 20 years
     });
 
     console.log(`gaveshaUserApiKey: ${gaveshaUserApiKey}`);
@@ -95,7 +103,7 @@ export class SessionService {
     // Create new user dto.
     const createUserDto: CreateUserDto = {
       email: createSessionDto.email,
-      uid: createSessionDto.userId,
+      uid: createSessionDto.uid,
       name: createSessionDto.name,
       contact_no: '',
       nearest_city: '',
@@ -108,6 +116,7 @@ export class SessionService {
     console.log(`createUserDto: ${JSON.stringify(createUserDto)}`);
 
     // Create user within the database.
-    return await this.usersService.create(createUserDto);
+    // When crea ting a user, the uuidv4 userId is passed as the _id.
+    return await this.usersService.create(createUserDto, uuidV4Id);
   }
 }
