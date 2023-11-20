@@ -22,9 +22,14 @@ export class WeatherDataController {
   @Post()
   create(
     @Headers('gavesha-user-api-key') apiKey: string,
+    @Headers('client-id') clientId: string,
     @Body() createWeatherDatumDto: CreateWeatherDatumDto,
   ) {
-    return this.weatherDataService.create(createWeatherDatumDto, apiKey);
+    return this.weatherDataService.create(
+      createWeatherDatumDto,
+      apiKey,
+      clientId,
+    );
   }
 
   @Get()

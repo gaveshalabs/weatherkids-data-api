@@ -15,6 +15,18 @@ export class SessionService {
     private usersService: UsersService,
   ) {}
 
+  public async validateMobileClientId(clientId: string) {
+    if (clientId !== process.env.MOBILE_CLIENT_ID) {
+      throw new HttpException('Invalid Mobile Client Id', 401);
+    }
+  }
+
+  public async validateWebClientId(clientId: string) {
+    if (clientId !== process.env.WEBAPP_CLIENT_ID) {
+      throw new HttpException('Invalid Web Client Id', 401);
+    }
+  }
+
   public async validateGaveshaUserApiKey(key: string) {
     // Verify the sent key is a valid JWT.
     let result = null;
