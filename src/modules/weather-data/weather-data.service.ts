@@ -1,23 +1,22 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { CreateWeatherDatumDto } from './dto/create-weather-datum.dto';
+import { GetWeatherDatumDto } from './dto/get-weather-datum.dto';
 import { UpdateWeatherDatumDto } from './dto/update-weather-datum.dto';
 import {
   WeatherDatum,
   WeatherDatumDocument,
 } from './entities/weather-datum.entity';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { GetWeatherDatumDto } from './dto/get-weather-datum.dto';
-import { SessionService } from '../users/session/session.service';
 
 @Injectable()
 export class WeatherDataService {
   constructor(
     @InjectModel(WeatherDatum.name)
     private readonly weatherDatumModel: Model<WeatherDatumDocument>,
-    private readonly sessionService: SessionService,
   ) {}
 
+  // Protected by guards.
   async create(
     createWeatherDatumDto: CreateWeatherDatumDto,
   ): Promise<WeatherDatum> {

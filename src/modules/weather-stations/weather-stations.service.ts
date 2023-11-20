@@ -16,6 +16,7 @@ export class WeatherStationsService {
     private readonly weatherStationModel: Model<WeatherStationDocument>,
   ) {}
 
+  // Protected by guards.
   async create(
     createWeatherStationDto: CreateWeatherStationDto,
   ): Promise<WeatherStation> {

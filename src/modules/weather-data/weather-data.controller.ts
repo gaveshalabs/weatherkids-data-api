@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   ParseUUIDPipe,
-  Headers,
   BadRequestException,
   UsePipes,
   ValidationPipe,
@@ -35,11 +34,7 @@ export class WeatherDataController {
       exceptionFactory: (errors) => new BadRequestException(errors),
     }),
   )
-  create(
-    @Headers('gavesha-user-api-key') apiKey: string,
-    @Headers('client-id') clientId: string,
-    @Body() createWeatherDatumDto: CreateWeatherDatumDto,
-  ) {
+  create(@Body() createWeatherDatumDto: CreateWeatherDatumDto) {
     return this.weatherDataService.create(createWeatherDatumDto);
   }
 
