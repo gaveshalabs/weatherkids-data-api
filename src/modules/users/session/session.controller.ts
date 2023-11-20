@@ -12,4 +12,12 @@ export class SessionController {
   create(@Body() creationSessionDto: CreateSessionDto) {
     return this.sessionService.create(creationSessionDto);
   }
+
+  // Not directly called in prod, but useful for testing.
+  @Post('gavesha-user-api-key')
+  checkApiKey(@Body() body: string) {
+    return this.sessionService.validateGaveshaUserApiKey(
+      body['gavesha_user_api_key'],
+    );
+  }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { CreateWeatherDatumDto } from './dto/create-weather-datum.dto';
 import { UpdateWeatherDatumDto } from './dto/update-weather-datum.dto';
 import {
@@ -8,17 +8,28 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { GetWeatherDatumDto } from './dto/get-weather-datum.dto';
+import { SessionService } from '../users/session/session.service';
 
 @Injectable()
 export class WeatherDataService {
   constructor(
     @InjectModel(WeatherDatum.name)
     private readonly weatherDatumModel: Model<WeatherDatumDocument>,
+    private readonly sessionService: SessionService,
   ) {}
 
   async create(
     createWeatherDatumDto: CreateWeatherDatumDto,
   ): Promise<WeatherDatum> {
+    // Validate user api key.
+    try {
+      await this.sessionService.validateGaveshaUserApiKey(
+        createWeatherDatumDto.gavesha_user_api_key,
+      );
+    } catch (error) {
+      throw new HttpException(error, 401);
+    }
+
     const newWeatherDatum = new this.weatherDatumModel(createWeatherDatumDto);
     return await newWeatherDatum.save();
   }

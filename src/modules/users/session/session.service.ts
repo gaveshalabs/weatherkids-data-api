@@ -15,6 +15,30 @@ export class SessionService {
     private usersService: UsersService,
   ) {}
 
+  public async validateGaveshaUserApiKey(key: string) {
+    // Verify the sent key is a valid JWT.
+    let result = null;
+    try {
+      result = await this.jwtService.verifyAsync(key);
+    } catch (e) {
+      throw new HttpException('API Key validation failed', 401);
+    }
+
+    // Get the user from the database based on the email from the JWT.
+    const user = await this.usersService.findUserByEmail(result.email);
+
+    if (!user) {
+      throw new HttpException('User not found. API Key validation failed', 404);
+    }
+
+    // If the key is not the same as the one in the database,
+    if (user.gavesha_user_api_key !== key) {
+      throw new HttpException('API Key validation failed', 401);
+    }
+
+    return user;
+  }
+
   private async generateGaveshaUserApiKey(
     data: IGenUserApiKey,
   ): Promise<string> {

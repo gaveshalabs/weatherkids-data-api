@@ -24,5 +24,6 @@ import { OAuth2Client } from 'google-auth-library';
   ],
   controllers: [SessionController],
   providers: [SessionService, OAuth2Client, AuthService],
+  exports: [SessionService],
 })
 export class SessionModule {}

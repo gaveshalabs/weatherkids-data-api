@@ -2,6 +2,7 @@ import { ICoordinates } from 'src/modules/common/interfaces/coordinates.interfac
 
 export class CreateWeatherDatumDto {
   readonly author_user_id: string;
+  readonly gavesha_user_api_key: string;
   readonly weather_station_id: string;
   readonly metadata: {
     joined_sensor_key: string;
