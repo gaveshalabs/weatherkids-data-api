@@ -7,18 +7,33 @@ import {
   Param,
   Delete,
   ParseUUIDPipe,
+  BadRequestException,
+  UsePipes,
+  ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { WeatherDataService } from './weather-data.service';
 import { CreateWeatherDatumDto } from './dto/create-weather-datum.dto';
 import { UpdateWeatherDatumDto } from './dto/update-weather-datum.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
+import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
 
 @Controller('weather-data')
 @ApiTags('weather-data')
 export class WeatherDataController {
   constructor(private readonly weatherDataService: WeatherDataService) {}
 
+  @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
   @Post()
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      exceptionFactory: (errors) => new BadRequestException(errors),
+    }),
+  )
   create(@Body() createWeatherDatumDto: CreateWeatherDatumDto) {
     return this.weatherDataService.create(createWeatherDatumDto);
   }

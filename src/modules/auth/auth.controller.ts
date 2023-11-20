@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  // Not directly called in prod, but useful for testing
   @Post('id-token')
   async authenticate(@Body('idToken') idToken: string) {
     try {

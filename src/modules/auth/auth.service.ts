@@ -1,7 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { OAuth2Client } from 'google-auth-library';
-import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -23,26 +22,12 @@ export class AuthService {
         throw new UnauthorizedException();
       }
 
-      const sub = decodeUser.sub;
+      const email = decodeUser.email;
 
-      let user = await this.userService.getUserBySubId(sub); // Get user from db.
+      const user = await this.userService.findUserByEmail(email); // Get user from db.
 
       if (!user) {
-        // User does not exist, so create a new one.
-        const createUserDto: CreateUserDto = {
-          sub_id: sub,
-          name: decodeUser.name,
-          email: decodeUser.email,
-          contact_no: '',
-          nearest_city: '',
-          nearest_city_postalcode: '',
-          photo_url: decodeUser.picture,
-          is_active: true,
-          token: '',
-        };
-        const result: any = await this.userService.create(createUserDto);
-
-        user = result._doc;
+        return 'No user in Gavesha db.';
       }
 
       return user;

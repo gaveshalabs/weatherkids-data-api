@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  Headers,
 } from '@nestjs/common';
 import { WeatherStationsService } from './weather-stations.service';
 import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
@@ -13,6 +15,8 @@ import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
 import { GetWeatherStationDto } from './dto/get-weather-station.dto';
 import { AddUsersToWeatherStationDto } from './dto/add-users-to-weather-station.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
+import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
 
 @Controller('weather-stations')
 @ApiTags('weather-stations')
@@ -21,9 +25,16 @@ export class WeatherStationsController {
     private readonly weatherStationsService: WeatherStationsService,
   ) {}
 
+  @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
   @Post()
-  create(@Body() createWeatherStationDto: CreateWeatherStationDto) {
-    return this.weatherStationsService.create(createWeatherStationDto);
+  create(
+    @Headers('gavesha-user-api-key') gaveshaUserApiKey: string,
+    @Body() createWeatherStationDto: CreateWeatherStationDto,
+  ) {
+    return this.weatherStationsService.create(
+      createWeatherStationDto,
+      gaveshaUserApiKey,
+    );
   }
 
   @Get()

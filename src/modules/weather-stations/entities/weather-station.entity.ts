@@ -19,7 +19,7 @@ export class WeatherStation {
   coordinates: ICoordinates;
 
   @Prop({ type: [{ type: String, default: uuidv4, ref: User.name }] })
-  user_ids: User[];
+  user_ids: string[];
 }
 
 export type WeatherStationDocument = WeatherStation & Document;

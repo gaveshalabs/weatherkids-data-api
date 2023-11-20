@@ -1,16 +1,18 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { v4 as uuidv4 } from 'uuid';
 
 @Schema({
   timestamps: true,
   collection: 'users',
 })
 export class User {
-  @Prop({ type: String, default: uuidv4 })
+  @Prop({ type: String })
   _id: string;
 
   @Prop({ type: String })
-  sub_id: string;
+  uid: string;
+
+  @Prop({ type: String })
+  gavesha_user_api_key: string;
 
   @Prop({ type: String })
   name: string;
@@ -32,9 +34,6 @@ export class User {
 
   @Prop({ type: Boolean, default: true })
   is_active: boolean;
-
-  @Prop({ type: String })
-  token: string;
 }
 
 export type UserDocument = User & Document;
