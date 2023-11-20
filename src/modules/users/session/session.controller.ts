@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Headers } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateSessionDto } from '../dto/create-session.dto';
 import { SessionService } from './session.service';
@@ -9,8 +9,11 @@ export class SessionController {
   constructor(private readonly sessionService: SessionService) {}
 
   @Post()
-  create(@Body() creationSessionDto: CreateSessionDto) {
-    return this.sessionService.create(creationSessionDto);
+  create(
+    @Headers('id-token') idToken: string,
+    @Body() creationSessionDto: CreateSessionDto,
+  ) {
+    return this.sessionService.create(creationSessionDto, idToken);
   }
 
   // Not directly called in prod, but useful for testing.

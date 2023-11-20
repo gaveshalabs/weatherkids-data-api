@@ -6,5 +6,4 @@ export class CreateSessionDto extends PartialType(CreateUserDto) {
   readonly email: string;
   readonly name: string;
   readonly photo_url: string;
-  readonly idToken: string;
 }

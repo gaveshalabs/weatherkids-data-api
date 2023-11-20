@@ -53,10 +53,13 @@ export class SessionService {
     }
   }
 
-  async create(createSessionDto: CreateSessionDto): Promise<User> {
+  async create(
+    createSessionDto: CreateSessionDto,
+    idToken: string,
+  ): Promise<User> {
     // Check auth.
     try {
-      this.authService.authenticateWithGoogle(createSessionDto.idToken);
+      this.authService.authenticateWithGoogle(idToken);
     } catch (e) {
       console.error(e);
       throw new HttpException(e, 401);
