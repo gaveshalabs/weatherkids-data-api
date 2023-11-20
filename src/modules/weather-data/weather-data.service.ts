@@ -20,24 +20,7 @@ export class WeatherDataService {
 
   async create(
     createWeatherDatumDto: CreateWeatherDatumDto,
-    apiKey: string,
-    clientId: string,
   ): Promise<WeatherDatum> {
-    // Validate client id of request source.
-    try {
-      // Because the data can only be added from the mobile app,
-      await this.sessionService.validateMobileClientId(clientId);
-    } catch (error) {
-      throw new HttpException(error, 401);
-    }
-
-    // Validate user api key.
-    try {
-      await this.sessionService.validateGaveshaUserApiKey(apiKey);
-    } catch (error) {
-      throw new HttpException(error, 401);
-    }
-
     const newWeatherDatum = new this.weatherDatumModel(createWeatherDatumDto);
     return await newWeatherDatum.save();
   }

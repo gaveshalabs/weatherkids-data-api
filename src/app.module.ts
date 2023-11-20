@@ -9,8 +9,11 @@ import { ConfigModule } from '@nestjs/config';
 import { WeatherStationsModule } from './modules/weather-stations/weather-stations.module';
 import { UsersModule } from './modules/users/users.module';
 import { SessionModule } from './modules/users/session/session.module';
+import { GuardsModule } from './modules/common/guards/guards.module';
 @Module({
   imports: [
+    GuardsModule,
+
     SessionModule,
     AuthModule,
     UsersModule,
