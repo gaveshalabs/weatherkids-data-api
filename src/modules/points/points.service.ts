@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import mongoose, { Connection, Model } from 'mongoose';
 import { PointTransactionTypes } from '../common/enums/point-transaction-types.enum';
 import { CreateWeatherDatumDto } from '../weather-data/dto/create-weather-datum.dto';
@@ -35,8 +35,8 @@ export class PointsService {
     @InjectConnection() private readonly mongoConnection: Connection,
   ) {}
 
-  //TODO: @Cron(CronExpression.EVERY_DAY_AT_11PM)
-  @Cron('*/10 * * * * *') // Every 5 seconds
+  @Cron(CronExpression.EVERY_DAY_AT_11PM)
+  // @Cron('*/10 * * * * *') // Every 5 seconds
   async handleInspectPointReductionForTheDayCron() {
     console.log('Running cron');
 
@@ -45,8 +45,8 @@ export class PointsService {
      * If so, then reduce points by a pre-defined amount.
      */
     // For testing the tomorrow day
-    //TODO: const date = new Date();
-    const date = new Date('2023-11-21 23:55:00');
+    const date = new Date();
+    //TODO: const date = new Date('2023-11-21 23:55:00');
     date.setDate(date.getDate() - 1);
 
     // Get the users who haven't uploaded weather data for 24 hours.
