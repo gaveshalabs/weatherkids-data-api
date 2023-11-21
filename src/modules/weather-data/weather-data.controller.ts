@@ -25,6 +25,21 @@ export class WeatherDataController {
   constructor(private readonly weatherDataService: WeatherDataService) {}
 
   @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
+  @Post('bulk')
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      exceptionFactory: (errors) => new BadRequestException(errors),
+    }),
+  )
+  bulkCommit(@Body() createWeatherData: CreateWeatherDatumDto[]) {
+    return this.weatherDataService.bulkCommit(createWeatherData);
+  }
+
+  // Not directly called in prod, but useful for testing.
+  @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
   @Post()
   @UsePipes(
     new ValidationPipe({

@@ -8,6 +8,9 @@ export class CreateWeatherDatumDto {
   @IsNotEmpty()
   readonly weather_station_id: string;
 
+  @IsNotEmpty()
+  readonly timestamp: number;
+
   @IsOptional()
   readonly metadata: {
     joined_sensor_key: string;

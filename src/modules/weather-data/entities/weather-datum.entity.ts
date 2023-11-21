@@ -9,13 +9,18 @@ import { v4 as uuidv4 } from 'uuid';
   timestamps: true,
   collection: 'weather_data',
   timeseries: {
-    timeField: 'updatedAt',
-    granularity: 'seconds',
+    timeField: 'timestamp',
+    metaField: 'metadata',
+    granularity: 'minutes',
   },
 })
 export class WeatherDatum {
   @Prop({ type: String, default: uuidv4 })
   _id: string;
+
+  // The field for the timeseries to use as the time field.
+  @Prop({ type: Number })
+  timestamp: number;
 
   @Prop({ type: String, default: uuidv4, ref: User.name })
   author_user_id: string;
