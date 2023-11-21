@@ -18,9 +18,6 @@ export class Point {
 
   @Prop({ type: Number, default: 0 })
   last_point_calculated_timestamp: number;
-
-  @Prop({ type: Number, default: 0 })
-  last_weatherdata_uploaded_timestamp: number;
 }
 
 export type PointDocument = Point & Document;
