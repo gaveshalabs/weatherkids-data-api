@@ -108,6 +108,15 @@ export class WeatherDataService {
       .exec();
   }
 
+  async findLatestByWeatherStationId(
+    weatherStationId: string,
+  ): Promise<GetWeatherDatumDto> {
+    return this.weatherDatumModel
+      .findOne({ weather_station_id: weatherStationId }) // Use findOne if you need just the latest document
+      .sort({ timestamp: -1 })
+      .exec();
+  }
+
   update(id: number, updateWeatherDatumDto: UpdateWeatherDatumDto) {
     console.log('updateWeatherDatumDto', updateWeatherDatumDto);
     return `This action updates a #${id} weatherDatum`;

@@ -8,9 +8,13 @@ import {
 } from './entities/weather-station.entity';
 import { SessionModule } from '../users/session/session.module';
 import { UsersModule } from '../users/users.module';
+import { WeatherDataModule } from '../weather-data/weather-data.module';
+import { PointsModule } from '../points/points.module';
 
 @Module({
   imports: [
+    PointsModule,
+    WeatherDataModule,
     UsersModule,
     SessionModule,
     MongooseModule.forFeature([

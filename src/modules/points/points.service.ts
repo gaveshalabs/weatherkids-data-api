@@ -40,12 +40,16 @@ export class PointsService {
   async handleInspectPointReductionForTheDayCron() {
     console.log('Running cron');
 
+    // t=20 11PM
+    // t=21 11PM FAIL X
+    // t=22 manually 8AM
+
     /**
      * Check if the user hasn't uploaded weather data for the day.
      * If so, then reduce points by a pre-defined amount.
      */
     // For testing the tomorrow day
-    const date = new Date();
+    const date = new Date(); // TODO: 11PM
     //TODO: const date = new Date('2023-11-21 23:55:00');
     date.setDate(date.getDate() - 1);
 
@@ -71,6 +75,8 @@ export class PointsService {
   async deductPoints(author_user_id: string, reduceBy: number) {
     const session = await this.mongoConnection.startSession();
     session.startTransaction();
+
+    // TODO:
 
     try {
       // TODO: refactor.
@@ -224,5 +230,9 @@ export class PointsService {
 
   findAll(): Promise<Point[]> {
     return this.pointModel.find().exec();
+  }
+
+  findByUserId(author_user_id: string): Promise<Point> {
+    return this.pointModel.findOne({ author_user_id }).exec();
   }
 }

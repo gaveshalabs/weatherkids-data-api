@@ -19,5 +19,6 @@ import { PointsModule } from '../points/points.module';
   ],
   controllers: [WeatherDataController],
   providers: [WeatherDataService, WeatherDatum],
+  exports: [WeatherDataService],
 })
 export class WeatherDataModule {}
