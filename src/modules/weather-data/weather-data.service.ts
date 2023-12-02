@@ -9,6 +9,11 @@ import {
   WeatherDatum,
   WeatherDatumDocument,
 } from './entities/weather-datum.entity';
+import {
+  CreateBulkWeatherDataDto,
+  CreateWeatherDataPointDto,
+} from './dto/create-bulk-weather-data.dto';
+import { BulkCreateWeatherDataResponseDto } from './dto/bulk-create-weather-data-response.dto';
 
 @Injectable()
 export class WeatherDataService {
@@ -23,8 +28,8 @@ export class WeatherDataService {
 
   // Protected by guards.
   async bulkCommit(
-    createWeatherData: CreateWeatherDatumDto[],
-  ): Promise<WeatherDatum[]> {
+    createBulkWeatherData: CreateBulkWeatherDataDto,
+  ): Promise<BulkCreateWeatherDataResponseDto[]> {
     /**
      * This commit has to be a db transaction to ensure that all or none of the data is committed.
      * In the transaction, we need to also calculate the points.
@@ -36,13 +41,28 @@ export class WeatherDataService {
      * 3) If there are atleast one weather data point for a day, then the user gets 8 points for that day.
      *
      */
+    // Restructure the data to include the author_user_id, weather_station_id, metadata, coordinates.
+    const { author_user_id, weather_station_id, metadata, coordinates } =
+      createBulkWeatherData;
+
+    const data = createBulkWeatherData.data.map(
+      (datum: CreateWeatherDataPointDto) => {
+        return {
+          ...datum,
+          author_user_id,
+          weather_station_id,
+          metadata,
+          coordinates,
+        };
+      },
+    ) as CreateWeatherDatumDto[];
 
     const session = await this.mongoConnection.startSession();
     session.startTransaction();
     let insertedData = [];
     try {
       // Calculate the points.
-      await this.pointsService.calculatePoints(createWeatherData, session); // Pass the transaction session.
+      await this.pointsService.calculatePoints(data, session); // Pass the transaction session.
 
       try {
         /**
@@ -50,11 +70,10 @@ export class WeatherDataService {
          * Due to MongoDB limitation.
          * https://www.mongodb.com/docs/manual/core/timeseries/timeseries-limitations/#transactions
          */
-        insertedData =
-          await this.weatherDatumModel.insertMany(createWeatherData);
+        insertedData = await this.weatherDatumModel.insertMany(data);
 
         // Hacky checks to check if the data was inserted.
-        if (!insertedData || insertedData.length !== createWeatherData.length) {
+        if (!insertedData || insertedData.length !== data.length) {
           throw new Error('Error inserting weather data');
         }
       } catch (error) {
@@ -65,7 +84,14 @@ export class WeatherDataService {
       // Commit the point calculation transaction if all goes well.
       await session.commitTransaction();
 
-      return insertedData;
+      // Return the _id, timestamp, created_at fields.
+      return insertedData.map((datum) => {
+        return {
+          _id: datum._id,
+          timestamp: datum.timestamp,
+          created_at: datum.createdAt,
+        } as BulkCreateWeatherDataResponseDto;
+      }) as BulkCreateWeatherDataResponseDto[];
     } catch (error) {
       // Abort the point calculation transaction if any error occurs during the above.
       await session.abortTransaction();

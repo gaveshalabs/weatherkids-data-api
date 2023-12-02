@@ -19,8 +19,8 @@ export class WeatherDatum {
   _id: string;
 
   // The field for the timeseries to use as the time field.
-  @Prop({ type: Number })
-  timestamp: number;
+  @Prop({ type: Date })
+  timestamp: Date;
 
   @Prop({ type: String, default: uuidv4, ref: User.name })
   author_user_id: string;

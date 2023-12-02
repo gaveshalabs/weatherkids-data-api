@@ -18,6 +18,8 @@ import { UpdateWeatherDatumDto } from './dto/update-weather-datum.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
+import { CreateBulkWeatherDataDto } from './dto/create-bulk-weather-data.dto';
+import { BulkCreateWeatherDataResponseDto } from './dto/bulk-create-weather-data-response.dto';
 
 @Controller('weather-data')
 @ApiTags('weather-data')
@@ -34,8 +36,10 @@ export class WeatherDataController {
       exceptionFactory: (errors) => new BadRequestException(errors),
     }),
   )
-  bulkCommit(@Body() createWeatherData: CreateWeatherDatumDto[]) {
-    return this.weatherDataService.bulkCommit(createWeatherData);
+  async bulkCommit(
+    @Body() createBulkWeatherData: CreateBulkWeatherDataDto,
+  ): Promise<BulkCreateWeatherDataResponseDto[]> {
+    return await this.weatherDataService.bulkCommit(createBulkWeatherData);
   }
 
   // Not directly called in prod, but useful for testing.
