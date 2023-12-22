@@ -4,6 +4,7 @@ import {
   IsArray,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   ValidateNested,
 } from 'class-validator';
 import { ICoordinates } from 'src/modules/common/interfaces/coordinates.interface';
@@ -18,7 +19,7 @@ export class CreateBulkWeatherDataDto {
   @IsNotEmpty()
   readonly coordinates: ICoordinates;
 
-  @IsNotEmpty()
+  @IsOptional()
   readonly metadata: {
     joined_sensor_key: string;
     source: string;
@@ -36,27 +37,31 @@ export class CreateWeatherDataPointDto {
   @IsNotEmpty()
   readonly timestamp: number;
 
-  @IsNotEmpty()
   @IsNumber()
+  @IsOptional()
   readonly temperature: number;
 
-  @IsNotEmpty()
   @IsNumber()
+  @IsOptional()
   readonly humidity: number;
 
-  @IsNotEmpty()
   @IsNumber()
+  @IsOptional()
   readonly pressure: number;
 
-  @IsNotEmpty()
   @IsNumber()
+  @IsOptional()
   readonly precipitation: number;
 
-  @IsNotEmpty()
   @IsNumber()
+  @IsOptional()
   readonly solar_irradiance: number;
 
-  @IsNotEmpty()
   @IsNumber()
+  @IsOptional()
   readonly percentage_light_intensity: number;
+
+  @IsNumber()
+  @IsOptional()
+  readonly tvoc: number;
 }
