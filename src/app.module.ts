@@ -11,6 +11,8 @@ import { UsersModule } from './modules/users/users.module';
 import { SessionModule } from './modules/users/session/session.module';
 import { GuardsModule } from './modules/common/guards/guards.module';
 import { JwtModule } from '@nestjs/jwt';
+import { PointsModule } from './modules/points/points.module';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -33,6 +35,9 @@ import { JwtModule } from '@nestjs/jwt';
     MongooseModule.forRoot(process.env.MONGO_URL),
     WeatherDataModule,
     WeatherStationsModule,
+    PointsModule,
+
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

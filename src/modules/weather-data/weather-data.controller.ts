@@ -18,12 +18,31 @@ import { UpdateWeatherDatumDto } from './dto/update-weather-datum.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
+import { CreateBulkWeatherDataDto } from './dto/create-bulk-weather-data.dto';
+import { BulkCreateWeatherDataResponseDto } from './dto/bulk-create-weather-data-response.dto';
 
 @Controller('weather-data')
 @ApiTags('weather-data')
 export class WeatherDataController {
   constructor(private readonly weatherDataService: WeatherDataService) {}
 
+  @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
+  @Post('bulk')
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      exceptionFactory: (errors) => new BadRequestException(errors),
+    }),
+  )
+  async bulkCommit(
+    @Body() createBulkWeatherData: CreateBulkWeatherDataDto,
+  ): Promise<BulkCreateWeatherDataResponseDto[]> {
+    return await this.weatherDataService.bulkCommit(createBulkWeatherData);
+  }
+
+  // Not directly called in prod, but useful for testing.
   @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
   @Post()
   @UsePipes(

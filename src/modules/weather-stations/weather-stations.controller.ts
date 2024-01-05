@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Headers,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { WeatherStationsService } from './weather-stations.service';
 import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
@@ -17,12 +18,16 @@ import { AddUsersToWeatherStationDto } from './dto/add-users-to-weather-station.
 import { ApiTags } from '@nestjs/swagger';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
+import { WeatherDataService } from '../weather-data/weather-data.service';
+import { PointsService } from '../points/points.service';
 
 @Controller('weather-stations')
 @ApiTags('weather-stations')
 export class WeatherStationsController {
   constructor(
     private readonly weatherStationsService: WeatherStationsService,
+    private readonly weatherDataService: WeatherDataService,
+    private readonly pointsService: PointsService,
   ) {}
 
   @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
@@ -45,6 +50,35 @@ export class WeatherStationsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.weatherStationsService.findOne(+id);
+  }
+
+  @Get('latest/:weather_station_id')
+  async findLatestByWeatherStationId(
+    @Param('weather_station_id', new ParseUUIDPipe({ version: '4' }))
+    weatherStationId: string,
+  ) {
+    // TODO: return points as well.
+    // TODO: Assumed only one user per weather station.
+
+    // Get weather data.
+    const weatherData =
+      await this.weatherDataService.findLatestByWeatherStationId(
+        weatherStationId,
+      );
+
+    // Get points of the user of the weather station.
+    const pointsOfUser = await this.pointsService.findByUserId(
+      weatherData.author_user_id,
+    );
+
+    return {
+      weatherData,
+      pointsOfUser,
+    };
+
+    // return this.weatherDataService.findLatestByWeatherStationId(
+    //   weatherStationId,
+    // );
   }
 
   @Patch(':id')

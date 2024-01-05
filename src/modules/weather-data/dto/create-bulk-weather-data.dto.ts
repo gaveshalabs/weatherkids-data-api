@@ -1,7 +1,15 @@
-import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  ValidateNested,
+} from 'class-validator';
 import { ICoordinates } from 'src/modules/common/interfaces/coordinates.interface';
 
-export class CreateWeatherDatumDto {
+export class CreateBulkWeatherDataDto {
   @IsNotEmpty()
   readonly author_user_id: string;
 
@@ -9,7 +17,7 @@ export class CreateWeatherDatumDto {
   readonly weather_station_id: string;
 
   @IsNotEmpty()
-  readonly timestamp: number;
+  readonly coordinates: ICoordinates;
 
   @IsOptional()
   readonly metadata: {
@@ -18,8 +26,16 @@ export class CreateWeatherDatumDto {
     topic: string;
   };
 
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CreateWeatherDataPointDto)
+  readonly data: CreateWeatherDataPointDto[];
+}
+
+export class CreateWeatherDataPointDto {
   @IsNotEmpty()
-  readonly coordinates: ICoordinates;
+  readonly timestamp: number;
 
   @IsNumber()
   @IsOptional()

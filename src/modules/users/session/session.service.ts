@@ -68,7 +68,7 @@ export class SessionService {
   ): Promise<User> {
     // Check auth.
     try {
-      this.authService.authenticateWithGoogle(idToken);
+      await this.authService.authenticateWithGoogle(idToken);
     } catch (e) {
       console.error(e);
       throw new HttpException(e, 401);
