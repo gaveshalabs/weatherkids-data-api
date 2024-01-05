@@ -1,40 +1,71 @@
 import { getConnectionToken, getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Model } from 'mongoose';
-import { User } from '../users/entities/user.entity';
-import { WeatherDatum } from '../weather-data/entities/weather-datum.entity';
-import { PointsConfigs } from './configs/points.config';
-import { LastProcessedEntry } from './entities/last-processed-entry.entity';
-import { PointTransaction } from './entities/point-transaction.entity';
-import { Point } from './entities/point.entity';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose, { Connection, Model, connect } from 'mongoose';
+import {
+  WeatherDatum,
+  WeatherDatumSchema,
+} from '../weather-data/entities/weather-datum.entity';
+import {
+  LastProcessedEntry,
+  LastProcessedEntrySchema,
+} from './entities/last-processed-entry.entity';
+import {
+  PointTracker,
+  PointTrackerSchema,
+} from './entities/point-tracker.entity';
+import {
+  PointTransaction,
+  PointTransactionSchema,
+} from './entities/point-transaction.entity';
+import { Point, PointSchema } from './entities/point.entity';
+import { PointsController } from './points.controller';
 import { PointsService } from './points.service';
-import { PointsUtils } from './utils/points.utils';
+import { CreateWeatherDatumDto } from '../weather-data/dto/create-weather-datum.dto';
+import { PointsConfigs } from './configs/points.config';
 
 describe('PointsService', () => {
-  let service: PointsService;
-  let mockPointTransactionModel: Model<PointTransaction>;
-  let mockLastProcessedEntryModel: Model<LastProcessedEntry>;
-  let mockPointModel: Model<Point>;
-  let mockWeatherDatumModel: Model<WeatherDatum>;
-  let mockUserModel: Model<User>;
-  const mockMongoConnection = {
-    startSession: jest.fn(),
-  };
+  let pointsService: PointsService;
 
-  beforeEach(async () => {
-    mockPointModel = {
-      updateOne: jest.fn(),
-    } as any;
+  let mockPointTrackerModel = Model<PointTracker>;
+  let mockPointTransactionModel = Model<PointTransaction>;
+  let mockLastProcessedEntryModel = Model<LastProcessedEntry>;
+  let mockPointModel = Model<Point>;
+  let mockWeatherDatumModel = Model<WeatherDatum>;
+  let mockMongoConnection: Connection;
 
-    const module: TestingModule = await Test.createTestingModule({
+  let mongod: MongoMemoryServer;
+
+  beforeAll(async () => {
+    mongod = await MongoMemoryServer.create();
+    const uri = mongod.getUri();
+    mockMongoConnection = (await connect(uri)).connection;
+
+    mockPointTrackerModel = mockMongoConnection.model(
+      PointTracker.name,
+      PointTrackerSchema,
+    );
+    mockPointTransactionModel = mockMongoConnection.model(
+      PointTransaction.name,
+      PointTransactionSchema,
+    );
+    mockLastProcessedEntryModel = mockMongoConnection.model(
+      LastProcessedEntry.name,
+      LastProcessedEntrySchema,
+    );
+    mockPointModel = mockMongoConnection.model(Point.name, PointSchema);
+    mockWeatherDatumModel = mockMongoConnection.model(
+      WeatherDatum.name,
+      WeatherDatumSchema,
+    );
+
+    const app: TestingModule = await Test.createTestingModule({
+      controllers: [PointsController],
       providers: [
         PointsService,
-        PointsConfigs,
-        PointsUtils,
-        // Provide your mock models here
         {
-          provide: getModelToken(User.name),
-          useValue: mockUserModel,
+          provide: getModelToken(PointTracker.name),
+          useValue: mockPointTrackerModel,
         },
         {
           provide: getModelToken(PointTransaction.name),
@@ -44,57 +75,113 @@ describe('PointsService', () => {
           provide: getModelToken(LastProcessedEntry.name),
           useValue: mockLastProcessedEntryModel,
         },
-        { provide: getModelToken(Point.name), useValue: mockPointModel },
+        {
+          provide: getModelToken(Point.name),
+          useValue: mockPointModel,
+        },
         {
           provide: getModelToken(WeatherDatum.name),
           useValue: mockWeatherDatumModel,
         },
         {
-          provide: getConnectionToken(),
+          provide: getConnectionToken('DatabaseConnection'),
           useValue: mockMongoConnection,
         },
-        // Add any other dependencies your service might have
       ],
     }).compile();
-
-    service = module.get<PointsService>(PointsService);
+    pointsService = app.get<PointsService>(PointsService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  afterAll(async () => {
+    await mockMongoConnection.dropDatabase();
+    await mockMongoConnection.close();
+    await mongod.stop();
   });
 
-  it('should correctly deduct points from a user', async () => {
-    const author_user_id = 'user123';
-    const reduceBy = 10;
+  beforeEach(async () => {});
 
-    jest.spyOn(service['mongoConnection'], 'startSession').mockImplementation(
-      () =>
-        ({
-          startTransaction: jest.fn(),
-          commitTransaction: jest.fn(),
-          abortTransaction: jest.fn(),
-          endSession: jest.fn(),
-        }) as any,
-    ); // Mock the session
+  afterEach(async () => {
+    const collections = mockMongoConnection.collections;
+    for (const key in collections) {
+      const collection = collections[key];
+      await collection.deleteMany({});
+    }
+  });
 
-    const mockUsers = [
-      { author_user_id: 'user1' },
-      { author_user_id: 'user2' },
-    ];
+  describe('calculatePoints', () => {
+    const author_user_id = 'author_user_id';
+    let session: mongoose.mongo.ClientSession;
+    beforeAll(() => {
+      session = null;
+    });
 
-    mockPointModel.updateOne.mockResolvedValue(mockUsers);
-    mockPointTransactionModel.prototype.save = jest
-      .fn()
-      .mockResolvedValue(null);
+    it('should return 0 if no new weather data is provided', async () => {
+      const result = await pointsService.calculatePoints(
+        author_user_id,
+        123456789,
+        [] as CreateWeatherDatumDto[],
+        session,
+      );
 
-    await service.deductPoints(author_user_id, reduceBy);
+      expect(result).toBe(0);
+    });
 
-    expect(mockPointModel.updateOne).toHaveBeenCalledWith(
-      { author_user_id },
-      expect.any(Object),
-      expect.any(Object),
-    );
-    expect(mockPointTransactionModel.prototype.save).toHaveBeenCalled();
+    it('should return 0 if the new weather data is in the past', async () => {
+      const result = await pointsService.calculatePoints(
+        author_user_id,
+        123456789,
+        [{ timestamp: 123456788 }] as CreateWeatherDatumDto[],
+        session,
+      );
+
+      expect(result).toBe(0);
+    });
+
+    it('should return the correct points for a single future weather data point for a new date', async () => {
+      const result = await pointsService.calculatePoints(
+        author_user_id,
+        123456789,
+        [{ timestamp: 123456790 }] as CreateWeatherDatumDto[],
+        session,
+      );
+
+      expect(result).toBe(
+        PointsConfigs.POINTS_PER_HOUR + PointsConfigs.POINTS_PER_DAY,
+      );
+    });
+
+    it('should return the correct points for multiple future weather data points for a single new date.', async () => {
+      const result = await pointsService.calculatePoints(
+        author_user_id,
+        123456789,
+        [
+          { timestamp: 1704523621000 },
+          { timestamp: 1704527221000 },
+        ] as CreateWeatherDatumDto[],
+        session,
+      );
+
+      expect(result).toBe(
+        PointsConfigs.POINTS_PER_HOUR * 2 + PointsConfigs.POINTS_PER_DAY,
+      );
+    });
+
+    it('should return the correct points for multiple future weather data points for a multiple new dates.', async () => {
+      const result = await pointsService.calculatePoints(
+        author_user_id,
+        123456789,
+        [
+          { timestamp: 1704192176000 },
+          { timestamp: 1704192695000 },
+          { timestamp: 1704192854000 },
+          { timestamp: 1704332150000 },
+        ] as CreateWeatherDatumDto[],
+        session,
+      );
+
+      expect(result).toBe(
+        PointsConfigs.POINTS_PER_HOUR * 2 + PointsConfigs.POINTS_PER_DAY * 2,
+      );
+    });
   });
 });

@@ -15,11 +15,28 @@ import {
   PointTransactionDocument,
 } from './entities/point-transaction.entity';
 import { Point, PointDocument } from './entities/point.entity';
-import { PointsUtils } from './utils/points.utils';
+import {
+  PointTracker,
+  PointTrackerDocument,
+} from './entities/point-tracker.entity';
 
 @Injectable()
+/**
+ * Service class for managing points related operations.
+ */
 export class PointsService {
+  /**
+   * Constructs a new instance of the PointsService class.
+   * @param pointTransactionModel The model for PointTransaction documents.
+   * @param lastProcessedEntryModel The model for LastProcessedEntry documents.
+   * @param pointModel The model for Point documents.
+   * @param weatherDatumModel The model for WeatherDatum documents.
+   * @param mongoConnection The MongoDB connection.
+   */
   constructor(
+    @InjectModel(PointTracker.name)
+    private pointTrackerModel: Model<PointTrackerDocument>,
+
     @InjectModel(PointTransaction.name)
     private pointTransactionModel: Model<PointTransactionDocument>,
 
@@ -115,6 +132,12 @@ export class PointsService {
     }
   }
 
+  /**
+   * Retrieves the last processed entry timestamp for a given author user ID.
+   * @param author_user_id - The ID of the author user.
+   * @param session - The MongoDB client session.
+   * @returns The last processed entry timestamp, or 0 if no entry is found.
+   */
   async getLastProcessedEntryTimestamp(
     author_user_id: string,
     session: mongoose.mongo.ClientSession,
@@ -135,87 +158,96 @@ export class PointsService {
     return lastProcessedEntry.last_processed_timestamp;
   }
 
-  async calculatePoints(
-    newWeatherData: CreateWeatherDatumDto[],
+  /**
+   * Updates the point tracker for a given user.
+   * @param {string} author_user_id - The ID of the user.
+   * @param {Date} date - The date of the update.
+   * @param {number[]} hours - The hours that were processed.
+   * @param {mongoose.mongo.ClientSession} session - The MongoDB session.
+   */
+  async commitPointTrackerUpdate(
+    author_user_id: string,
+    dateOnly: Date,
+    hours: number[],
     session: mongoose.mongo.ClientSession,
   ) {
-    // Get from db.
-    let lastProcessedTimestamp = await this.getLastProcessedEntryTimestamp(
-      newWeatherData[0].author_user_id,
-      session,
+    // Update point tracker.
+    await this.pointTrackerModel.updateOne(
+      {
+        author_user_id: author_user_id,
+        date: dateOnly,
+      },
+      {
+        $addToSet: {
+          hours_processed: hours,
+        },
+        $setOnInsert: {
+          date: dateOnly,
+        },
+      },
+      {
+        upsert: true,
+        session: session,
+      },
     );
+  }
 
-    const uniqueHourlyData = new Set();
-    const uniqueDays = new Set();
-    let points = 0;
-
-    newWeatherData.forEach((weatherDatum) => {
-      // Only consider future data.
-      if (weatherDatum.timestamp > lastProcessedTimestamp) {
-        const dayKey = PointsUtils.extractDayFromTimestamp(
-          weatherDatum.timestamp,
-        );
-
-        // If unique day, add points.
-        if (!uniqueDays.has(dayKey)) {
-          uniqueDays.add(dayKey);
-        }
-
-        const hourKey = PointsUtils.extractHourFromTimestamp(
-          weatherDatum.timestamp,
-        );
-
-        // If unique hourly data, add points.
-        if (!uniqueHourlyData.has(hourKey)) {
-          uniqueHourlyData.add(hourKey);
-          lastProcessedTimestamp = weatherDatum.timestamp; // Update lastProcessedTimestamp to current datum's timestamp. (For db later.)
-        }
-      }
-    });
-
-    points += uniqueDays.size * PointsConfigs.POINTS_PER_DAY;
-    points += uniqueHourlyData.size * PointsConfigs.POINTS_PER_HOUR;
-
-    //------------------ Commit details ---------------------------------//
-    // Save the newly calculated points to the user's points.
-    // But if points is 0, then don't do anything.
-    if (points !== 0) {
-      // Create a new points transaction for user.
-      const newPointTransaction = new this.pointTransactionModel({
-        author_user_id: newWeatherData[0].author_user_id,
-        amount: points,
-        transaction_type: PointTransactionTypes.ADD,
-      });
-      await newPointTransaction.save({ session });
-
-      // Update the user's points.
-      await this.pointModel.updateOne(
-        {
-          author_user_id: newWeatherData[0].author_user_id, // Assume all weather data is from the same user.
-        },
-        {
-          $inc: {
-            amount: points,
-          },
-          last_point_calculated_timestamp: Date.now(),
-          last_weatherdata_uploaded_timestamp: lastProcessedTimestamp, // TODO: check if this is needed.
-        },
-        {
-          upsert: true,
-          session: session,
-        },
-      );
+  /**
+   * Commits points to the database for a given user.
+   * @param author_user_id - The ID of the user.
+   * @param pointsToCommit - The number of points to commit.
+   * @param session - The MongoDB session to use for the transaction.
+   */
+  async commitPointsToDatabase(
+    author_user_id: string,
+    pointsToCommit: number,
+    session: mongoose.mongo.ClientSession,
+  ) {
+    if (pointsToCommit === 0) {
+      return;
     }
+    // Create a new points transaction for user.
+    const newPointTransaction = new this.pointTransactionModel({
+      author_user_id,
+      amount: pointsToCommit,
+      transaction_type: PointTransactionTypes.ADD,
+    });
+    await newPointTransaction.save({ session });
 
-    // Clear.
-    points = 0;
-    uniqueDays.clear();
-    uniqueHourlyData.clear();
+    // Update the user's points.
+    await this.pointModel.updateOne(
+      {
+        author_user_id,
+      },
+      {
+        $inc: {
+          amount: pointsToCommit,
+        },
+        last_point_calculated_timestamp: Date.now(),
+      },
+      {
+        upsert: true,
+        session: session,
+      },
+    );
+  }
 
+  /**
+   * Commits the last processed timestamp for a user.
+   * If the entry does not exist, it creates a new one. Otherwise, it updates the existing entry.
+   * @param newWeatherData - The new weather data to be processed.
+   * @param lastProcessedTimestamp - The last processed timestamp to be committed.
+   * @param session - The MongoDB client session.
+   */
+  async commitLastProcessedTimestampForUser(
+    author_user_id: string,
+    lastProcessedTimestamp: number,
+    session: mongoose.mongo.ClientSession,
+  ) {
     // Update last processed entry for user.
     // If not entry, create new otherwise update.
-    return await this.lastProcessedEntryModel.updateOne(
-      { author_user_id: newWeatherData[0].author_user_id },
+    await this.lastProcessedEntryModel.updateOne(
+      { author_user_id: author_user_id },
       {
         $set: {
           last_processed_timestamp: lastProcessedTimestamp,
@@ -226,6 +258,86 @@ export class PointsService {
         session: session,
       },
     );
+  }
+
+  /**
+   * Calculates the points based on the provided parameters.
+   *
+   * @param author_user_id - The ID of the author user.
+   * @param lastProcessedTimestamp - The timestamp of the last processed data.
+   * @param newWeatherData - An array of new weather data.
+   * @param session - The MongoDB session.
+   * @returns The calculated points.
+   */
+  async calculatePoints(
+    author_user_id: string,
+    lastProcessedTimestamp: number,
+    newWeatherData: CreateWeatherDatumDto[],
+    session: mongoose.mongo.ClientSession,
+  ) {
+    let points = 0;
+
+    const localPointTrackers = new Map<string, Set<number>>();
+
+    const dates = newWeatherData.map((d) => {
+      const date = new Date(d.timestamp);
+      date.setUTCHours(0, 0, 0, 0);
+      return date;
+    });
+
+    const uniqueDates = [...new Set(dates.map((date) => date.toISOString()))];
+
+    // Get the existing point trackers from DB and populate local cache.
+    const existingTrackers = await this.pointTrackerModel.find(
+      {
+        date: { $in: uniqueDates },
+      },
+      null,
+      { session },
+    );
+
+    // Populate local cache
+    existingTrackers.forEach((tracker) => {
+      localPointTrackers.set(
+        tracker.date.toISOString(),
+        new Set(tracker.hours_processed),
+      );
+    });
+
+    for (const weatherDatum of newWeatherData) {
+      // Only consider future data.
+      if (weatherDatum.timestamp > lastProcessedTimestamp) {
+        const date = new Date(weatherDatum.timestamp);
+        date.setUTCHours(0, 0, 0, 0);
+        const dateISO = date.toISOString();
+        const hourOnly = new Date(weatherDatum.timestamp).getUTCHours();
+
+        const processedHours = localPointTrackers.get(dateISO) || new Set();
+        const isNewDay = processedHours.size === 0;
+        const isHourProcessed = processedHours.has(hourOnly);
+
+        if (!isHourProcessed) {
+          points += PointsConfigs.POINTS_PER_HOUR;
+          processedHours.add(hourOnly);
+          localPointTrackers.set(dateISO, processedHours);
+
+          if (isNewDay) {
+            points += PointsConfigs.POINTS_PER_DAY;
+          }
+        }
+      }
+    }
+
+    for (const [date, hours] of localPointTrackers) {
+      await this.commitPointTrackerUpdate(
+        author_user_id,
+        new Date(date),
+        Array.from(hours),
+        session,
+      );
+    }
+
+    return points;
   }
 
   findAll(): Promise<Point[]> {

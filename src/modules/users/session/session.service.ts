@@ -86,6 +86,8 @@ export class SessionService {
       return user;
     }
 
+    // TODO: Handle expiry...
+
     // Create a new userId.
     const uuidV4Id = uuidv4();
 

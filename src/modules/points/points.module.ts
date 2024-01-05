@@ -18,11 +18,18 @@ import {
   WeatherDatum,
   WeatherDatumSchema,
 } from '../weather-data/entities/weather-datum.entity';
+import {
+  PointTracker,
+  PointTrackerSchema,
+} from './entities/point-tracker.entity';
 
 @Module({
   controllers: [PointsController],
   providers: [PointsService, PointsConfigs, PointsUtils],
   imports: [
+    MongooseModule.forFeature([
+      { name: PointTracker.name, schema: PointTrackerSchema },
+    ]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     MongooseModule.forFeature([
       { name: PointTransaction.name, schema: PointTransactionSchema },
