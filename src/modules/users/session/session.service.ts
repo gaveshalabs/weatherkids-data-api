@@ -28,8 +28,6 @@ export class SessionService {
     try {
       result = await this.jwtService.verifyAsync(key);
     } catch (e) {
-      console.log(e);
-      
       throw new HttpException('API Key validation failed', 401);
     }
 
@@ -51,7 +49,7 @@ export class SessionService {
   public async generateGaveshaUserApiKey(
     data: IGenUserApiKey,
   ): Promise<string> {
-    const expiresIn: string = '7300d'; // 20 years
+    const expiresIn: string = data.expiresIn || '7300d'; // 20 years
 
     try {
       const apiKey = await this.jwtService.signAsync(data.payload, {
@@ -76,19 +74,47 @@ export class SessionService {
       throw new HttpException(e, 401);
     }
 
-    const user = await this.usersService.findUserByEmail(
+    const user = (await this.usersService.findUserByEmail(
       createSessionDto.email,
-    );
+    )) as User;
 
     // If user exist with the email,
     if (user) {
       console.log('User exists. No need to re-create within Gavesha db.');
       console.log(`user`, user);
 
+      // Try to validate the User API key in the database.
+      try {
+        await this.validateGaveshaUserApiKey(user.gavesha_user_api_key);
+
+        console.log(`User API Key in database is valid`);
+      } catch (error) {
+        // If the User API key is invalid, then generate a new one and update the database.
+        console.log(`User API Key is invalid. Generating a new one...`);
+
+        // Extract payload from the existing User API key.
+        const payload = this.jwtService.decode(user.gavesha_user_api_key);
+
+        // Generate a new User API key.
+        const newApiKey = await this.generateGaveshaUserApiKey({
+          payload: {
+            _id: payload._id,
+            uid: payload.uid,
+            email: payload.email,
+            weatherStationIds: payload.weatherStationIds,
+          },
+        });
+
+        // Update the database with the new User API key.
+        const updatedUser = await this.usersService.update(user._id, {
+          gavesha_user_api_key: newApiKey,
+        });
+
+        return updatedUser;
+      }
+
       return user;
     }
-
-    // TODO: Handle expiry...
 
     // Create a new userId.
     const uuidV4Id = uuidv4();
@@ -102,8 +128,6 @@ export class SessionService {
       },
     });
 
-    console.log(`gaveshaUserApiKey: ${gaveshaUserApiKey}`);
-
     // Create new user dto.
     const createUserDto: CreateUserDto = {
       email: createSessionDto.email,
@@ -116,8 +140,6 @@ export class SessionService {
       is_active: true,
       gavesha_user_api_key: gaveshaUserApiKey,
     };
-
-    console.log(`createUserDto: ${JSON.stringify(createUserDto)}`);
 
     // Create user within the database.
     // When crea ting a user, the uuidv4 userId is passed as the _id.
