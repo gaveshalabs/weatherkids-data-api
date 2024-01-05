@@ -19,6 +19,8 @@ import {
   PointTracker,
   PointTrackerDocument,
 } from './entities/point-tracker.entity';
+import { RedeemPointsInputDto } from './dto/redeem-points.dto';
+import { RedeemPointsResponseDto } from './dto/redeem-points-response.dto';
 
 @Injectable()
 /**
@@ -83,47 +85,94 @@ export class PointsService {
 
     usersWithNoDataForTheDay.forEach(async (user) => {
       await this.deductPoints(
+        PointTransactionTypes.DEDUCT,
         user.author_user_id,
         PointsConfigs.POINTS_DAILY_PENALTY,
       );
     });
   }
 
-  async deductPoints(author_user_id: string, reduceBy: number) {
+  async redeemPoints(
+    redeemPointsInputDto: RedeemPointsInputDto,
+  ): Promise<RedeemPointsResponseDto> {
+    const { author_user_id, num_points } = redeemPointsInputDto;
+
+    try {
+      const result = await this.deductPoints(
+        PointTransactionTypes.REDEEM,
+        author_user_id,
+        -1 * num_points,
+      ); // Note the minus 1.
+
+      return {
+        success: true,
+        message: `Successfully redeemed ${num_points} points.`,
+        result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  async deductPoints(
+    transactionType: PointTransactionTypes,
+    author_user_id: string,
+    reduceBy: number,
+  ): Promise<Point> {
     const session = await this.mongoConnection.startSession();
     session.startTransaction();
 
     // TODO:
 
+    // Retrieve the current points of the user.
+    const currentUserPoints = await this.pointModel.findOne({ author_user_id });
+    const currentPoints = currentUserPoints ? currentUserPoints.amount : 0;
+
+    // Check the type of transaction and validate accordingly.
+    if (
+      transactionType === PointTransactionTypes.REDEEM &&
+      currentPoints < Math.abs(reduceBy)
+    ) {
+      throw new Error('Not enough points to redeem.');
+    } else if (transactionType === PointTransactionTypes.DEDUCT) {
+      // For DEDUCT type, adjust the 'reduceBy' value to not go below zero.
+      reduceBy = currentPoints < Math.abs(reduceBy) ? -currentPoints : reduceBy;
+    }
+
     try {
-      // TODO: refactor.
-      // Update the user's points.
-      await this.pointModel.updateOne(
+      // Existing logic to update the user's points.
+      const updateUserPoints = (await this.pointModel.findOneAndUpdate(
         {
           author_user_id,
         },
         {
           $inc: {
-            amount: PointsConfigs.POINTS_DAILY_PENALTY, // Increment negative.
+            amount: reduceBy, // Increment negative.
           },
           last_point_calculated_timestamp: Date.now(),
         },
         {
           upsert: true,
+          new: true,
           session: session,
         },
-      );
+      )) as Point;
 
       // Create a new points transaction for user.
       const newPointTransaction = new this.pointTransactionModel({
         author_user_id,
         amount: reduceBy, // Negative value.
-        transaction_type: PointTransactionTypes.DEDUCT,
+        transaction_type: transactionType,
       });
       await newPointTransaction.save({ session });
 
       // Commit.
       await session.commitTransaction();
+
+      return updateUserPoints;
     } catch (error) {
       await session.abortTransaction();
       throw error;
