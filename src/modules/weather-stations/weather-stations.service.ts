@@ -103,10 +103,19 @@ export class WeatherStationsService {
     return `This action returns a #${id} weatherStation`;
   }
 
-  update(id: number, updateWeatherStationDto: UpdateWeatherStationDto) {
-    console.log('updateWeatherStationDto', updateWeatherStationDto);
+  async update(_id: string, updateWeatherStationDto: UpdateWeatherStationDto) {
+    const updatedWeatherStation =
+      await this.weatherStationModel.findByIdAndUpdate(
+        _id,
+        updateWeatherStationDto,
+        { new: true }, // Return the updated document instead of the original
+      );
 
-    return `This action updates a #${id} weatherStation`;
+    if (!updatedWeatherStation) {
+      throw new NotFoundException(`Weather Station with ID '${_id}' not found`);
+    }
+
+    return updatedWeatherStation;
   }
 
   remove(id: number) {

@@ -20,6 +20,7 @@ import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guar
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
 import { WeatherDataService } from '../weather-data/weather-data.service';
 import { PointsService } from '../points/points.service';
+import { WeatherStationUpdatedResponseDto } from './dto/weather-station-updated-response.dto';
 
 @Controller('weather-stations')
 @ApiTags('weather-stations')
@@ -85,8 +86,8 @@ export class WeatherStationsController {
   update(
     @Param('id') id: string,
     @Body() updateWeatherStationDto: UpdateWeatherStationDto,
-  ) {
-    return this.weatherStationsService.update(+id, updateWeatherStationDto);
+  ): Promise<WeatherStationUpdatedResponseDto> {
+    return this.weatherStationsService.update(id, updateWeatherStationDto);
   }
 
   @Patch(':id/add-users')
