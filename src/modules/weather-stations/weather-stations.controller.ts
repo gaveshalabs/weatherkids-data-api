@@ -83,7 +83,7 @@ export class WeatherStationsController {
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateWeatherStationDto: UpdateWeatherStationDto,
   ): Promise<WeatherStationUpdatedResponseDto> {
