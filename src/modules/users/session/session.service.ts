@@ -28,6 +28,8 @@ export class SessionService {
     try {
       result = await this.jwtService.verifyAsync(key);
     } catch (e) {
+      console.log(e);
+      
       throw new HttpException('API Key validation failed', 401);
     }
 

@@ -12,7 +12,6 @@ import {
   LastProcessedEntrySchema,
 } from './entities/last-processed-entry.entity';
 import { PointsConfigs } from './configs/points.config';
-import { PointsUtils } from './utils/points.utils';
 import { Point, PointSchema } from './entities/point.entity';
 import {
   WeatherDatum,
@@ -25,7 +24,7 @@ import {
 
 @Module({
   controllers: [PointsController],
-  providers: [PointsService, PointsConfigs, PointsUtils],
+  providers: [PointsService, PointsConfigs],
   imports: [
     MongooseModule.forFeature([
       { name: PointTracker.name, schema: PointTrackerSchema },
