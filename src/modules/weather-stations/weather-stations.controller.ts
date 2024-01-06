@@ -68,18 +68,21 @@ export class WeatherStationsController {
       );
 
     // Get points of the user of the weather station.
-    const pointsOfUser = await this.pointsService.findByUserId(
-      weatherData.author_user_id,
-    );
+    let pointsOfUser = 0;
+    if (!weatherData) {
+      return {
+        weatherData,
+        pointsOfUser,
+      };
+    }
+    pointsOfUser = (
+      await this.pointsService.findByUserId(weatherData.author_user_id)
+    ).amount;
 
     return {
       weatherData,
       pointsOfUser,
     };
-
-    // return this.weatherDataService.findLatestByWeatherStationId(
-    //   weatherStationId,
-    // );
   }
 
   @Patch(':id')
