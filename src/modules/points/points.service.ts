@@ -131,6 +131,8 @@ export class PointsService {
     const currentUserPoints = await this.pointModel.findOne({ author_user_id });
     const currentPoints = currentUserPoints ? currentUserPoints.amount : 0;
 
+    let updatedPoints = currentPoints;
+
     // Check the type of transaction and validate accordingly.
     if (
       transactionType === PointTransactionTypes.REDEEM &&
@@ -139,7 +141,7 @@ export class PointsService {
       throw new Error('Not enough points to redeem.');
     } else if (transactionType === PointTransactionTypes.DEDUCT) {
       // For DEDUCT type, adjust the 'reduceBy' value to not go below zero.
-      reduceBy = currentPoints < Math.abs(reduceBy) ? -currentPoints : reduceBy;
+      updatedPoints = Math.max(currentPoints - Math.abs(reduceBy), 0);
     }
 
     try {
@@ -149,8 +151,8 @@ export class PointsService {
           author_user_id,
         },
         {
-          $inc: {
-            amount: reduceBy, // Increment negative.
+          $set: {
+            amount: updatedPoints,
           },
           last_point_calculated_timestamp: Date.now(),
         },
@@ -339,6 +341,7 @@ export class PointsService {
     // Get the existing point trackers from DB and populate local cache.
     const existingTrackers = await this.pointTrackerModel.find(
       {
+        author_user_id,
         date: { $in: uniqueDates },
       },
       null,
@@ -356,7 +359,7 @@ export class PointsService {
     for (const weatherDatum of newWeatherData) {
       // Only consider future data.
       if (weatherDatum.timestamp > lastProcessedTimestamp) {
-        const date = new Date(weatherDatum.timestamp);
+        const date = new Date(weatherDatum.timestamp); // UTC received.
         date.setUTCHours(0, 0, 0, 0);
         const dateISO = date.toISOString();
         const hourOnly = new Date(weatherDatum.timestamp).getUTCHours();

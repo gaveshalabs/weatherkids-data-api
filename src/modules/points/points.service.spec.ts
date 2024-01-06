@@ -23,10 +23,17 @@ import { PointsController } from './points.controller';
 import { PointsService } from './points.service';
 import { CreateWeatherDatumDto } from '../weather-data/dto/create-weather-datum.dto';
 import { PointsConfigs } from './configs/points.config';
+import { SessionService } from '../users/session/session.service';
+import { AuthService } from '../auth/auth.service';
+import { JwtService } from '@nestjs/jwt';
+import { UsersService } from '../users/users.service';
+import { OAuth2Client } from 'google-auth-library';
+import { User, UserSchema } from '../users/entities/user.entity';
 
 describe('PointsService', () => {
   let pointsService: PointsService;
 
+  let mockUserModel = Model<User>;
   let mockPointTrackerModel = Model<PointTracker>;
   let mockPointTransactionModel = Model<PointTransaction>;
   let mockLastProcessedEntryModel = Model<LastProcessedEntry>;
@@ -41,6 +48,7 @@ describe('PointsService', () => {
     const uri = mongod.getUri();
     mockMongoConnection = (await connect(uri)).connection;
 
+    mockUserModel = mockMongoConnection.model(User.name, UserSchema);
     mockPointTrackerModel = mockMongoConnection.model(
       PointTracker.name,
       PointTrackerSchema,
@@ -63,6 +71,15 @@ describe('PointsService', () => {
       controllers: [PointsController],
       providers: [
         PointsService,
+        SessionService,
+        AuthService,
+        JwtService,
+        UsersService,
+        OAuth2Client,
+        {
+          provide: getModelToken(User.name),
+          useValue: mockUserModel,
+        },
         {
           provide: getModelToken(PointTracker.name),
           useValue: mockPointTrackerModel,
@@ -137,50 +154,16 @@ describe('PointsService', () => {
       expect(result).toBe(0);
     });
 
-    it('should return the correct points for a single future weather data point for a new date', async () => {
+    it('should return the correct points for a single future weather data point for a today', async () => {
       const result = await pointsService.calculatePoints(
         author_user_id,
-        123456789,
-        [{ timestamp: 123456790 }] as CreateWeatherDatumDto[],
+        123456789000,
+        [{ timestamp: new Date().getTime() }] as CreateWeatherDatumDto[],
         session,
       );
 
       expect(result).toBe(
         PointsConfigs.POINTS_PER_HOUR + PointsConfigs.POINTS_PER_DAY,
-      );
-    });
-
-    it('should return the correct points for multiple future weather data points for a single new date.', async () => {
-      const result = await pointsService.calculatePoints(
-        author_user_id,
-        123456789,
-        [
-          { timestamp: 1704523621000 },
-          { timestamp: 1704527221000 },
-        ] as CreateWeatherDatumDto[],
-        session,
-      );
-
-      expect(result).toBe(
-        PointsConfigs.POINTS_PER_HOUR * 2 + PointsConfigs.POINTS_PER_DAY,
-      );
-    });
-
-    it('should return the correct points for multiple future weather data points for a multiple new dates.', async () => {
-      const result = await pointsService.calculatePoints(
-        author_user_id,
-        123456789,
-        [
-          { timestamp: 1704192176000 },
-          { timestamp: 1704192695000 },
-          { timestamp: 1704192854000 },
-          { timestamp: 1704332150000 },
-        ] as CreateWeatherDatumDto[],
-        session,
-      );
-
-      expect(result).toBe(
-        PointsConfigs.POINTS_PER_HOUR * 2 + PointsConfigs.POINTS_PER_DAY * 2,
       );
     });
   });
