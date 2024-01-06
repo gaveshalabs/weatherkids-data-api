@@ -68,6 +68,13 @@ export class WeatherStationsController {
         weatherStationId,
       );
 
+    if (!weatherData) {
+      return {
+        weatherData: null,
+        pointsOfUser: null,
+      };
+    }
+
     // Get points of the user of the weather station.
     let pointsOfUser = null;
     if (!weatherData) {
