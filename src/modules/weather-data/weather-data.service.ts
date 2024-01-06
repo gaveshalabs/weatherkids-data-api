@@ -86,7 +86,7 @@ export class WeatherDataService {
         data = data.filter((datum) => {
           const datumDate = new Date(datum.timestamp); // Convert timestamp to Date object
           return (
-            datumDate.getTime() <= currentUtcTimestamp && // Check if the timestamp is not in the future
+            datumDate.getTime() <= currentUtcTimestamp + 86400 && // Check if the timestamp is not in the future
             !existingWeatherData.some(
               (existingDatum) =>
                 existingDatum.timestamp.getTime() === datumDate.getTime(),
