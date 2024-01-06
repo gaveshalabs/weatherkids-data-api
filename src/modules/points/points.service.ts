@@ -371,7 +371,15 @@ export class PointsService {
           localPointTrackers.set(dateISO, processedHours);
 
           if (isNewDay) {
-            points += PointsConfigs.POINTS_PER_DAY;
+            // Check if the datapoint is uploaded within same day.
+            // Check if server date.
+            const serverDate = new Date();
+            serverDate.setUTCHours(0, 0, 0, 0);
+            const serverDateISO = serverDate.toISOString();
+
+            if (dateISO === serverDateISO) {
+              points += PointsConfigs.POINTS_PER_DAY;
+            }
           }
         }
       }
