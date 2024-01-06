@@ -26,26 +26,26 @@ export class WeatherDataService {
     @InjectConnection() private readonly mongoConnection: Connection,
   ) {}
 
-  // Protected by guards.
+  /**
+   * Protected by guards.
+   * This commit has to be a db transaction to ensure that all or none of the data is committed.
+   * In the transaction, we need to also calculate the points.
+   * 1) Get the weather data uploaded by this user.
+   * 2) Calculate the points considering only a single representative weather datum for each hour.
+   * Multiple weather data points for the same hour should be only once.
+   * For each hour (if have atleast one weather data point for that hour):
+   * points += #hours_covered * 0.5
+   * 3) If there are atleast one weather data point for a day, then the user gets 8 points for that day.
+   *
+   */
   async bulkCommit(
     createBulkWeatherData: CreateBulkWeatherDataDto,
   ): Promise<BulkCreateWeatherDataResponseDto[]> {
-    /**
-     * This commit has to be a db transaction to ensure that all or none of the data is committed.
-     * In the transaction, we need to also calculate the points.
-     * 1) Get the weather data uploaded by this user.
-     * 2) Calculate the points considering only a single representative weather datum for each hour.
-     * Multiple weather data points for the same hour should be only once.
-     * For each hour (if have atleast one weather data point for that hour):
-     * points += #hours_covered * 0.5
-     * 3) If there are atleast one weather data point for a day, then the user gets 8 points for that day.
-     *
-     */
     // Restructure the data to include the author_user_id, weather_station_id, metadata, coordinates.
     const { author_user_id, weather_station_id, metadata, coordinates } =
       createBulkWeatherData;
 
-    const data = createBulkWeatherData.data.map(
+    let data = createBulkWeatherData.data.map(
       (datum: CreateWeatherDataPointDto) => {
         return {
           ...datum,
@@ -61,15 +61,33 @@ export class WeatherDataService {
     session.startTransaction();
     let insertedData = [];
     try {
-      // Calculate the points.
-      await this.pointsService.calculatePoints(data, session); // Pass the transaction session.
-
+      // (1) Commit weather data into the database.
       try {
         /**
          * The following weatherdata insertion is not part of the points calculation transaction.
          * Due to MongoDB limitation.
          * https://www.mongodb.com/docs/manual/core/timeseries/timeseries-limitations/#transactions
          */
+
+        // Filter out the weather data that already exists within the database with same timestamps.
+        // This is to prevent duplicate weather data.
+        const existingWeatherData = await this.weatherDatumModel
+          .find({
+            timestamp: {
+              $in: data.map((datum) => datum.timestamp),
+            },
+          })
+          .exec();
+
+        // Remove the existing weather data from the data to be inserted.
+        data = data.filter((datum) => {
+          const datumDate = new Date(datum.timestamp); // Convert timestamp to Date object
+          return !existingWeatherData.some(
+            (existingDatum) =>
+              existingDatum.timestamp.getTime() === datumDate.getTime(),
+          );
+        });
+
         insertedData = await this.weatherDatumModel.insertMany(data);
 
         // Hacky checks to check if the data was inserted.
@@ -80,6 +98,37 @@ export class WeatherDataService {
         // Handle any errors that occur during the insertion of time-series data.
         throw error;
       }
+
+      // (2) Points calculations.
+      const lastProcessedTimestamp =
+        await this.pointsService.getLastProcessedEntryTimestamp(
+          author_user_id,
+          session,
+        );
+
+      // Calculate the points.
+      const pointsForBulk = await this.pointsService.calculatePoints(
+        author_user_id,
+        lastProcessedTimestamp,
+        data,
+        session,
+      ); // Pass the transaction session.
+
+      console.debug('pointsForBulk', pointsForBulk);
+
+      // Commit the points for the user to db.
+      await this.pointsService.commitPointsToDatabase(
+        author_user_id,
+        pointsForBulk,
+        session,
+      );
+
+      // Commit the last processed timestamp for user to db.
+      await this.pointsService.commitLastProcessedTimestampForUser(
+        author_user_id,
+        lastProcessedTimestamp,
+        session,
+      );
 
       // Commit the point calculation transaction if all goes well.
       await session.commitTransaction();

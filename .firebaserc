@@ -1,5 +1,9 @@
 {
   "projects": {
-    "default": "weatherkids-f85f4"
-  }
+    "default": "weatherkids-dev-67016",
+    "dev": "weatherkids-dev-67016",
+    "prod": "weatherkids-f85f4"
+  },
+  "targets": {},
+  "etags": {}
 }

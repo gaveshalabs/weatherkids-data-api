@@ -12,17 +12,25 @@ import {
   LastProcessedEntrySchema,
 } from './entities/last-processed-entry.entity';
 import { PointsConfigs } from './configs/points.config';
-import { PointsUtils } from './utils/points.utils';
 import { Point, PointSchema } from './entities/point.entity';
 import {
   WeatherDatum,
   WeatherDatumSchema,
 } from '../weather-data/entities/weather-datum.entity';
+import {
+  PointTracker,
+  PointTrackerSchema,
+} from './entities/point-tracker.entity';
+import { SessionModule } from '../users/session/session.module';
 
 @Module({
   controllers: [PointsController],
-  providers: [PointsService, PointsConfigs, PointsUtils],
+  providers: [PointsService, PointsConfigs],
   imports: [
+    SessionModule,
+    MongooseModule.forFeature([
+      { name: PointTracker.name, schema: PointTrackerSchema },
+    ]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     MongooseModule.forFeature([
       { name: PointTransaction.name, schema: PointTransactionSchema },
