@@ -80,11 +80,17 @@ export class WeatherDataService {
           .exec();
 
         // Remove the existing weather data from the data to be inserted.
+        // Also check timestamp of weather datapoint
+        const currentUtcTimestamp = new Date().getTime(); // Get current UTC timestamp
+
         data = data.filter((datum) => {
           const datumDate = new Date(datum.timestamp); // Convert timestamp to Date object
-          return !existingWeatherData.some(
-            (existingDatum) =>
-              existingDatum.timestamp.getTime() === datumDate.getTime(),
+          return (
+            datumDate.getTime() <= currentUtcTimestamp && // Check if the timestamp is not in the future
+            !existingWeatherData.some(
+              (existingDatum) =>
+                existingDatum.timestamp.getTime() === datumDate.getTime(),
+            )
           );
         });
 
