@@ -67,6 +67,13 @@ export class WeatherStationsController {
         weatherStationId,
       );
 
+    if (!weatherData) {
+      return {
+        weatherData: null,
+        pointsOfUser: null,
+      };
+    }
+
     // Get points of the user of the weather station.
     const pointsOfUser = await this.pointsService.findByUserId(
       weatherData.author_user_id,
