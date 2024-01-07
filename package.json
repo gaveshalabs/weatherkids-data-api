@@ -16,6 +16,8 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "deploy:dev": "firebase deploy --only functions --project dev",
+    "deploy:prod": "firebase deploy --only functions --project prod",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",

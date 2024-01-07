@@ -1,0 +1,27 @@
+name: Deploy NestJS API to Firebase
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '16'
+      - name: Install dependencies.
+        run: npm install
+      - name: Set correct firebase project based on git branch.
+        run: echo "FIREBASE_PROJECT=$(if [ ${{ github.ref }} == 'refs/heads/main' ]; then echo 'prod'; else echo 'dev'; fi)" >> $GITHUB_ENV
+      - name: Deploy to firebase cloud functions.
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions --project ${{ env.FIREBASE_PROJECT }}
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
