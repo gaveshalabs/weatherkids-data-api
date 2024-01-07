@@ -31,7 +31,9 @@ import { ScheduleModule } from '@nestjs/schedule';
     AuthModule,
     UsersModule,
 
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      envFilePath: ['.env.local', '.env.dev', '.env.prod'],
+    }),
     MongooseModule.forRoot(process.env.MONGO_URL),
     WeatherDataModule,
     WeatherStationsModule,
