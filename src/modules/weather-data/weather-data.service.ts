@@ -60,6 +60,7 @@ export class WeatherDataService {
     const session = await this.mongoConnection.startSession();
     session.startTransaction();
     let insertedData = [];
+    let existingWeatherData = [];
     try {
       // (1) Commit weather data into the database.
       try {
@@ -71,7 +72,7 @@ export class WeatherDataService {
 
         // Filter out the weather data that already exists within the database with same timestamps.
         // This is to prevent duplicate weather data.
-        const existingWeatherData = await this.weatherDatumModel
+        existingWeatherData = await this.weatherDatumModel
           .find({
             timestamp: {
               $in: data.map((datum) => datum.timestamp),
@@ -80,11 +81,17 @@ export class WeatherDataService {
           .exec();
 
         // Remove the existing weather data from the data to be inserted.
+        // Also check timestamp of weather datapoint
+        const currentUtcTimestamp = new Date().getTime(); // Get current UTC timestamp
+
         data = data.filter((datum) => {
           const datumDate = new Date(datum.timestamp); // Convert timestamp to Date object
-          return !existingWeatherData.some(
-            (existingDatum) =>
-              existingDatum.timestamp.getTime() === datumDate.getTime(),
+          return (
+            datumDate.getTime() <= currentUtcTimestamp + 86400000 && // Check if the timestamp is not in the future
+            !existingWeatherData.some(
+              (existingDatum) =>
+                existingDatum.timestamp.getTime() === datumDate.getTime(),
+            )
           );
         });
 
@@ -134,7 +141,9 @@ export class WeatherDataService {
       await session.commitTransaction();
 
       // Return the _id, timestamp, created_at fields.
-      return insertedData.map((datum) => {
+      const responseData = [...insertedData, ...existingWeatherData];
+
+      return responseData.map((datum) => {
         return {
           _id: datum._id,
           timestamp: datum.timestamp,

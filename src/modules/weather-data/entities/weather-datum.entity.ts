@@ -55,6 +55,9 @@ export class WeatherDatum {
 
   @Prop()
   percentage_light_intensity: number;
+
+  @Prop()
+  tvoc: number;
 }
 
 export type WeatherDatumDocument = WeatherDatum & Document;
