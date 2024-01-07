@@ -60,6 +60,7 @@ export class WeatherDataService {
     const session = await this.mongoConnection.startSession();
     session.startTransaction();
     let insertedData = [];
+    let existingWeatherData = [];
     try {
       // (1) Commit weather data into the database.
       try {
@@ -71,7 +72,7 @@ export class WeatherDataService {
 
         // Filter out the weather data that already exists within the database with same timestamps.
         // This is to prevent duplicate weather data.
-        const existingWeatherData = await this.weatherDatumModel
+        existingWeatherData = await this.weatherDatumModel
           .find({
             timestamp: {
               $in: data.map((datum) => datum.timestamp),
@@ -140,7 +141,9 @@ export class WeatherDataService {
       await session.commitTransaction();
 
       // Return the _id, timestamp, created_at fields.
-      return insertedData.map((datum) => {
+      const responseData = [...insertedData, ...existingWeatherData];
+
+      return responseData.map((datum) => {
         return {
           _id: datum._id,
           timestamp: datum.timestamp,
