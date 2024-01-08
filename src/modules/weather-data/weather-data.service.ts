@@ -85,9 +85,6 @@ export class WeatherDataService {
         const populatedData = filteredDataPoints.map((dataPoint) => {
           return {
             ...dataPoint,
-            author_user_id,
-            weather_station_id,
-            coordinates,
             metadata: {
               author_user_id: author_user_id,
               weather_station_id: weather_station_id,
