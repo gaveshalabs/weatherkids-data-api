@@ -59,8 +59,8 @@ export class PointsService {
     private sessionService: SessionService,
   ) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_11PM)
   // @Cron('*/10 * * * * *') // Every 5 seconds
+  @Cron('15 18 * * *') // 6:15 PM server time (UTC), 11:45 PM local time
   async handleInspectPointReductionForTheDayCron() {
     console.log('Running cron');
 
