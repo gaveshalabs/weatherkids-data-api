@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import mongoose, { Connection, Model } from 'mongoose';
 import { PointTransactionTypes } from '../common/enums/point-transaction-types.enum';
 import { WeatherDatum } from '../weather-data/entities/weather-datum.entity';
