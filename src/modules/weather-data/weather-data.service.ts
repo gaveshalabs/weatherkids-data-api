@@ -85,9 +85,6 @@ export class WeatherDataService {
         const populatedData = filteredDataPoints.map((dataPoint) => {
           return {
             ...dataPoint,
-            author_user_id,
-            weather_station_id,
-            coordinates,
             metadata: {
               author_user_id: author_user_id,
               weather_station_id: weather_station_id,
@@ -100,7 +97,7 @@ export class WeatherDataService {
         insertedData = await this.weatherDatumModel.insertMany(populatedData);
 
         // Hacky checks to check if the data was inserted.
-        if (!insertedData || insertedData.length !== data.length) {
+        if (!insertedData || insertedData.length !== populatedData.length) {
           throw new Error('Error inserting weather data');
         }
       } catch (error) {
