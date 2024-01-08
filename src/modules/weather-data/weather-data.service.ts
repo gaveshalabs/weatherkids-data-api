@@ -201,16 +201,45 @@ export class WeatherDataService {
     });
   }
 
+  /**
+   * Retrieves weather data by weather station ID within a specified date range.
+   * If no date range is provided, retrieves all weather data for the specified weather station.
+   *
+   * @param weatherStationId - The ID of the weather station.
+   * @param dateFrom - Optional. The starting date of the date range (inclusive)
+   * @param dateTo - Optional. The ending date of the date range (inclusive)
+   * @returns A promise that resolves to an array of GetWeatherDatumDto objects representing the weather data.
+   */
   async findAllByWeatherStationId(
     weatherStationId: string,
+    dateFrom?: string,
+    dateTo?: string,
   ): Promise<GetWeatherDatumDto[]> {
+    // Convert date strings to actual Date objects, if they are defined
+    const fromDate = dateFrom ? new Date(dateFrom) : null;
+    const toDate = dateTo ? new Date(dateTo) : null;
+
+    // Create the query object with the weather station ID
+    const query: any = { 'metadata.weather_station_id': weatherStationId };
+
+    // If both dates are defined, use the $gte (greater than or equal) and $lte (less than or equal) operators.
+    // Inclusive ranges.
+    if (fromDate && toDate) {
+      query.timestamp = { $gte: fromDate, $lte: toDate };
+    } else if (fromDate) {
+      // If only the fromDate is defined, use $gte operator
+      query.timestamp = { $gte: fromDate };
+    } else if (toDate) {
+      // If only the toDate is defined, use $lte operator
+      query.timestamp = { $lte: toDate };
+    }
+
     const data = (await this.weatherDatumModel
-      .find({ weather_station_id: weatherStationId })
+      .find(query)
       .exec()) as WeatherDatum[];
 
-    return data.map((datum) => {
-      return this.transformWeatherDatum(datum);
-    });
+    // Transform and return the data
+    return data.map((datum) => this.transformWeatherDatum(datum));
   }
 
   async findLatestByWeatherStationId(
