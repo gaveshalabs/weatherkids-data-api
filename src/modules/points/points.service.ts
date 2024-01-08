@@ -3,7 +3,6 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import mongoose, { Connection, Model } from 'mongoose';
 import { PointTransactionTypes } from '../common/enums/point-transaction-types.enum';
-import { CreateWeatherDatumDto } from '../weather-data/dto/create-weather-datum.dto';
 import { WeatherDatum } from '../weather-data/entities/weather-datum.entity';
 import { PointsConfigs } from './configs/points.config';
 import {
@@ -21,6 +20,7 @@ import {
 } from './entities/point-tracker.entity';
 import { RedeemPointsInputDto } from './dto/redeem-points.dto';
 import { RedeemPointsResponseDto } from './dto/redeem-points-response.dto';
+import { WeatherDataPoint } from '../weather-data/entities/weather-datapoint.entity';
 
 @Injectable()
 /**
@@ -323,7 +323,7 @@ export class PointsService {
   async calculatePoints(
     author_user_id: string,
     lastProcessedTimestamp: number,
-    newWeatherData: CreateWeatherDatumDto[],
+    newWeatherData: WeatherDataPoint[],
     session: mongoose.mongo.ClientSession,
   ) {
     let points = 0;
