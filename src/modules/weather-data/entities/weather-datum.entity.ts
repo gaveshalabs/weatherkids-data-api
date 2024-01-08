@@ -7,7 +7,7 @@ import {
 } from '../schema/weatherdata-metadata.schema';
 
 @Schema({
-  timestamps: { createdAt: false, updatedAt: true },
+  timestamps: true,
   collection: 'weather_data',
   timeseries: {
     timeField: 'timestamp',
