@@ -29,6 +29,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { OAuth2Client } from 'google-auth-library';
 import { User, UserSchema } from '../users/entities/user.entity';
+import { set, reset } from 'mockdate';
 
 describe('PointsService', () => {
   let pointsService: PointsService;
@@ -165,6 +166,38 @@ describe('PointsService', () => {
       expect(result).toBe(
         PointsConfigs.POINTS_PER_HOUR + PointsConfigs.POINTS_PER_DAY,
       );
+    });
+
+    it('should add bonus points if the user has uploaded data on the same date they were collected in sri lanka timezone', async () => {
+      set('2024-01-05T10:00:00Z'); // 5:30 PM in SL time
+      const result = await pointsService.calculatePoints(
+        author_user_id,
+        123456789000,
+        [
+          { timestamp: new Date('2024-01-04T23:00:00Z').getTime() },  // 4:30 AM in SL time
+        ] as CreateWeatherDatumDto[],
+        session,
+      );
+
+      expect(result).toBe(
+        PointsConfigs.POINTS_PER_HOUR + PointsConfigs.POINTS_PER_DAY,
+      );
+      reset();
+    });
+
+    it('should not add bonus points if the user has uploaded data on a different date than they were collected in sri lanka timezone', async () => {
+      set('2024-01-05T10:00:00Z'); // 5:30 PM in SL time
+      const result = await pointsService.calculatePoints(
+        author_user_id,
+        123456789000,
+        [
+          { timestamp: new Date('2024-01-05T23:00:00Z').getTime() },  // next day 4:30 AM in SL time
+        ] as CreateWeatherDatumDto[],
+        session,
+      );
+
+      expect(result).toBe(PointsConfigs.POINTS_PER_HOUR);
+      reset();
     });
   });
 });
