@@ -55,9 +55,13 @@ export class WeatherDataController {
   async findAllByWeatherStationId(
     @Query('weather_station_id', new ParseUUIDPipe({ version: '4' }))
     weatherStationId: string,
+    @Query('from_date') dateFrom?: string, // Optional parameter
+    @Query('to_date') dateTo?: string, // Optional parameter
   ): Promise<GetWeatherDatumDto[]> {
     return await this.weatherDataService.findAllByWeatherStationId(
       weatherStationId,
+      dateFrom,
+      dateTo,
     );
   }
 
