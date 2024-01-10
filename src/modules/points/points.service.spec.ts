@@ -21,7 +21,6 @@ import {
 import { Point, PointSchema } from './entities/point.entity';
 import { PointsController } from './points.controller';
 import { PointsService } from './points.service';
-import { CreateWeatherDatumDto } from '../weather-data/dto/create-weather-datum.dto';
 import { PointsConfigs } from './configs/points.config';
 import { SessionService } from '../users/session/session.service';
 import { AuthService } from '../auth/auth.service';
@@ -29,6 +28,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { OAuth2Client } from 'google-auth-library';
 import { User, UserSchema } from '../users/entities/user.entity';
+import { WeatherDataPoint } from '../weather-data/entities/weather-datapoint.entity';
 import { set, reset } from 'mockdate';
 
 describe('PointsService', () => {
@@ -137,7 +137,7 @@ describe('PointsService', () => {
       const result = await pointsService.calculatePoints(
         author_user_id,
         123456789,
-        [] as CreateWeatherDatumDto[],
+        [] as WeatherDataPoint[],
         session,
       );
 
@@ -148,7 +148,7 @@ describe('PointsService', () => {
       const result = await pointsService.calculatePoints(
         author_user_id,
         123456789,
-        [{ timestamp: 123456788 }] as CreateWeatherDatumDto[],
+        [{ timestamp: 123456788 }] as WeatherDataPoint[],
         session,
       );
 
@@ -159,7 +159,7 @@ describe('PointsService', () => {
       const result = await pointsService.calculatePoints(
         author_user_id,
         123456789000,
-        [{ timestamp: new Date().getTime() }] as CreateWeatherDatumDto[],
+        [{ timestamp: new Date().getTime() }] as WeatherDataPoint[],
         session,
       );
 

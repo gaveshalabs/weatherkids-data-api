@@ -1,9 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { ICoordinates } from 'src/modules/common/interfaces/coordinates.interface';
-import { User } from 'src/modules/users/entities/user.entity';
-import { WeatherStation } from 'src/modules/weather-stations/entities/weather-station.entity';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  WeatherDataMetadata,
+  WeatherDataMetadataSchema,
+} from '../schema/weatherdata-metadata.schema';
 
 @Schema({
   timestamps: true,
@@ -22,21 +23,8 @@ export class WeatherDatum {
   @Prop({ type: Date })
   timestamp: Date;
 
-  @Prop({ type: String, default: uuidv4, ref: User.name })
-  author_user_id: string;
-
-  @Prop({ type: String, default: uuidv4, ref: WeatherStation.name })
-  weather_station_id: string;
-
-  @Prop({ type: Object })
-  metadata: {
-    joined_sensor_key: string;
-    source: string;
-    topic: string;
-  };
-
-  @Prop({ type: Object })
-  coordinates: ICoordinates;
+  @Prop({ type: WeatherDataMetadataSchema })
+  metadata: WeatherDataMetadata;
 
   @Prop()
   temperature: number;

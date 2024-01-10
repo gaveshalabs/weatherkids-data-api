@@ -2,18 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
 import { PointsService } from '../points/points.service';
-import { CreateWeatherDatumDto } from './dto/create-weather-datum.dto';
 import { GetWeatherDatumDto } from './dto/get-weather-datum.dto';
-import { UpdateWeatherDatumDto } from './dto/update-weather-datum.dto';
 import {
   WeatherDatum,
   WeatherDatumDocument,
 } from './entities/weather-datum.entity';
-import {
-  CreateBulkWeatherDataDto,
-  CreateWeatherDataPointDto,
-} from './dto/create-bulk-weather-data.dto';
+import { CreateBulkWeatherDataDto } from './dto/create-bulk-weather-data.dto';
 import { BulkCreateWeatherDataResponseDto } from './dto/bulk-create-weather-data-response.dto';
+import { WeatherDataMetadata } from './schema/weatherdata-metadata.schema';
+import { WeatherDataPoint } from './entities/weather-datapoint.entity';
 
 @Injectable()
 export class WeatherDataService {
@@ -42,20 +39,10 @@ export class WeatherDataService {
     createBulkWeatherData: CreateBulkWeatherDataDto,
   ): Promise<BulkCreateWeatherDataResponseDto[]> {
     // Restructure the data to include the author_user_id, weather_station_id, metadata, coordinates.
-    const { author_user_id, weather_station_id, metadata, coordinates } =
+    const { author_user_id, weather_station_id, coordinates, data } =
       createBulkWeatherData;
 
-    let data = createBulkWeatherData.data.map(
-      (datum: CreateWeatherDataPointDto) => {
-        return {
-          ...datum,
-          author_user_id,
-          weather_station_id,
-          metadata,
-          coordinates,
-        };
-      },
-    ) as CreateWeatherDatumDto[];
+    let filteredDataPoints: WeatherDataPoint[] = [];
 
     const session = await this.mongoConnection.startSession();
     session.startTransaction();
@@ -84,7 +71,7 @@ export class WeatherDataService {
         // Also check timestamp of weather datapoint
         const currentUtcTimestamp = new Date().getTime(); // Get current UTC timestamp
 
-        data = data.filter((datum) => {
+        filteredDataPoints = data.filter((datum) => {
           const datumDate = new Date(datum.timestamp); // Convert timestamp to Date object
           return (
             datumDate.getTime() <= currentUtcTimestamp + 86400000 && // Check if the timestamp is not in the future
@@ -95,10 +82,22 @@ export class WeatherDataService {
           );
         });
 
-        insertedData = await this.weatherDatumModel.insertMany(data);
+        const populatedData = filteredDataPoints.map((dataPoint) => {
+          return {
+            ...dataPoint,
+            metadata: {
+              author_user_id: author_user_id,
+              weather_station_id: weather_station_id,
+              coordinates: coordinates,
+              sensor_id: 'weathercomv3',
+            } as WeatherDataMetadata,
+          };
+        });
+
+        insertedData = await this.weatherDatumModel.insertMany(populatedData);
 
         // Hacky checks to check if the data was inserted.
-        if (!insertedData || insertedData.length !== data.length) {
+        if (!insertedData || insertedData.length !== populatedData.length) {
           throw new Error('Error inserting weather data');
         }
       } catch (error) {
@@ -160,50 +159,69 @@ export class WeatherDataService {
     }
   }
 
-  // Protected by guards.
-  async create(
-    createWeatherDatumDto: CreateWeatherDatumDto,
-  ): Promise<WeatherDatum> {
-    const newWeatherDatum = new this.weatherDatumModel(createWeatherDatumDto);
-    return await newWeatherDatum.save();
+  // TODO: Add types.
+  /**
+   * Transforms a weather datum object into a return format.
+   * @param {any} datum - The weather datum object to be transformed.
+   * @returns {any} - The transformed weather datum object.
+   */
+  transformWeatherDatum(datum) {
+    return {
+      _id: datum._id,
+      author_user_id: datum.metadata.author_user_id,
+      sensor_id: datum.metadata.sensor_id,
+      weather_station_id: datum.metadata.weather_station_id,
+      coordinates: datum.metadata.coordinates,
+      timestamp: datum.timestamp,
+      temperature: datum.temperature,
+      humidity: datum.humidity,
+      pressure: datum.pressure,
+      precipitation: datum.precipitation,
+      solar_irradiance: datum.solar_irradiance,
+      percentage_light_intensity: datum.percentage_light_intensity,
+    };
   }
 
   async findAll(): Promise<GetWeatherDatumDto[]> {
-    return this.weatherDatumModel.find();
+    const data = (await this.weatherDatumModel.find().exec()) as WeatherDatum[];
+
+    return data.map((datum) => {
+      return this.transformWeatherDatum(datum);
+    });
   }
 
   async findAllWithUserDetails() {
-    const weatherData = await this.weatherDatumModel
-      .find()
-      .populate('author_user_id');
+    const data = await this.weatherDatumModel.find().populate({
+      path: 'metadata.author_user_id',
+      model: 'User',
+    });
 
-    return weatherData;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} weatherDatum`;
+    return data.map((datum) => {
+      return this.transformWeatherDatum(datum);
+    });
   }
 
   async findAllByWeatherStationId(
     weatherStationId: string,
   ): Promise<GetWeatherDatumDto[]> {
-    return this.weatherDatumModel
+    const data = (await this.weatherDatumModel
       .find({ weather_station_id: weatherStationId })
-      .exec();
+      .exec()) as WeatherDatum[];
+
+    return data.map((datum) => {
+      return this.transformWeatherDatum(datum);
+    });
   }
 
   async findLatestByWeatherStationId(
     weatherStationId: string,
   ): Promise<GetWeatherDatumDto> {
-    return this.weatherDatumModel
-      .findOne({ weather_station_id: weatherStationId }) // Use findOne if you need just the latest document
+    const datum = (await this.weatherDatumModel
+      .findOne({ weather_station_id: weatherStationId })
       .sort({ timestamp: -1 })
-      .exec();
-  }
+      .exec()) as WeatherDatum;
 
-  update(id: number, updateWeatherDatumDto: UpdateWeatherDatumDto) {
-    console.log('updateWeatherDatumDto', updateWeatherDatumDto);
-    return `This action updates a #${id} weatherDatum`;
+    return this.transformWeatherDatum(datum);
   }
 
   remove(id: number) {

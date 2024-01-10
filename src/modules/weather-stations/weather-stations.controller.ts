@@ -53,6 +53,7 @@ export class WeatherStationsController {
     return this.weatherStationsService.findOne(+id);
   }
 
+  // TODO: refactor to weather-data module.
   @Get('latest/:weather_station_id')
   async findLatestByWeatherStationId(
     @Param('weather_station_id', new ParseUUIDPipe({ version: '4' }))

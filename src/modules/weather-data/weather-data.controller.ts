@@ -3,23 +3,22 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   ParseUUIDPipe,
+  UseGuards,
   BadRequestException,
   UsePipes,
   ValidationPipe,
-  UseGuards,
+  Query,
 } from '@nestjs/common';
 import { WeatherDataService } from './weather-data.service';
-import { CreateWeatherDatumDto } from './dto/create-weather-datum.dto';
-import { UpdateWeatherDatumDto } from './dto/update-weather-datum.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
 import { CreateBulkWeatherDataDto } from './dto/create-bulk-weather-data.dto';
 import { BulkCreateWeatherDataResponseDto } from './dto/bulk-create-weather-data-response.dto';
+import { GetWeatherDatumDto } from './dto/get-weather-datum.dto';
 
 @Controller('weather-data')
 @ApiTags('weather-data')
@@ -42,22 +41,7 @@ export class WeatherDataController {
     return await this.weatherDataService.bulkCommit(createBulkWeatherData);
   }
 
-  // Not directly called in prod, but useful for testing.
-  @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
-  @Post()
-  @UsePipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      exceptionFactory: (errors) => new BadRequestException(errors),
-    }),
-  )
-  create(@Body() createWeatherDatumDto: CreateWeatherDatumDto) {
-    return this.weatherDataService.create(createWeatherDatumDto);
-  }
-
-  @Get()
+  @Get('all')
   findAll() {
     return this.weatherDataService.findAll();
   }
@@ -67,25 +51,14 @@ export class WeatherDataController {
     return this.weatherDataService.findAllWithUserDetails();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.weatherDataService.findOne(+id);
-  }
-
-  @Get(':weather_station_id')
+  @Get()
   async findAllByWeatherStationId(
-    @Param('weather_station_id', new ParseUUIDPipe({ version: '4' }))
+    @Query('weather_station_id', new ParseUUIDPipe({ version: '4' }))
     weatherStationId: string,
-  ) {
-    return this.weatherDataService.findAllByWeatherStationId(weatherStationId);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateWeatherDatumDto: UpdateWeatherDatumDto,
-  ) {
-    return this.weatherDataService.update(+id, updateWeatherDatumDto);
+  ): Promise<GetWeatherDatumDto[]> {
+    return await this.weatherDataService.findAllByWeatherStationId(
+      weatherStationId,
+    );
   }
 
   @Delete(':id')
