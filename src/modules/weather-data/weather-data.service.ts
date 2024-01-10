@@ -168,10 +168,10 @@ export class WeatherDataService {
   transformWeatherDatum(datum) {
     return {
       _id: datum._id,
-      author_user_id: datum.metadata.author_user_id,
-      sensor_id: datum.metadata.sensor_id,
-      weather_station_id: datum.metadata.weather_station_id,
-      coordinates: datum.metadata.coordinates,
+      author_user_id: datum.metadata?.author_user_id,
+      sensor_id: datum.metadata?.sensor_id,
+      weather_station_id: datum.metadata?.weather_station_id,
+      coordinates: datum.metadata?.coordinates,
       timestamp: datum.timestamp,
       temperature: datum.temperature,
       humidity: datum.humidity,
@@ -246,9 +246,13 @@ export class WeatherDataService {
     weatherStationId: string,
   ): Promise<GetWeatherDatumDto> {
     const datum = (await this.weatherDatumModel
-      .findOne({ weather_station_id: weatherStationId })
+      .findOne({ "metadata.weather_station_id": weatherStationId })
       .sort({ timestamp: -1 })
       .exec()) as WeatherDatum;
+
+    if (!datum) {
+      return null;
+    }
 
     return this.transformWeatherDatum(datum);
   }
