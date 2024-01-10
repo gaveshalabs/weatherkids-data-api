@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import mongoose, { Connection, Model } from 'mongoose';
 import { PointTransactionTypes } from '../common/enums/point-transaction-types.enum';
 import { WeatherDatum } from '../weather-data/entities/weather-datum.entity';
@@ -21,6 +21,8 @@ import {
 import { RedeemPointsInputDto } from './dto/redeem-points.dto';
 import { RedeemPointsResponseDto } from './dto/redeem-points-response.dto';
 import { WeatherDataPoint } from '../weather-data/entities/weather-datapoint.entity';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const moment = require('moment');
 
 @Injectable()
 /**
@@ -54,8 +56,8 @@ export class PointsService {
     @InjectConnection() private readonly mongoConnection: Connection,
   ) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_11PM)
   // @Cron('*/10 * * * * *') // Every 5 seconds
+  @Cron('15 18 * * *') // 6:15 PM server time (UTC), 11:45 PM local time
   async handleInspectPointReductionForTheDayCron() {
     console.log('Running cron');
 
@@ -376,12 +378,21 @@ export class PointsService {
           if (isNewDay) {
             // Check if the datapoint is uploaded within same day.
             // Check if server date.
-            const serverDate = new Date();
-            serverDate.setUTCHours(0, 0, 0, 0);
-            const serverDateISO = serverDate.toISOString();
+            const datumDateStr = moment(weatherDatum.timestamp)
+              .utc()
+              .utcOffset(330)
+              .toDate()
+              .toDateString(); // +05:30 timezone
+            const serverDateStr = moment()
+              .utc()
+              .utcOffset(330)
+              .toDate()
+              .toDateString();
+            console.debug('check to add bonus points. datum timestamp =', datumDateStr, 'server time =', serverDateStr);
 
-            if (dateISO === serverDateISO) {
+            if (datumDateStr === serverDateStr) {
               points += PointsConfigs.POINTS_PER_DAY;
+              console.debug('bonus points added');
             }
           }
         }
