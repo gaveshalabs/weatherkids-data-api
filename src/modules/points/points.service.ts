@@ -185,6 +185,8 @@ export class PointsService {
     } else if (transactionType === PointTransactionTypes.DEDUCT) {
       // For DEDUCT type, adjust the 'reduceBy' value to not go below zero.
       updatedPoints = Math.max(currentPoints - Math.abs(reduceBy), 0);
+    } else if (transactionType === PointTransactionTypes.REDEEM) {
+      updatedPoints = currentPoints - Math.abs(reduceBy);
     }
 
     try {
