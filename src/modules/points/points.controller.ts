@@ -37,8 +37,8 @@ export class PointsController {
   @Post('/my-redeem')
   @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
   async myRedeemPoints(
+    @Headers('gavesha-user-api-key') gavesha_user_api_key: string,
     @Body() redeemMyPointsInputDto: RedeemMyPointsInputDto,
-    @Headers('gavesha_user_api_key') gavesha_user_api_key: string,
   ): Promise<RedeemPointsResponseDto> {
     return await this.pointsService.myRedeemPoints(
       gavesha_user_api_key,
