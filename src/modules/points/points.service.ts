@@ -21,11 +21,10 @@ import {
 import { RedeemPointsInputDto } from './dto/redeem-points.dto';
 import { RedeemPointsResponseDto } from './dto/redeem-points-response.dto';
 import { WeatherDataPoint } from '../weather-data/entities/weather-datapoint.entity';
-import { RedeemMyPointsInputDto } from './dto/redeem-my-points.dto';
-import { SessionService } from '../users/session/session.service';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const moment = require('moment');
 import { RedeemMyPointsInputDto } from './dto/redeem-my-points.dto';
+import { SessionService } from '../users/session/session.service';
 
 @Injectable()
 /**
@@ -145,35 +144,6 @@ export class PointsService {
         author_user_id,
         -1 * num_points,
         `reduced points due to redeeming by user ${author_user_id}`,
-      ); // Note the minus 1.
-
-      return {
-        success: true,
-        message: `Successfully redeemed ${num_points} points.`,
-        result,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message,
-      };
-    }
-  }
-
-  async myRedeemPoints(
-    gavesha_user_api_key: string,
-    redeemMyPointsInputDto: RedeemMyPointsInputDto,
-  ) {
-    const { num_points } = redeemMyPointsInputDto;
-
-    // Decode the author_user_id from gavesha_user_api_key.
-    const author_user_id = gavesha_user_api_key.split('.')[0];
-
-    try {
-      const result = await this.deductPoints(
-        PointTransactionTypes.REDEEM,
-        author_user_id,
-        -1 * num_points,
       ); // Note the minus 1.
 
       return {
