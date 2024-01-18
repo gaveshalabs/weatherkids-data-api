@@ -37,4 +37,7 @@ export class GetWeatherDatumDto {
 
   @Prop()
   readonly percentage_light_intensity: number;
+
+  @Prop()
+  readonly tvoc: number;
 }
