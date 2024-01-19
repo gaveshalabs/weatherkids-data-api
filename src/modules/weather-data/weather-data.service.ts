@@ -165,7 +165,7 @@ export class WeatherDataService {
    * @param {any} datum - The weather datum object to be transformed.
    * @returns {any} - The transformed weather datum object.
    */
-  transformWeatherDatum(datum) {
+  transformWeatherDatum(datum): GetWeatherDatumDto {
     return {
       _id: datum._id,
       author_user_id: datum.metadata?.author_user_id,
@@ -179,6 +179,7 @@ export class WeatherDataService {
       precipitation: datum.precipitation,
       solar_irradiance: datum.solar_irradiance,
       percentage_light_intensity: datum.percentage_light_intensity,
+      tvoc: datum.tvoc,
     };
   }
 

@@ -50,7 +50,7 @@ export class WeatherStationsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.weatherStationsService.findOne(+id);
+    return this.weatherStationsService.findOne(id);
   }
 
   // TODO: refactor to weather-data module.
@@ -76,14 +76,7 @@ export class WeatherStationsController {
     }
 
     // Get points of the user of the weather station.
-    let pointsOfUser = null;
-    if (!weatherData) {
-      return {
-        weatherData,
-        pointsOfUser,
-      };
-    }
-    pointsOfUser = await this.pointsService.findByUserId(
+    const pointsOfUser = await this.pointsService.findByUserId(
       weatherData.author_user_id,
     );
 

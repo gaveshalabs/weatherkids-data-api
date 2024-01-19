@@ -99,8 +99,8 @@ export class WeatherStationsService {
     return this.weatherStationModel.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} weatherStation`;
+  findOne(id: string) {
+    return this.weatherStationModel.findOne({ _id: id });
   }
 
   async update(_id: string, updateWeatherStationDto: UpdateWeatherStationDto) {
