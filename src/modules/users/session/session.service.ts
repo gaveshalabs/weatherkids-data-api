@@ -28,7 +28,7 @@ export class SessionService {
     try {
       result = await this.jwtService.verifyAsync(key);
     } catch (e) {
-      throw new HttpException('API Key validation failed', 401);
+      throw new HttpException('API Key validation failed, err 1001', 401);
     }
 
     // Get the user from the database based on the email from the JWT.
@@ -40,7 +40,7 @@ export class SessionService {
 
     // If the key is not the same as the one in the database,
     if (user.gavesha_user_api_key !== key) {
-      throw new HttpException('API Key validation failed', 401);
+      throw new HttpException('API Key validation failed, err 1002', 401);
     }
 
     return user;

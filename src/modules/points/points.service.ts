@@ -23,6 +23,8 @@ import { RedeemPointsResponseDto } from './dto/redeem-points-response.dto';
 import { WeatherDataPoint } from '../weather-data/entities/weather-datapoint.entity';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const moment = require('moment');
+import { RedeemMyPointsInputDto } from './dto/redeem-my-points.dto';
+import { SessionService } from '../users/session/session.service';
 
 @Injectable()
 /**
@@ -36,6 +38,7 @@ export class PointsService {
    * @param pointModel The model for Point documents.
    * @param weatherDatumModel The model for WeatherDatum documents.
    * @param mongoConnection The MongoDB connection.
+   * @param sessionService - The session service.
    */
   constructor(
     @InjectModel(PointTracker.name)
@@ -54,6 +57,8 @@ export class PointsService {
     private weatherDatumModel: Model<WeatherDatum>,
 
     @InjectConnection() private readonly mongoConnection: Connection,
+
+    private sessionService: SessionService,
   ) {}
 
   // @Cron('*/10 * * * * *') // Every 5 seconds
@@ -90,6 +95,7 @@ export class PointsService {
         PointTransactionTypes.DEDUCT,
         user.author_user_id,
         PointsConfigs.POINTS_DAILY_PENALTY,
+        'reduced points due to daily penalty',
       );
     });
   }
@@ -104,6 +110,40 @@ export class PointsService {
         PointTransactionTypes.REDEEM,
         author_user_id,
         -1 * num_points,
+        'reduced points for redeeming by admin',
+      ); // Note the minus 1.
+
+      return {
+        success: true,
+        message: `Successfully redeemed ${num_points} points.`,
+        result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  async myRedeemPoints(
+    gavesha_user_api_key: string,
+    redeemMyPointsInputDto: RedeemMyPointsInputDto,
+  ) {
+    const { num_points } = redeemMyPointsInputDto;
+
+    // Decode the author_user_id from gavesha_user_api_key.
+    const user =
+      await this.sessionService.validateGaveshaUserApiKey(gavesha_user_api_key);
+
+    const author_user_id = user._id;
+
+    try {
+      const result = await this.deductPoints(
+        PointTransactionTypes.REDEEM,
+        author_user_id,
+        -1 * num_points,
+        `reduced points due to redeeming by user ${author_user_id}`,
       ); // Note the minus 1.
 
       return {
@@ -123,6 +163,7 @@ export class PointsService {
     transactionType: PointTransactionTypes,
     author_user_id: string,
     reduceBy: number,
+    remarks: string,
   ): Promise<Point> {
     const session = await this.mongoConnection.startSession();
     session.startTransaction();
@@ -144,6 +185,8 @@ export class PointsService {
     } else if (transactionType === PointTransactionTypes.DEDUCT) {
       // For DEDUCT type, adjust the 'reduceBy' value to not go below zero.
       updatedPoints = Math.max(currentPoints - Math.abs(reduceBy), 0);
+    } else if (transactionType === PointTransactionTypes.REDEEM) {
+      updatedPoints = currentPoints - Math.abs(reduceBy);
     }
 
     try {
@@ -170,6 +213,9 @@ export class PointsService {
         author_user_id,
         amount: reduceBy, // Negative value.
         transaction_type: transactionType,
+        metadata: {
+          remarks,
+        },
       });
       await newPointTransaction.save({ session });
 
@@ -264,6 +310,9 @@ export class PointsService {
       author_user_id,
       amount: pointsToCommit,
       transaction_type: PointTransactionTypes.ADD,
+      metadata: {
+        remarks: 'added points for users contribution',
+      },
     });
     await newPointTransaction.save({ session });
 
@@ -388,7 +437,12 @@ export class PointsService {
               .utcOffset(330)
               .toDate()
               .toDateString();
-            console.debug('check to add bonus points. datum timestamp =', datumDateStr, 'server time =', serverDateStr);
+            console.debug(
+              'check to add bonus points. datum timestamp =',
+              datumDateStr,
+              'server time =',
+              serverDateStr,
+            );
 
             if (datumDateStr === serverDateStr) {
               points += PointsConfigs.POINTS_PER_DAY;
