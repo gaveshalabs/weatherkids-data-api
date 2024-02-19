@@ -14,6 +14,8 @@ import { RedeemPointsResponseDto } from './dto/redeem-points-response.dto';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
 import { RedeemMyPointsInputDto } from './dto/redeem-my-points.dto';
+import { FreezePointsInputDto } from './dto/freeze-points.dto ';
+import { ValidateAdminUserGuard } from '../common/guards/admin-user.guard';
 
 @Controller('points')
 @ApiTags('points')
@@ -44,5 +46,13 @@ export class PointsController {
       gavesha_user_api_key,
       redeemMyPointsInputDto,
     );
+  }
+
+  @Post('/freeze')
+  @UseGuards(ValidateGaveshaClientGuard, ValidateAdminUserGuard)
+  async freezePoints(
+    @Body() freezePointsInputDto: FreezePointsInputDto,
+  ): Promise<RedeemPointsResponseDto> {
+    return await this.pointsService.freezePoints(freezePointsInputDto);
   }
 }

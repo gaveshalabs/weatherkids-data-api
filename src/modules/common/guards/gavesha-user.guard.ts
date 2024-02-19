@@ -19,6 +19,7 @@ export class ValidateGaveshaUserGuard implements CanActivate {
       );
       return true;
     } catch (error) {
+      console.error('Error validating admin user', error);
       throw new HttpException(error, 401);
     }
   }

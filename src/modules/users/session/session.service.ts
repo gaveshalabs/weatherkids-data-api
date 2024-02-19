@@ -66,6 +66,7 @@ export class SessionService {
             uid: user.uid,
             email: user.email,
             weatherStationIds: weatherStations.map((doc) => doc._id),
+            scopes: user.scopes,
           },
         });
 
@@ -90,11 +91,12 @@ export class SessionService {
           uid: createSessionDto.uid,
           email: createSessionDto.email,
           weatherStationIds: [], // Because initially the user will not have any weather stations.
+          scopes: [],
         },
       });
 
     // Create new user dto.
-    const createUserDto: CreateUserDto = {
+    const createUserDto: CreateUserDto & { scopes: string[] } = {
       email: createSessionDto.email,
       uid: createSessionDto.uid,
       name: createSessionDto.name,
@@ -104,10 +106,11 @@ export class SessionService {
       photo_url: createSessionDto.photo_url,
       is_active: true,
       gavesha_user_api_key: gaveshaUserApiKey,
+      scopes: [],
     };
 
     // Create user within the database.
-    // When crea ting a user, the uuidv4 userId is passed as the _id.
+    // When creating a user, the uuidv4 userId is passed as the _id.
     return await this.usersService.create(createUserDto, uuidV4Id);
   }
 }

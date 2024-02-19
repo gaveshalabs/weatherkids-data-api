@@ -21,6 +21,7 @@ import {
   PointTracker,
   PointTrackerSchema,
 } from './entities/point-tracker.entity';
+import { AppLoggerModule } from '../app-logger/app-logger.module';
 import { TokenModule } from '../users/token/token.module';
 
 @Module({
@@ -28,6 +29,7 @@ import { TokenModule } from '../users/token/token.module';
   providers: [PointsService, PointsConfigs],
   imports: [
     TokenModule,
+    AppLoggerModule,
     MongooseModule.forFeature([
       { name: PointTracker.name, schema: PointTrackerSchema },
     ]),

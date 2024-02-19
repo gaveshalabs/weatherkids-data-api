@@ -54,9 +54,12 @@ export class WeatherStationsService {
         savedWeatherStation._id,
       ];
 
-      const { _id, email, uid } = result;
+      const { _id, email, uid, scopes } = result;
+      if (scopes.indexOf('weather_data:commit') < 0) {
+        scopes.push('weather_data:commit');
+      }
       const updatedApiKey = await this.tokenService.generateGaveshaUserApiKey({
-        payload: { ...{ _id, email, uid }, weatherStationIds },
+        payload: { ...{ _id, email, uid }, weatherStationIds, scopes },
       });
 
       // Step 3: Save the updated API key to the user.
@@ -64,6 +67,7 @@ export class WeatherStationsService {
 
       this.usersService.update(result._id, {
         gavesha_user_api_key: updatedApiKey,
+        scopes,
       });
 
       // Step 4: Commit the transaction
@@ -153,7 +157,7 @@ export class WeatherStationsService {
     const userIdsToBeUpdated = [];
     for (let i = 0; i < userIds.length; i++) {
       const _uid = userIds[i];
-      if (validUserIds.indexOf(_uid) && !userIdsAsMap[_uid]) {
+      if (validUserIds.indexOf(_uid) >= 0 && !userIdsAsMap[_uid]) {
         userIdsToBeUpdated.push(_uid);
         userIdsAsMap[_uid] = true;
       }
