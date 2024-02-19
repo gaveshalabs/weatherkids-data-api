@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { PointTransactionTypes } from 'src/modules/common/enums/point-transaction-types.enum';
 import { v4 as uuidv4 } from 'uuid';
+import { PointTransactionMetadataSchema } from '../schemas/point-transaction-metadata.schema';
 
 @Schema({
   timestamps: true,
@@ -19,6 +20,9 @@ export class PointTransaction {
 
   @Prop()
   transaction_type: PointTransactionTypes;
+
+  @Prop({ type: PointTransactionMetadataSchema })
+  metadata: PointTransactionMetadataSchema;
 }
 
 export type PointTransactionDocument = PointTransaction & Document;

@@ -174,7 +174,7 @@ describe('PointsService', () => {
         author_user_id,
         123456789000,
         [
-          { timestamp: new Date('2024-01-04T23:00:00Z').getTime() },  // 4:30 AM in SL time
+          { timestamp: new Date('2024-01-04T23:00:00Z').getTime() }, // 4:30 AM in SL time
         ] as CreateWeatherDatumDto[],
         session,
       );
@@ -191,7 +191,7 @@ describe('PointsService', () => {
         author_user_id,
         123456789000,
         [
-          { timestamp: new Date('2024-01-05T23:00:00Z').getTime() },  // next day 4:30 AM in SL time
+          { timestamp: new Date('2024-01-05T23:00:00Z').getTime() }, // next day 4:30 AM in SL time
         ] as CreateWeatherDatumDto[],
         session,
       );

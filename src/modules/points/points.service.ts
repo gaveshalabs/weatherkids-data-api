@@ -3,7 +3,6 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Cron } from '@nestjs/schedule';
 import mongoose, { Connection, Model } from 'mongoose';
 import { PointTransactionTypes } from '../common/enums/point-transaction-types.enum';
-import { WeatherDatum } from '../weather-data/entities/weather-datum.entity';
 import { PointsConfigs } from './configs/points.config';
 import {
   LastProcessedEntry,
@@ -21,8 +20,12 @@ import {
 import { RedeemPointsInputDto } from './dto/redeem-points.dto';
 import { RedeemPointsResponseDto } from './dto/redeem-points-response.dto';
 import { WeatherDataPoint } from '../weather-data/entities/weather-datapoint.entity';
+import { AppLoggerService } from '../app-logger/app-logger.service';
+import { FreezePointsInputDto } from './dto/freeze-points.dto ';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const moment = require('moment');
+import { RedeemMyPointsInputDto } from './dto/redeem-my-points.dto';
+import { TokenService } from '../users/token/token.service';
 
 @Injectable()
 /**
@@ -36,8 +39,11 @@ export class PointsService {
    * @param pointModel The model for Point documents.
    * @param weatherDatumModel The model for WeatherDatum documents.
    * @param mongoConnection The MongoDB connection.
+   * @param sessionService - The session service.
    */
   constructor(
+    private readonly appLogger: AppLoggerService,
+
     @InjectModel(PointTracker.name)
     private pointTrackerModel: Model<PointTrackerDocument>,
 
@@ -50,17 +56,14 @@ export class PointsService {
     @InjectModel(Point.name)
     private pointModel: Model<PointDocument>,
 
-    @InjectModel(WeatherDatum.name)
-    private weatherDatumModel: Model<WeatherDatum>,
-
     @InjectConnection() private readonly mongoConnection: Connection,
+
+    private tokenService: TokenService,
   ) {}
 
   // @Cron('*/10 * * * * *') // Every 5 seconds
   @Cron('15 18 * * *') // 6:15 PM server time (UTC), 11:45 PM local time
   async handleInspectPointReductionForTheDayCron() {
-    console.log('Running cron');
-
     // t=20 11PM
     // t=21 11PM FAIL X
     // t=22 manually 8AM
@@ -71,6 +74,7 @@ export class PointsService {
      */
     // For testing the tomorrow day
     const date = new Date(); // TODO: 11PM
+    this.appLogger.logInfo('Running cron at', date.toISOString());
     //TODO: const date = new Date('2023-11-21 23:55:00');
     date.setDate(date.getDate() - 1);
 
@@ -82,14 +86,27 @@ export class PointsService {
     });
 
     if (usersWithNoDataForTheDay.length === 0) {
+      this.appLogger.logInfo(
+        'All users uploaded data within last 24 hours. No deductions',
+      );
       return;
     }
 
+    this.appLogger.logInfo(
+      `Deducting daily penalty for ${usersWithNoDataForTheDay.length} users`,
+    );
     usersWithNoDataForTheDay.forEach(async (user) => {
+      if (user.freeze_points) {
+        this.appLogger.logWarn(
+          `Points frozen for user ${user.author_user_id}. Penalty of ${PointsConfigs.POINTS_DAILY_PENALTY} points not deducted`,
+        );
+        return;
+      }
       await this.deductPoints(
         PointTransactionTypes.DEDUCT,
         user.author_user_id,
         PointsConfigs.POINTS_DAILY_PENALTY,
+        'reduced points due to daily penalty',
       );
     });
   }
@@ -104,6 +121,40 @@ export class PointsService {
         PointTransactionTypes.REDEEM,
         author_user_id,
         -1 * num_points,
+        'reduced points for redeeming by admin',
+      ); // Note the minus 1.
+
+      return {
+        success: true,
+        message: `Successfully redeemed ${num_points} points.`,
+        result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  async myRedeemPoints(
+    gavesha_user_api_key: string,
+    redeemMyPointsInputDto: RedeemMyPointsInputDto,
+  ) {
+    const { num_points } = redeemMyPointsInputDto;
+
+    // Decode the author_user_id from gavesha_user_api_key.
+    const user =
+      await this.tokenService.validateGaveshaUserApiKey(gavesha_user_api_key);
+
+    const author_user_id = user._id;
+
+    try {
+      const result = await this.deductPoints(
+        PointTransactionTypes.REDEEM,
+        author_user_id,
+        -1 * num_points,
+        `reduced points due to redeeming by user ${author_user_id}`,
       ); // Note the minus 1.
 
       return {
@@ -123,6 +174,7 @@ export class PointsService {
     transactionType: PointTransactionTypes,
     author_user_id: string,
     reduceBy: number,
+    remarks: string,
   ): Promise<Point> {
     const session = await this.mongoConnection.startSession();
     session.startTransaction();
@@ -144,6 +196,8 @@ export class PointsService {
     } else if (transactionType === PointTransactionTypes.DEDUCT) {
       // For DEDUCT type, adjust the 'reduceBy' value to not go below zero.
       updatedPoints = Math.max(currentPoints - Math.abs(reduceBy), 0);
+    } else if (transactionType === PointTransactionTypes.REDEEM) {
+      updatedPoints = currentPoints - Math.abs(reduceBy);
     }
 
     try {
@@ -157,6 +211,7 @@ export class PointsService {
             amount: updatedPoints,
           },
           last_point_calculated_timestamp: Date.now(),
+          last_point_calculated_datetime: Date.now(),
         },
         {
           upsert: true,
@@ -170,6 +225,9 @@ export class PointsService {
         author_user_id,
         amount: reduceBy, // Negative value.
         transaction_type: transactionType,
+        metadata: {
+          remarks,
+        },
       });
       await newPointTransaction.save({ session });
 
@@ -259,11 +317,22 @@ export class PointsService {
     if (pointsToCommit === 0) {
       return;
     }
+    const existing = await this.pointModel.findOne({ author_user_id });
+    if (existing?.freeze_points) {
+      this.appLogger.logWarn(
+        `Points frozen. ${pointsToCommit} points not added to ${author_user_id}.`,
+      );
+      return;
+    }
+
     // Create a new points transaction for user.
     const newPointTransaction = new this.pointTransactionModel({
       author_user_id,
       amount: pointsToCommit,
       transaction_type: PointTransactionTypes.ADD,
+      metadata: {
+        remarks: 'added points for users contribution',
+      },
     });
     await newPointTransaction.save({ session });
 
@@ -277,6 +346,7 @@ export class PointsService {
           amount: pointsToCommit,
         },
         last_point_calculated_timestamp: Date.now(),
+        last_point_calculated_datetime: Date.now(),
       },
       {
         upsert: true,
@@ -388,7 +458,12 @@ export class PointsService {
               .utcOffset(330)
               .toDate()
               .toDateString();
-            console.debug('check to add bonus points. datum timestamp =', datumDateStr, 'server time =', serverDateStr);
+            console.debug(
+              'check to add bonus points. datum timestamp =',
+              datumDateStr,
+              'server time =',
+              serverDateStr,
+            );
 
             if (datumDateStr === serverDateStr) {
               points += PointsConfigs.POINTS_PER_DAY;
@@ -417,5 +492,45 @@ export class PointsService {
 
   findByUserId(author_user_id: string): Promise<Point> {
     return this.pointModel.findOne({ author_user_id }).exec();
+  }
+
+  async freezePoints(freezePointsInputDto: FreezePointsInputDto) {
+    const { author_user_id, freeze, unfreeze } = freezePointsInputDto;
+    const pointsDoc = await this.findByUserId(author_user_id);
+    let message = 'Not modified';
+    if (!pointsDoc) {
+      return {
+        success: false,
+        message,
+        result: null,
+      };
+    }
+
+    let pointsAfterUpdate;
+    if (freeze && !pointsDoc.freeze_points) {
+      pointsAfterUpdate = await this.pointModel.findByIdAndUpdate(
+        pointsDoc._id,
+        {
+          freeze_points: true,
+        },
+        { new: true }, // Return the updated document instead of the original
+      );
+      message = 'Successfully freezed points.';
+    } else if (unfreeze && pointsDoc.freeze_points) {
+      pointsAfterUpdate = await this.pointModel.findByIdAndUpdate(
+        pointsDoc._id,
+        {
+          freeze_points: false,
+        },
+        { new: true },
+      );
+      message = 'Successfully unfreezed points';
+    }
+
+    return {
+      success: true,
+      message,
+      result: pointsAfterUpdate,
+    };
   }
 }

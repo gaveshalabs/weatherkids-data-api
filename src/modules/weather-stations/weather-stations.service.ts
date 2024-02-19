@@ -9,9 +9,9 @@ import {
 import { Connection, Model } from 'mongoose';
 import { GetWeatherStationDto } from './dto/get-weather-station.dto';
 import { JwtService } from '@nestjs/jwt';
-import { SessionService } from '../users/session/session.service';
 import { UsersService } from '../users/users.service';
 import { WeatherStationCreatedResponseDto } from './dto/weather-station-created-response.dto';
+import { TokenService } from '../users/token/token.service';
 
 @Injectable()
 export class WeatherStationsService {
@@ -22,7 +22,7 @@ export class WeatherStationsService {
     @InjectConnection() private readonly mongoConnection: Connection,
 
     private readonly jwtService: JwtService,
-    private readonly sessionService: SessionService,
+    private readonly tokenService: TokenService,
     private readonly usersService: UsersService,
   ) {}
 
@@ -54,16 +54,20 @@ export class WeatherStationsService {
         savedWeatherStation._id,
       ];
 
-      const { _id, email, uid } = result;
-      const updatedApiKey = await this.sessionService.generateGaveshaUserApiKey(
-        { payload: { ...{ _id, email, uid }, weatherStationIds } },
-      );
+      const { _id, email, uid, scopes } = result;
+      if (scopes.indexOf('weather_data:commit') < 0) {
+        scopes.push('weather_data:commit');
+      }
+      const updatedApiKey = await this.tokenService.generateGaveshaUserApiKey({
+        payload: { ...{ _id, email, uid }, weatherStationIds, scopes },
+      });
 
       // Step 3: Save the updated API key to the user.
       console.log(`result`, result);
 
       this.usersService.update(result._id, {
         gavesha_user_api_key: updatedApiKey,
+        scopes,
       });
 
       // Step 4: Commit the transaction
@@ -96,11 +100,21 @@ export class WeatherStationsService {
   }
 
   findAll(): Promise<GetWeatherStationDto[]> {
-    return this.weatherStationModel.find();
+    return this.weatherStationModel.find({ is_hidden: { $ne: true } });
   }
 
   findOne(id: string) {
-    return this.weatherStationModel.findOne({ _id: id });
+    return this.weatherStationModel.findOne({
+      _id: id,
+      is_hidden: { $ne: true },
+    });
+  }
+
+  findByUser(user_id: string): Promise<WeatherStationDocument[]> {
+    return this.weatherStationModel.find({
+      user_ids: user_id,
+      is_hidden: { $ne: true },
+    });
   }
 
   async update(_id: string, updateWeatherStationDto: UpdateWeatherStationDto) {
@@ -122,7 +136,7 @@ export class WeatherStationsService {
     return `This action removes a #${id} weatherStation`;
   }
 
-  async addUsersToWeatherStation(weatherStationId: string, user_ids: string[]) {
+  async addUsersToWeatherStation(weatherStationId: string, userIds: string[]) {
     // Check if weather station exists
     const weatherStation =
       await this.weatherStationModel.findById(weatherStationId);
@@ -131,13 +145,35 @@ export class WeatherStationsService {
       throw new NotFoundException('Weather station not found');
     }
 
+    const userIdsAsMap = {};
+    for (let i = 0; i < weatherStation.user_ids.length; i++) {
+      const _uid = weatherStation.user_ids[i];
+      userIdsAsMap[_uid] = true;
+    }
+
+    const validUserIds = (await this.usersService.findAll(userIds, true)).map(
+      (u) => u._id,
+    );
+    const userIdsToBeUpdated = [];
+    for (let i = 0; i < userIds.length; i++) {
+      const _uid = userIds[i];
+      if (validUserIds.indexOf(_uid) >= 0 && !userIdsAsMap[_uid]) {
+        userIdsToBeUpdated.push(_uid);
+        userIdsAsMap[_uid] = true;
+      }
+    }
+
+    if (userIdsToBeUpdated.length != userIds.length) {
+      throw new HttpException('Invalid users provided', 400);
+    }
+
     // Append user_ids to the existing user_ids and return the updated document
     const updatedWeatherStation =
       await this.weatherStationModel.findOneAndUpdate(
         { _id: weatherStationId },
         {
           $addToSet: {
-            user_ids: { $each: user_ids },
+            user_ids: { $each: userIdsToBeUpdated },
           },
         },
         { new: true }, // This ensures the updated document is returned

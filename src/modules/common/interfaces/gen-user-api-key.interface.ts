@@ -4,6 +4,7 @@ export interface IGenUserApiKey {
     uid: string;
     email: string;
     weatherStationIds?: string[];
+    scopes?: string[];
   };
   expiresIn?: string;
 }

@@ -86,6 +86,7 @@ export class WeatherStationsController {
     };
   }
 
+  @UseGuards(ValidateGaveshaClientGuard)
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -94,6 +95,7 @@ export class WeatherStationsController {
     return this.weatherStationsService.update(id, updateWeatherStationDto);
   }
 
+  @UseGuards(ValidateGaveshaClientGuard)
   @Patch(':id/add-users')
   async addUsersToWeatherStation(
     @Param('id') weatherStationId: string,
@@ -106,6 +108,7 @@ export class WeatherStationsController {
     );
   }
 
+  @UseGuards(ValidateGaveshaClientGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.weatherStationsService.remove(+id);

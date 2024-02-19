@@ -34,6 +34,9 @@ export class User {
 
   @Prop({ type: Boolean, default: true })
   is_active: boolean;
+
+  @Prop({ type: Array<string> })
+  scopes: string[];
 }
 
 export type UserDocument = User & Document;

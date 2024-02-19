@@ -18,6 +18,12 @@ export class Point {
 
   @Prop({ type: Number, default: 0 })
   last_point_calculated_timestamp: number;
+
+  @Prop({ type: Date })
+  last_point_calculated_datetime: number;
+
+  @Prop({ type: Boolean, default: false })
+  freeze_points: boolean;
 }
 
 export type PointDocument = Point & Document;

@@ -4,21 +4,22 @@ import {
   ExecutionContext,
   HttpException,
 } from '@nestjs/common';
-import { SessionService } from 'src/modules/users/session/session.service';
+import { TokenService } from '../../users/token/token.service';
 
 @Injectable()
 export class ValidateGaveshaUserGuard implements CanActivate {
-  constructor(private sessionService: SessionService) {}
+  constructor(private tokenService: TokenService) {}
 
   // This guard will be used to protect routes that require a Gavesha user to be logged in.
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     try {
-      await this.sessionService.validateGaveshaUserApiKey(
+      await this.tokenService.validateGaveshaUserApiKey(
         request.headers['gavesha-user-api-key'],
       );
       return true;
     } catch (error) {
+      console.error('Error validating admin user', error);
       throw new HttpException(error, 401);
     }
   }

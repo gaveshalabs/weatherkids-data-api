@@ -6,15 +6,15 @@ import {
   WeatherDatumSchema,
 } from './entities/weather-datum.entity';
 import { MongooseModule } from '@nestjs/mongoose';
-import { SessionModule } from '../users/session/session.module';
 import { PointsModule } from '../points/points.module';
+import { TokenModule } from '../users/token/token.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: WeatherDatum.name, schema: WeatherDatumSchema },
     ]),
-    SessionModule,
+    TokenModule,
     PointsModule,
   ],
   controllers: [WeatherDataController],

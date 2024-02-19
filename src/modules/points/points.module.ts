@@ -21,13 +21,15 @@ import {
   PointTracker,
   PointTrackerSchema,
 } from './entities/point-tracker.entity';
-import { SessionModule } from '../users/session/session.module';
+import { AppLoggerModule } from '../app-logger/app-logger.module';
+import { TokenModule } from '../users/token/token.module';
 
 @Module({
   controllers: [PointsController],
   providers: [PointsService, PointsConfigs],
   imports: [
-    SessionModule,
+    TokenModule,
+    AppLoggerModule,
     MongooseModule.forFeature([
       { name: PointTracker.name, schema: PointTrackerSchema },
     ]),

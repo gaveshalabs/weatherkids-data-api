@@ -7,18 +7,20 @@ import {
 import { TokenService } from '../../users/token/token.service';
 
 @Injectable()
-export class ValidateGaveshaClientGuard implements CanActivate {
+export class ValidateAdminUserGuard implements CanActivate {
   constructor(private tokenService: TokenService) {}
 
-  // This guard will protect the routes that require a Gavesha client such as the Gavesha mobile app.
+  // This guard will be used to protect routes that require an Admin user to be logged in.
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     try {
-      // Assume we want to check the client id of the request source to be the Gavesha mobile app.
-      await this.tokenService.validateMobileClientId(
-        request.headers['client-id'],
+      const user = await this.tokenService.validateGaveshaUserApiKey(
+        request.headers['gavesha-user-api-key'],
       );
-      return true;
+      if (user.scopes?.indexOf('admin') >= 0) {
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('Error validating admin user', error);
       throw new HttpException(error, 401);
