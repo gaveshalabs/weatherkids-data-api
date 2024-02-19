@@ -132,7 +132,7 @@ export class WeatherStationsService {
     return `This action removes a #${id} weatherStation`;
   }
 
-  async addUsersToWeatherStation(weatherStationId: string, user_ids: string[]) {
+  async addUsersToWeatherStation(weatherStationId: string, userIds: string[]) {
     // Check if weather station exists
     const weatherStation =
       await this.weatherStationModel.findById(weatherStationId);
@@ -141,13 +141,35 @@ export class WeatherStationsService {
       throw new NotFoundException('Weather station not found');
     }
 
+    const userIdsAsMap = {};
+    for (let i = 0; i < weatherStation.user_ids.length; i++) {
+      const _uid = weatherStation.user_ids[i];
+      userIdsAsMap[_uid] = true;
+    }
+
+    const validUserIds = (await this.usersService.findAll(userIds, true)).map(
+      (u) => u._id,
+    );
+    const userIdsToBeUpdated = [];
+    for (let i = 0; i < userIds.length; i++) {
+      const _uid = userIds[i];
+      if (validUserIds.indexOf(_uid) && !userIdsAsMap[_uid]) {
+        userIdsToBeUpdated.push(_uid);
+        userIdsAsMap[_uid] = true;
+      }
+    }
+
+    if (userIdsToBeUpdated.length != userIds.length) {
+      throw new HttpException('Invalid users provided', 400);
+    }
+
     // Append user_ids to the existing user_ids and return the updated document
     const updatedWeatherStation =
       await this.weatherStationModel.findOneAndUpdate(
         { _id: weatherStationId },
         {
           $addToSet: {
-            user_ids: { $each: user_ids },
+            user_ids: { $each: userIdsToBeUpdated },
           },
         },
         { new: true }, // This ensures the updated document is returned

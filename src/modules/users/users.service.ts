@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './entities/user.entity';
 import { GetUserDto } from './dto/get-user.dto';
@@ -18,8 +18,15 @@ export class UsersService {
     return await newUser.save();
   }
 
-  findAll(): Promise<GetUserDto[]> {
-    return this.userModel.find().exec();
+  findAll(userIds?: string[], activeOnly?: boolean): Promise<GetUserDto[]> {
+    const queryParams: FilterQuery<UserDocument> = {};
+    if (userIds) {
+      queryParams.user_ids = { $in: userIds };
+    }
+    if (activeOnly) {
+      queryParams.is_active = true;
+    }
+    return this.userModel.find(queryParams).exec();
   }
 
   async findUserByEmail(email: string) {
