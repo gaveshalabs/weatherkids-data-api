@@ -5,9 +5,11 @@ import { UsersModule } from '../users.module';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { OAuth2Client } from 'google-auth-library';
+import { WeatherStationsModule } from '../../weather-stations/weather-stations.module';
+import { TokenModule } from '../token/token.module';
 
 @Module({
-  imports: [AuthModule, UsersModule],
+  imports: [AuthModule, UsersModule, WeatherStationsModule, TokenModule],
   controllers: [SessionController],
   providers: [SessionService, OAuth2Client, AuthService],
   exports: [SessionService],

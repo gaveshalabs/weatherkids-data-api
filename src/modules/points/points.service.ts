@@ -24,7 +24,7 @@ import { WeatherDataPoint } from '../weather-data/entities/weather-datapoint.ent
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const moment = require('moment');
 import { RedeemMyPointsInputDto } from './dto/redeem-my-points.dto';
-import { SessionService } from '../users/session/session.service';
+import { TokenService } from '../users/token/token.service';
 
 @Injectable()
 /**
@@ -134,7 +134,7 @@ export class PointsService {
 
     // Decode the author_user_id from gavesha_user_api_key.
     const user =
-      await this.sessionService.validateGaveshaUserApiKey(gavesha_user_api_key);
+      await this.tokenService.validateGaveshaUserApiKey(gavesha_user_api_key);
 
     const author_user_id = user._id;
 

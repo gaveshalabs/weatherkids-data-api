@@ -4,18 +4,18 @@ import {
   ExecutionContext,
   HttpException,
 } from '@nestjs/common';
-import { SessionService } from 'src/modules/users/session/session.service';
+import { TokenService } from '../../users/token/token.service';
 
 @Injectable()
 export class ValidateGaveshaClientGuard implements CanActivate {
-  constructor(private sessionService: SessionService) {}
+  constructor(private tokenService: TokenService) {}
 
   // This guard will protect the routes that require a Gavesha client such as the Gavesha mobile app.
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     try {
       // Assume we want to check the client id of the request source to be the Gavesha mobile app.
-      await this.sessionService.validateMobileClientId(
+      await this.tokenService.validateMobileClientId(
         request.headers['client-id'],
       );
       return true;

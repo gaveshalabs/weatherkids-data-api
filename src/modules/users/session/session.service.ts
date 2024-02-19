@@ -1,66 +1,21 @@
 import { CreateSessionDto } from '../dto/create-session.dto';
-import { IGenUserApiKey } from '../../common/interfaces/gen-user-api-key.interface';
-import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { User } from '../entities/user.entity';
 import { HttpException, Injectable } from '@nestjs/common';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { v4 as uuidv4 } from 'uuid';
+import { WeatherStationsService } from '../../weather-stations/weather-stations.service';
+import { TokenService } from '../token/token.service';
 
 @Injectable()
 export class SessionService {
   constructor(
     private authService: AuthService,
-    private jwtService: JwtService,
     private usersService: UsersService,
+    private tokenService: TokenService,
+    private weatherStationsService: WeatherStationsService,
   ) {}
-
-  public async validateMobileClientId(clientId: string) {
-    if (clientId !== process.env.MOBILE_CLIENT_ID) {
-      throw new HttpException('Invalid Mobile Client Id', 401);
-    }
-  }
-
-  public async validateGaveshaUserApiKey(key: string) {
-    // Verify the sent key is a valid JWT.
-    let result = null;
-    try {
-      result = await this.jwtService.verifyAsync(key);
-    } catch (e) {
-      throw new HttpException('API Key validation failed, err 1001', 401);
-    }
-
-    // Get the user from the database based on the email from the JWT.
-    const user = await this.usersService.findUserByEmail(result.email);
-
-    if (!user) {
-      throw new HttpException('User not found. API Key validation failed', 404);
-    }
-
-    // If the key is not the same as the one in the database,
-    if (user.gavesha_user_api_key !== key) {
-      throw new HttpException('API Key validation failed, err 1002', 401);
-    }
-
-    return user;
-  }
-
-  public async generateGaveshaUserApiKey(
-    data: IGenUserApiKey,
-  ): Promise<string> {
-    const expiresIn: string = data.expiresIn || '7300d'; // 20 years
-
-    try {
-      const apiKey = await this.jwtService.signAsync(data.payload, {
-        expiresIn: expiresIn,
-      });
-      return apiKey;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  }
 
   async create(
     createSessionDto: CreateSessionDto,
@@ -80,12 +35,17 @@ export class SessionService {
 
     // If user exist with the email,
     if (user) {
-      console.log('User exists. No need to re-create within Gavesha db.');
-      console.log(`user`, user);
+      if (!user.is_active) {
+        throw new HttpException('User is disabled', 401);
+      }
+
+      console.log('User exists. No need to re-create within Gavesha db.', user);
 
       // Try to validate the User API key in the database.
       try {
-        await this.validateGaveshaUserApiKey(user.gavesha_user_api_key);
+        await this.tokenService.validateGaveshaUserApiKey(
+          user.gavesha_user_api_key,
+        );
 
         console.log(`User API Key in database is valid`);
       } catch (error) {
@@ -93,15 +53,19 @@ export class SessionService {
         console.log(`User API Key is invalid. Generating a new one...`);
 
         // Extract payload from the existing User API key.
-        const payload = this.jwtService.decode(user.gavesha_user_api_key);
+        // const payload = this.jwtService.decode(user.gavesha_user_api_key);
+
+        const weatherStations = await this.weatherStationsService.findByUser(
+          user._id,
+        );
 
         // Generate a new User API key.
-        const newApiKey = await this.generateGaveshaUserApiKey({
+        const newApiKey = await this.tokenService.generateGaveshaUserApiKey({
           payload: {
-            _id: payload._id,
-            uid: payload.uid,
-            email: payload.email,
-            weatherStationIds: payload.weatherStationIds,
+            _id: user._id,
+            uid: user.uid,
+            email: user.email,
+            weatherStationIds: weatherStations.map((doc) => doc._id),
           },
         });
 
@@ -119,14 +83,15 @@ export class SessionService {
     // Create a new userId.
     const uuidV4Id = uuidv4();
 
-    const gaveshaUserApiKey: string = await this.generateGaveshaUserApiKey({
-      payload: {
-        _id: uuidV4Id,
-        uid: createSessionDto.uid,
-        email: createSessionDto.email,
-        weatherStationIds: [], // Because initially the user will not have any weather stations.
-      },
-    });
+    const gaveshaUserApiKey: string =
+      await this.tokenService.generateGaveshaUserApiKey({
+        payload: {
+          _id: uuidV4Id,
+          uid: createSessionDto.uid,
+          email: createSessionDto.email,
+          weatherStationIds: [], // Because initially the user will not have any weather stations.
+        },
+      });
 
     // Create new user dto.
     const createUserDto: CreateUserDto = {

@@ -6,22 +6,23 @@ import {
   WeatherStation,
   WeatherStationSchema,
 } from './entities/weather-station.entity';
-import { SessionModule } from '../users/session/session.module';
 import { UsersModule } from '../users/users.module';
 import { WeatherDataModule } from '../weather-data/weather-data.module';
 import { PointsModule } from '../points/points.module';
+import { TokenModule } from '../users/token/token.module';
 
 @Module({
   imports: [
     PointsModule,
     WeatherDataModule,
     UsersModule,
-    SessionModule,
+    TokenModule,
     MongooseModule.forFeature([
       { name: WeatherStation.name, schema: WeatherStationSchema },
     ]),
   ],
   controllers: [WeatherStationsController],
   providers: [WeatherStationsService, WeatherStation],
+  exports: [WeatherStationsService],
 })
 export class WeatherStationsModule {}

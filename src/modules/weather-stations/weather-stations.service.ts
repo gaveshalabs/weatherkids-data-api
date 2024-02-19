@@ -9,9 +9,9 @@ import {
 import { Connection, Model } from 'mongoose';
 import { GetWeatherStationDto } from './dto/get-weather-station.dto';
 import { JwtService } from '@nestjs/jwt';
-import { SessionService } from '../users/session/session.service';
 import { UsersService } from '../users/users.service';
 import { WeatherStationCreatedResponseDto } from './dto/weather-station-created-response.dto';
+import { TokenService } from '../users/token/token.service';
 
 @Injectable()
 export class WeatherStationsService {
@@ -22,7 +22,7 @@ export class WeatherStationsService {
     @InjectConnection() private readonly mongoConnection: Connection,
 
     private readonly jwtService: JwtService,
-    private readonly sessionService: SessionService,
+    private readonly tokenService: TokenService,
     private readonly usersService: UsersService,
   ) {}
 
@@ -55,9 +55,9 @@ export class WeatherStationsService {
       ];
 
       const { _id, email, uid } = result;
-      const updatedApiKey = await this.sessionService.generateGaveshaUserApiKey(
-        { payload: { ...{ _id, email, uid }, weatherStationIds } },
-      );
+      const updatedApiKey = await this.tokenService.generateGaveshaUserApiKey({
+        payload: { ...{ _id, email, uid }, weatherStationIds },
+      });
 
       // Step 3: Save the updated API key to the user.
       console.log(`result`, result);
@@ -96,11 +96,21 @@ export class WeatherStationsService {
   }
 
   findAll(): Promise<GetWeatherStationDto[]> {
-    return this.weatherStationModel.find();
+    return this.weatherStationModel.find({ is_hidden: { $ne: true } });
   }
 
   findOne(id: string) {
-    return this.weatherStationModel.findOne({ _id: id });
+    return this.weatherStationModel.findOne({
+      _id: id,
+      is_hidden: { $ne: true },
+    });
+  }
+
+  findByUser(user_id: string): Promise<WeatherStationDocument[]> {
+    return this.weatherStationModel.find({
+      user_ids: user_id,
+      is_hidden: { $ne: true },
+    });
   }
 
   async update(_id: string, updateWeatherStationDto: UpdateWeatherStationDto) {

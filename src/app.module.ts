@@ -13,6 +13,7 @@ import { GuardsModule } from './modules/common/guards/guards.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PointsModule } from './modules/points/points.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { TokenModule } from './modules/users/token/token.module';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -28,6 +29,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     GuardsModule,
 
     SessionModule,
+    TokenModule,
     AuthModule,
     UsersModule,
 

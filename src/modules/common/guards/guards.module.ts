@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ValidateGaveshaClientGuard } from './gavesha-client.guard';
 import { ValidateGaveshaUserGuard } from './gavesha-user.guard';
-import { SessionModule } from 'src/modules/users/session/session.module';
+import { TokenModule } from '../../users/token/token.module';
 
 @Module({
-  imports: [SessionModule],
+  imports: [TokenModule],
   providers: [ValidateGaveshaUserGuard, ValidateGaveshaClientGuard],
   exports: [ValidateGaveshaUserGuard, ValidateGaveshaClientGuard],
 })
