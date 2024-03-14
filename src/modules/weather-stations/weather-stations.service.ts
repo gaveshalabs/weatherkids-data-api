@@ -54,7 +54,11 @@ export class WeatherStationsService {
         savedWeatherStation._id,
       ];
 
-      const { _id, email, uid, scopes } = result;
+      const { _id, email, uid } = result;
+      let scopes = result.scopes;
+      if (!scopes) {
+        scopes = ['weather_data:commit'];
+      }
       if (scopes.indexOf('weather_data:commit') < 0) {
         scopes.push('weather_data:commit');
       }
