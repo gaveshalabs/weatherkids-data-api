@@ -166,7 +166,7 @@ export class WeatherDataService {
    * @returns {any} - The transformed weather datum object.
    */
   transformWeatherDatum(datum): GetWeatherDatumDto {
-    return {
+    const transformed = {
       _id: datum._id,
       author_user_id: datum.metadata?.author_user_id,
       sensor_id: datum.metadata?.sensor_id,
@@ -181,6 +181,28 @@ export class WeatherDataService {
       percentage_light_intensity: datum.percentage_light_intensity,
       tvoc: datum.tvoc,
     };
+
+    // Following modifications are made to the datum because of the sensors overheating due to
+    // ESP32, BMS and the presence of the VoC sensor. The goal is to reduce the marginal error
+    // in the sensor readings. The error rates were determined through observation.
+    if (transformed.tvoc) {
+      if (transformed.percentage_light_intensity == 0) {
+        transformed.temperature -= 5; // error was observed to be approx 5 degrees celsius
+      } else if (transformed.percentage_light_intensity < 50) {
+        transformed.temperature -= 8.5;
+      } else {
+        transformed.temperature -= 12;
+      }
+    // } else {
+    //   if (transformed.percentage_light_intensity == 0) {
+    //     transformed.temperature -= 3; // error is 5 degrees celsius
+    //   } else if (transformed.percentage_light_intensity < 50) {
+    //     transformed.temperature -= 6.5;
+    //   } else {
+    //     transformed.temperature -= 10;
+    //   }
+    }
+    return transformed;
   }
 
   async findAll(): Promise<GetWeatherDatumDto[]> {
