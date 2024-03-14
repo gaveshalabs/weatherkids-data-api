@@ -20,7 +20,7 @@ jobs:
       - name: Set correct firebase project based on git branch.
         run: echo "FIREBASE_PROJECT=$(if [ ${{ github.ref }} == 'refs/heads/main' ]; then echo 'prod'; else echo 'dev'; fi)" >> $GITHUB_ENV
       - name: Deploy to firebase cloud functions.
-        uses: w9jds/firebase-action@master
+        uses: w9jds/firebase-action@v13.4.0
         with:
           args: deploy --only functions --project ${{ env.FIREBASE_PROJECT }}
         env:
