@@ -54,5 +54,6 @@ jobs:
         uses: w9jds/firebase-action@v13.4.0
         with:
           args: deploy --only functions --project ${{ env.FIREBASE_PROJECT }}
-        # env:
-        #   FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        env:
+          MOBILE_CLIENT_ID: ${{ secrets.MOBILE_CLIENT_ID }}
+          WEATHERCOM_CLIENT_ID: ${{ secrets.WEATHERCOM_CLIENT_ID }}
