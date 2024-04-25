@@ -23,20 +23,22 @@ jobs:
       security-events: write
       statuses: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout actions-oidc-debugger
+        uses: actions/checkout@v4
         with:
           repository: github/actions-oidc-debugger
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
           path: ./.github/actions/actions-oidc-debugger
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
       - name: Debug OIDC Claims
         uses: ./.github/actions/actions-oidc-debugger
         with:
           audience: 'projects/970886652672/locations/global/workloadIdentityPools/dev-ci-pool/providers/my-repo-oidc'
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - name: Set correct firebase project based on git branch.
         run: echo "FIREBASE_PROJECT=$(if [ ${{ github.ref }} == 'refs/heads/main' ]; then echo 'prod'; else echo 'dev'; fi)" >> $GITHUB_ENV
       - id: 'auth'
