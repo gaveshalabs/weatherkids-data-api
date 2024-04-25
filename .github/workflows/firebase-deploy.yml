@@ -9,16 +9,34 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # This is required for requesting the JWT
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          repository: github/actions-oidc-debugger
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: ./.github/actions/actions-oidc-debugger
+      - name: Debug OIDC Claims
+        uses: ./.github/actions/actions-oidc-debugger
+        with:
+          audience: 'projects/970886652672/locations/global/workloadIdentityPools/dev-ci-pool/providers/my-repo-oidc'
+      - name: Set correct firebase project based on git branch.
+        run: echo "FIREBASE_PROJECT=$(if [ ${{ github.ref }} == 'refs/heads/main' ]; then echo 'prod'; else echo 'dev'; fi)" >> $GITHUB_ENV
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          project-id: ${{ env.FIREBASE_PROJECT }}
+          workload_identity_provider: 'projects/970886652672/locations/global/workloadIdentityPools/dev-ci-pool/providers/my-repo-oidc'
+          # service_account: 'my-service-account@my-project.iam.gserviceaccount.com'
       - name: Use Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: '16'
+          node-version: '20'
       - name: Install dependencies.
         run: npm install
-      - name: Set correct firebase project based on git branch.
-        run: echo "FIREBASE_PROJECT=$(if [ ${{ github.ref }} == 'refs/heads/main' ]; then echo 'prod'; else echo 'dev'; fi)" >> $GITHUB_ENV
       - name: Deploy to firebase cloud functions.
         uses: w9jds/firebase-action@v13.4.0
         with:
