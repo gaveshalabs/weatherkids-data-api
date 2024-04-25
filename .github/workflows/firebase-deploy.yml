@@ -10,8 +10,18 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: 'read'
+      actions: write
+      checks: write
+      contents: write
+      deployments: write
       id-token: write # This is required for requesting the JWT
+      issues: write
+      packages: write
+      pages: write
+      pull-requests: write
+      repository-projects: write
+      security-events: write
+      statuses: write
     steps:
       - uses: actions/checkout@v4
         with:
