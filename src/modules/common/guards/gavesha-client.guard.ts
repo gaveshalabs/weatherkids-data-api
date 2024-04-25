@@ -13,15 +13,14 @@ export class ValidateGaveshaClientGuard implements CanActivate {
   // This guard will protect the routes that require a Gavesha client such as the Gavesha mobile app.
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    try {
-      // Assume we want to check the client id of the request source to be the Gavesha mobile app.
-      await this.tokenService.validateMobileClientId(
-        request.headers['client-id'],
-      );
+    const header = request.headers['client-id'];
+    if (this.tokenService.validateMobileClientId(header)) {
       return true;
-    } catch (error) {
-      console.error('Error validating admin user', error);
-      throw new HttpException(error, 401);
+    } else if (this.tokenService.validateComClientId(header)) {
+      return true;
+    } else {
+      console.error('Error validating client: ', header);
+      throw new HttpException('Invalid Client Id', 401);
     }
   }
 }
