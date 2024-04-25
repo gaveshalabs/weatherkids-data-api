@@ -29,6 +29,10 @@ jobs:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
           path: ./.github/actions/actions-oidc-debugger
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - name: Debug OIDC Claims
         uses: ./.github/actions/actions-oidc-debugger
         with:
@@ -42,13 +46,9 @@ jobs:
           project_id: ${{ env.FIREBASE_PROJECT }}
           workload_identity_provider: 'projects/970886652672/locations/global/workloadIdentityPools/dev-ci-pool/providers/my-repo-oidc'
           # service_account: 'my-service-account@my-project.iam.gserviceaccount.com'
-      - name: Use Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '20'
       - name: Install dependencies.
-        working-directory: ./../
         run: |
+          cd ../
           ls -l
           npm ci
       - name: Deploy to firebase cloud functions.
