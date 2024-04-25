@@ -10,9 +10,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
+      contents: 'read'
       id-token: write # This is required for requesting the JWT
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: github/actions-oidc-debugger
           ref: main
@@ -28,11 +29,11 @@ jobs:
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
         with:
-          project-id: ${{ env.FIREBASE_PROJECT }}
+          project_id: ${{ env.FIREBASE_PROJECT }}
           workload_identity_provider: 'projects/970886652672/locations/global/workloadIdentityPools/dev-ci-pool/providers/my-repo-oidc'
           # service_account: 'my-service-account@my-project.iam.gserviceaccount.com'
       - name: Use Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
           node-version: '20'
       - name: Install dependencies.
