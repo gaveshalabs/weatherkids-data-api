@@ -23,17 +23,17 @@ jobs:
       security-events: write
       statuses: write
     steps:
-      - name: Checkout actions-oidc-debugger
-        uses: actions/checkout@v4
-        with:
-          repository: github/actions-oidc-debugger
-          ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: ./.github/actions/actions-oidc-debugger
-      - name: Debug OIDC Claims
-        uses: ./.github/actions/actions-oidc-debugger
-        with:
-          audience: 'projects/970886652672/locations/global/workloadIdentityPools/dev-ci-pool/providers/my-repo-oidc'
+      # - name: Checkout actions-oidc-debugger
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: github/actions-oidc-debugger
+      #     ref: main
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     path: ./.github/actions/actions-oidc-debugger
+      # - name: Debug OIDC Claims
+      #   uses: ./.github/actions/actions-oidc-debugger
+      #   with:
+      #     audience: 'projects/970886652672/locations/global/workloadIdentityPools/dev-ci-pool/providers/my-repo-oidc'
       - uses: actions/checkout@v4
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -43,20 +43,20 @@ jobs:
         run: echo "FIREBASE_PROJECT=$(if [ ${{ github.ref }} == 'refs/heads/main' ]; then echo 'prod'; else echo 'dev'; fi)" >> $GITHUB_ENV
       - name: Set correct GCP project
         run: echo "GCP_PROJECT_FOR_BRANCH=$(if [ ${{ github.ref }} == 'refs/heads/main' ]; then echo 'weatherkids-f85f4'; else echo 'weatherkids-dev-67016'; fi)" >> $GITHUB_ENV
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
-        with:
-          project_id: ${{ env.GCP_PROJECT_FOR_BRANCH }}
-          workload_identity_provider: 'projects/970886652672/locations/global/workloadIdentityPools/dev-ci-pool/providers/my-repo-oidc'
-          service_account: 'githubdeploy@weatherkids-dev-67016.iam.gserviceaccount.com'
+      # - id: 'auth'
+      #   name: 'Authenticate to Google Cloud'
+      #   uses: 'google-github-actions/auth@v2'
+      #   with:
+      #     project_id: ${{ env.GCP_PROJECT_FOR_BRANCH }}
+      #     workload_identity_provider: 'projects/970886652672/locations/global/workloadIdentityPools/dev-ci-pool/providers/my-repo-oidc'
+      #     service_account: 'githubdeploy@weatherkids-dev-67016.iam.gserviceaccount.com'
       - name: Install dependencies.
         run: npm ci
       - name: Build
         run: npm run build
-      - name: Extract GCP Service Account Credentials
-        run: |
-          echo "SERVICE_ACCOUNT_KEY=$(cat "${{ steps.auth.outputs.credentials_file_path }}" | tr -d '\n')" >> $GITHUB_ENV
+      # - name: Extract GCP Service Account Credentials
+        # run: |
+        #   echo "SERVICE_ACCOUNT_KEY=$(cat "${{ steps.auth.outputs.credentials_file_path }}" | tr -d '\n')" >> $GITHUB_ENV
       - name: Deploy to firebase cloud functions.
         uses: w9jds/firebase-action@v13.6.0
         with:
@@ -64,4 +64,4 @@ jobs:
         env:
           MOBILE_CLIENT_ID: ${{ secrets.MOBILE_CLIENT_ID }}
           WEATHERCOM_CLIENT_ID: ${{ secrets.WEATHERCOM_CLIENT_ID }}
-          GCP_SA_KEY: ${{ env.SERVICE_ACCOUNT_KEY }}
+          GCP_SA_KEY: ${{ secrets.GITHUBDEPLOY_GCP_SERVICE_ACCOUNT }}
