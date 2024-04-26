@@ -10,18 +10,40 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
-          node-version: '16'
-      - name: Install dependencies.
-        run: npm install
+          node-version: 20
       - name: Set correct firebase project based on git branch.
         run: echo "FIREBASE_PROJECT=$(if [ ${{ github.ref }} == 'refs/heads/main' ]; then echo 'prod'; else echo 'dev'; fi)" >> $GITHUB_ENV
-      - name: Deploy to firebase cloud functions.
-        uses: w9jds/firebase-action@v13.4.0
+      - name: Install dependencies.
+        run: npm ci
+      - name: Set env vars
+        run: |
+          if [ ${{ github.ref }} == 'refs/heads/main' ]; then
+            DB=${{ secrets.WEATHERKIDS_DB_URL_PROD }}
+            FILE='.env.prod'
+            JWTSECRET=${{ secrets.WEATHERKIDS_JWT_SECRET_PROD }}
+            else
+            DB=${{ secrets.WEATHERKIDS_DB_URL_DEV }}
+            FILE='.env.dev'
+            JWTSECRET=secret
+          fi
+          echo "DB_FOR_BRANCH=$DB" >> $GITHUB_ENV
+          echo "FILE_FOR_BRANCH=$FILE" >> $GITHUB_ENV
+          echo "SECRET_FOR_BRANCH=$JWTSECRET" >> $GITHUB_ENV
+      - name: Make envfile
+        uses: SpicyPizza/create-envfile@v2.0
         with:
-          args: deploy --only functions --project ${{ env.FIREBASE_PROJECT }}
+          file_name: ${{ env.FILE_FOR_BRANCH }}
+          envkey_MOBILE_CLIENT_ID: ${{ secrets.MOBILE_CLIENT_ID }}
+          envkey_WEATHERCOM_CLIENT_ID: ${{ secrets.WEATHERCOM_CLIENT_ID }}
+          envkey_MONGO_URL: ${{ env.DB_FOR_BRANCH }}
+          envkey_JWT_SECRET: ${{ env.SECRET_FOR_BRANCH }}
+      - name: Deploy to firebase cloud functions.
+        uses: w9jds/firebase-action@v13.6.0
+        with:
+          args: deploy --only functions --project ${{ env.FIREBASE_PROJECT }} --non-interactive
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GCP_SA_KEY: ${{ secrets.GITHUBDEPLOY_GCP_SERVICE_ACCOUNT }}

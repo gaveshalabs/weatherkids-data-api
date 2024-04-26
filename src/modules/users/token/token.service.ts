@@ -55,9 +55,11 @@ export class TokenService {
     return user;
   }
 
-  public async validateMobileClientId(clientId: string) {
-    if (clientId !== process.env.MOBILE_CLIENT_ID) {
-      throw new HttpException('Invalid Mobile Client Id', 401);
-    }
+  public validateMobileClientId(clientId: string) {
+    return clientId === process.env.MOBILE_CLIENT_ID;
+  }
+
+  public validateComClientId(clientId: string) {
+    return clientId === process.env.WEATHERCOM_CLIENT_ID;
   }
 }

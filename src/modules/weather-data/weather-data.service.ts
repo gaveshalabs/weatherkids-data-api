@@ -64,6 +64,7 @@ export class WeatherDataService {
             timestamp: {
               $in: data.map((datum) => datum.timestamp),
             },
+            'metadata.author_user_id': author_user_id,
           })
           .exec();
 
@@ -269,7 +270,7 @@ export class WeatherDataService {
     weatherStationId: string,
   ): Promise<GetWeatherDatumDto> {
     const datum = (await this.weatherDatumModel
-      .findOne({ "metadata.weather_station_id": weatherStationId })
+      .findOne({ 'metadata.weather_station_id': weatherStationId })
       .sort({ timestamp: -1 })
       .exec()) as WeatherDatum;
 

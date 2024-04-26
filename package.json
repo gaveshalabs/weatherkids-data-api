@@ -1,13 +1,13 @@
 {
   "name": "weatherkids-data-api",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
   "main": "dist/index.js",
   "engines": {
-    "node": "16"
+    "node": "20"
   },
   "scripts": {
     "build": "nest build",
