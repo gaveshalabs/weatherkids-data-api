@@ -43,8 +43,8 @@ jobs:
             DB='mongodb+srv://gaveshalabsdev:erwb1BxPgh3uy91l@cluster0.o2egpxy.mongodb.net/weatherkids-dev'
             FILE='.env.dev'
           fi
-          echo "DB_FOR_BRANCH=$(echo DB)" >> $GITHUB_ENV
-          echo "FILE_FOR_BRANCH=$(echo FILE)" >> $GITHUB_ENV
+          echo "DB_FOR_BRANCH=$DB" >> $GITHUB_ENV
+          echo "FILE_FOR_BRANCH=$FILE" >> $GITHUB_ENV
       - name: Make envfile
         uses: SpicyPizza/create-envfile@v2.0
         with:
