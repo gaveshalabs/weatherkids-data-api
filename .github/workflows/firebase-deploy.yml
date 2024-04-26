@@ -26,7 +26,7 @@ jobs:
             FILE='.env.prod'
             JWTSECRET=${{ secrets.WEATHERKIDS_JWT_SECRET_PROD }}
             SER_ACC=${{ secrets.GITHUBDEPLOY_GCP_SERVICE_ACCOUNT_PROD }}
-          else
+            else
             DB=${{ secrets.WEATHERKIDS_DB_URL_DEV }}
             FILE='.env.dev'
             JWTSECRET=secret
