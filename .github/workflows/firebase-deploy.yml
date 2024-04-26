@@ -41,15 +41,20 @@ jobs:
           node-version: 20
       - name: Set correct firebase project based on git branch.
         run: echo "FIREBASE_PROJECT=$(if [ ${{ github.ref }} == 'refs/heads/main' ]; then echo 'prod'; else echo 'dev'; fi)" >> $GITHUB_ENV
+      - name: Set correct GCP project
+        run: echo "GCP_PROJECT_FOR_BRANCH=$(if [ ${{ github.ref }} == 'refs/heads/main' ]; then echo 'weatherkids'; else echo 'weatherkids-dev'; fi)" >> $GITHUB_ENV
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
         with:
-          project_id: ${{ env.FIREBASE_PROJECT }}
+          project_id: ${{ env.GCP_PROJECT_FOR_BRANCH }}
           workload_identity_provider: 'projects/970886652672/locations/global/workloadIdentityPools/dev-ci-pool/providers/my-repo-oidc'
           # service_account: 'my-service-account@my-project.iam.gserviceaccount.com'
       - name: Install dependencies.
         run: npm ci
+      - name: Extract GCP Service Account Credentials
+        run: |
+          echo "SERVICE_ACCOUNT_KEY=$(cat "${{ steps.auth.outputs.credentials_file_path }}" | tr -d '\n')" >> $GITHUB_ENV
       - name: Deploy to firebase cloud functions.
         uses: w9jds/firebase-action@v13.4.0
         with:
@@ -57,3 +62,4 @@ jobs:
         env:
           MOBILE_CLIENT_ID: ${{ secrets.MOBILE_CLIENT_ID }}
           WEATHERCOM_CLIENT_ID: ${{ secrets.WEATHERCOM_CLIENT_ID }}
+          GCP_SA_KEY: ${{ env.SERVICE_ACCOUNT_KEY }}
