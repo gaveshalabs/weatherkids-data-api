@@ -37,10 +37,10 @@ jobs:
       - name: Set env vars
         run: |
           if [ ${{ github.ref }} == 'refs/heads/main' ]; then
-            DB='mongodb+srv://gaveshalabsdev:erwb1BxPgh3uy91l@cluster0.o2egpxy.mongodb.net/weatherkids'
+            DB=${{ secrets.WEATHERKIDS_DB_URL_PROD }}
             FILE='.env.prod'
             else
-            DB='mongodb+srv://gaveshalabsdev:erwb1BxPgh3uy91l@cluster0.o2egpxy.mongodb.net/weatherkids-dev'
+            DB=${{ secrets.WEATHERKIDS_DB_URL_DEV }}
             FILE='.env.dev'
           fi
           echo "DB_FOR_BRANCH=$DB" >> $GITHUB_ENV
