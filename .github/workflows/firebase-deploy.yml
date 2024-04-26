@@ -25,14 +25,17 @@ jobs:
             DB=${{ secrets.WEATHERKIDS_DB_URL_PROD }}
             FILE='.env.prod'
             JWTSECRET=${{ secrets.WEATHERKIDS_JWT_SECRET_PROD }}
-            else
+            SER_ACC=${{ secrets.GITHUBDEPLOY_GCP_SERVICE_ACCOUNT_PROD }}
+          else
             DB=${{ secrets.WEATHERKIDS_DB_URL_DEV }}
             FILE='.env.dev'
             JWTSECRET=secret
+            SER_ACC=${{ secrets.GITHUBDEPLOY_GCP_SERVICE_ACCOUNT }}
           fi
           echo "DB_FOR_BRANCH=$DB" >> $GITHUB_ENV
           echo "FILE_FOR_BRANCH=$FILE" >> $GITHUB_ENV
           echo "SECRET_FOR_BRANCH=$JWTSECRET" >> $GITHUB_ENV
+          echo "ACC_FOR_BRANCH=$SER_ACC" >> $GITHUB_ENV
       - name: Make envfile
         uses: SpicyPizza/create-envfile@v2.0
         with:
@@ -46,4 +49,4 @@ jobs:
         with:
           args: deploy --only functions --project ${{ env.FIREBASE_PROJECT }} --non-interactive
         env:
-          GCP_SA_KEY: ${{ secrets.GITHUBDEPLOY_GCP_SERVICE_ACCOUNT }}
+          GCP_SA_KEY: ${{ env.ACC_FOR_BRANCH }}
