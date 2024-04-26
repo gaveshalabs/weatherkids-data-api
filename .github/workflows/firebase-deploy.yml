@@ -58,7 +58,7 @@ jobs:
         run: |
           echo "SERVICE_ACCOUNT_KEY=$(cat "${{ steps.auth.outputs.credentials_file_path }}" | tr -d '\n')" >> $GITHUB_ENV
       - name: Deploy to firebase cloud functions.
-        uses: w9jds/firebase-action@v13.7.0
+        uses: w9jds/firebase-action@v13.6.0
         with:
           args: deploy --only functions --project ${{ env.FIREBASE_PROJECT }}
         env:
