@@ -49,7 +49,7 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_FOR_BRANCH }}
           workload_identity_provider: 'projects/970886652672/locations/global/workloadIdentityPools/dev-ci-pool/providers/my-repo-oidc'
-          service_account: 'service-970886652672@gcf-admin-robot.iam.gserviceaccount.com'
+          # service_account: 'service-970886652672@gcf-admin-robot.iam.gserviceaccount.com'
       - name: Install dependencies.
         run: npm ci
       - name: Extract GCP Service Account Credentials
