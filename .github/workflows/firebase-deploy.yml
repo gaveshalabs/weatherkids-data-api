@@ -25,12 +25,10 @@ jobs:
             DB=${{ secrets.WEATHERKIDS_DB_URL_PROD }}
             FILE='.env.prod'
             JWTSECRET=${{ secrets.WEATHERKIDS_JWT_SECRET_PROD }}
-            SER_ACC=${{ secrets.GITHUBDEPLOY_GCP_SERVICE_ACCOUNT_PROD }}
           else
             DB=${{ secrets.WEATHERKIDS_DB_URL_DEV }}
             FILE='.env.dev'
             JWTSECRET=secret
-            SER_ACC=${{ secrets.GITHUBDEPLOY_GCP_SERVICE_ACCOUNT }}
           fi
           echo "DB_FOR_BRANCH=$DB" >> $GITHUB_ENV
           echo "FILE_FOR_BRANCH=$FILE" >> $GITHUB_ENV
@@ -48,5 +46,13 @@ jobs:
         uses: w9jds/firebase-action@v13.6.0
         with:
           args: deploy --only functions --project ${{ env.FIREBASE_PROJECT }} --non-interactive
+        if: github.ref == 'refs/heads/main'
         env:
-          GCP_SA_KEY: ${{ env.ACC_FOR_BRANCH }}
+          GCP_SA_KEY: ${{ secrets.GITHUBDEPLOY_GCP_SERVICE_ACCOUNT_PROD }}
+      - name: Deploy to firebase cloud functions.
+        uses: w9jds/firebase-action@v13.6.0
+        with:
+          args: deploy --only functions --project ${{ env.FIREBASE_PROJECT }} --non-interactive
+        if: github.ref == 'refs/heads/dev'
+        env:
+          GCP_SA_KEY: ${{ secrets.GITHUBDEPLOY_GCP_SERVICE_ACCOUNT }}
