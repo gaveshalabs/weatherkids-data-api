@@ -52,9 +52,9 @@ jobs:
           # service_account: 'my-service-account@my-project.iam.gserviceaccount.com'
       - name: Install dependencies.
         run: npm ci
-      - name: Extract GCP Service Account Credentials
-        run: |
-          echo "SERVICE_ACCOUNT_KEY=$(cat "${{ steps.auth.outputs.credentials_file_path }}" | tr -d '\n')" >> $GITHUB_ENV
+      # - name: Extract GCP Service Account Credentials
+      #   run: |
+      #     echo "SERVICE_ACCOUNT_KEY=$(cat "${{ steps.auth.outputs.credentials_file_path }}" | tr -d '\n')" >> $GITHUB_ENV
       - name: Deploy to firebase cloud functions.
         uses: w9jds/firebase-action@v13.4.0
         with:
@@ -62,4 +62,5 @@ jobs:
         env:
           MOBILE_CLIENT_ID: ${{ secrets.MOBILE_CLIENT_ID }}
           WEATHERCOM_CLIENT_ID: ${{ secrets.WEATHERCOM_CLIENT_ID }}
-          GCP_SA_KEY: ${{ env.SERVICE_ACCOUNT_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+        # GCP_SA_KEY: ${{ env.SERVICE_ACCOUNT_KEY }}
