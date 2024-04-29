@@ -14,10 +14,25 @@ export class ValidateGaveshaClientGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const header = request.headers['client-id'];
-    if (this.tokenService.validateMobileClientId(header)) {
-      return true;
-    } else if (this.tokenService.validateComClientId(header)) {
-      return true;
+    if (header) {
+      if (this.tokenService.validateMobileClientId(header)) {
+        return true;
+      } else if (this.tokenService.validateComClientId(header)) {
+        return true;
+      } else {
+        console.error('Error validating client: ', header);
+        throw new HttpException('Invalid header Client Id', 401);
+      }
+    } else if (request.body?.client_id) {
+      const param = request.body.client_id;
+      if (this.tokenService.validateMobileClientId(param)) {
+        return true;
+      } else if (this.tokenService.validateComClientId(param)) {
+        return true;
+      } else {
+        console.error('Error validating client: ', param);
+        throw new HttpException('Invalid body Client Id', 401);
+      }
     } else {
       console.error('Error validating client: ', header);
       throw new HttpException('Invalid Client Id', 401);

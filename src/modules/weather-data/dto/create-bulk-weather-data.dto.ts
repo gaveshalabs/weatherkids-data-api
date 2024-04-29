@@ -3,6 +3,7 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsNotEmpty,
+  IsOptional,
   ValidateNested,
 } from 'class-validator';
 import { ICoordinates } from 'src/modules/common/interfaces/coordinates.interface';
@@ -23,4 +24,10 @@ export class CreateBulkWeatherDataDto {
   @ValidateNested({ each: true })
   @Type(() => WeatherDataPoint)
   readonly data: WeatherDataPoint[];
+
+  @IsOptional()
+  readonly gavesha_user_api_key: string;
+
+  @IsOptional()
+  readonly client_id: string;
 }
