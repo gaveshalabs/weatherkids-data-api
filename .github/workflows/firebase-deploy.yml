@@ -41,6 +41,8 @@ jobs:
           envkey_WEATHERCOM_CLIENT_ID: ${{ secrets.WEATHERCOM_CLIENT_ID }}
           envkey_MONGO_URL: ${{ env.DB_FOR_BRANCH }}
           envkey_JWT_SECRET: ${{ env.SECRET_FOR_BRANCH }}
+      - name: Login to firebase
+        run: firebase login:ci --no-localhost
       - name: Deploy to firebase cloud functions.
         uses: w9jds/firebase-action@v13.6.0
         with:
