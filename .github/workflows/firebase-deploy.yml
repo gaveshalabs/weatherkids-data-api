@@ -44,6 +44,6 @@ jobs:
       - name: Deploy to firebase cloud functions.
         uses: w9jds/firebase-action@v13.6.0
         with:
-          args: deploy --only functions --project ${{ env.FIREBASE_PROJECT }} --non-interactive
+          args: deploy --only functions --project ${{ env.FIREBASE_PROJECT }} --non-interactive --debug
         env:
           GCP_SA_KEY: ${{ secrets.GITHUBDEPLOY_GCP_SERVICE_ACCOUNT }}
