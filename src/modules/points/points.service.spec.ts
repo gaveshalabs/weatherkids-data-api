@@ -30,6 +30,8 @@ import { OAuth2Client } from 'google-auth-library';
 import { User, UserSchema } from '../users/entities/user.entity';
 import { WeatherDataPoint } from '../weather-data/entities/weather-datapoint.entity';
 import { set, reset } from 'mockdate';
+import { TokenService } from '../users/token/token.service';
+import { AppLoggerService } from '../app-logger/app-logger.service';
 
 describe('PointsService', () => {
   let pointsService: PointsService;
@@ -70,13 +72,25 @@ describe('PointsService', () => {
 
     const app: TestingModule = await Test.createTestingModule({
       controllers: [PointsController],
+      imports: [],
       providers: [
         PointsService,
-        SessionService,
         AuthService,
         JwtService,
         UsersService,
         OAuth2Client,
+        {
+          provide: AppLoggerService,
+          useValue: () => {},
+        },
+        {
+          provide: SessionService,
+          useValue: () => {},
+        },
+        {
+          provide: TokenService,
+          useValue: () => {},
+        },
         {
           provide: getModelToken(User.name),
           useValue: mockUserModel,
@@ -175,7 +189,7 @@ describe('PointsService', () => {
         123456789000,
         [
           { timestamp: new Date('2024-01-04T23:00:00Z').getTime() }, // 4:30 AM in SL time
-        ] as CreateWeatherDatumDto[],
+        ] as WeatherDataPoint[],
         session,
       );
 
@@ -192,7 +206,7 @@ describe('PointsService', () => {
         123456789000,
         [
           { timestamp: new Date('2024-01-05T23:00:00Z').getTime() }, // next day 4:30 AM in SL time
-        ] as CreateWeatherDatumDto[],
+        ] as WeatherDataPoint[],
         session,
       );
 
