@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
       runs-on: ubuntu-latest
+      environment: WeatherKids_PROD
       steps:
           - name: Pull changes into server
             uses: appleboy/ssh-action@v1.0.3
