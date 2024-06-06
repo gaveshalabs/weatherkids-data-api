@@ -1,40 +1,51 @@
 name: Deploy NestJS API to DigitalOcean
 
 on:
-    push:
-        branches:
-            - main
-
-env:
-    DOCKER_SERVICE_NAME: unknown
-    DOCKER_REPO: unknown
+  push:
+    branches:
+      - main
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout files
-              uses: actions/checkout@v4
-            - name: Login to Docker Hub
-              uses: docker/login-action@v3
-              with:
-                username: ${{ secrets.DOCKERHUB_USERNAME }}
-                passsword: ${{ secrets.DOCKERHUB_PASSWORD }}
-            - name: Build and push
-              uses: docker/build-push-action@v5
-              with:
-                push: true
-                tags: ${{ env.DOCKER_REPO }}
+  build:
+    runs-on: ubuntu-latest
+    environment: WeatherKids_PROD
+    steps:
+      - name: Checkout files
+        uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies.
+        run: npm ci
+      - name: Make envfile
+        uses: SpicyPizza/create-envfile@v2.0
+        with:
+          file_name: .env.prod
+          envkey_MOBILE_CLIENT_ID: ${{ secrets.MOBILE_CLIENT_ID }}
+          envkey_WEATHERCOM_CLIENT_ID: ${{ secrets.WEATHERCOM_CLIENT_ID }}
+          envkey_MONGO_URL: ${{ secrets.MONGO_URL }}
+          envkey_JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          passsword: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: gavesha/weatherkids-api:latest
 
-    deploy:
-        needs: build
-        runs-on: ubuntu-latest
-        steps:
-            - name: Updating docker image
-              uses: appleboy/ssh-action@v1.0.3
-              with:
-                host: ${{ secrets.DROPLET_SSH_HOST }}
-                username: ${{ secrets.DROPLET_SSH_USERNAME }}
-                key: ${{ secrets.DROPLET_SSH_KEY }}
-                script: |
-                    docker service update --image "${{ env.DOCKER_REPO }}:latest" ${{ env.DOCKER_SERVICE_NAME }}
+  deploy:
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+          - name: Updating docker image
+            uses: appleboy/ssh-action@v1.0.3
+            with:
+              host: ${{ secrets.DROPLET_SSH_HOST }}
+              username: ${{ secrets.DROPLET_SSH_USERNAME }}
+              key: ${{ secrets.DROPLET_SSH_KEY }}
+              script: |
+                  docker service update --image "${{ env.DOCKER_REPO }}:latest" ${{ env.DOCKER_SERVICE_NAME }}
