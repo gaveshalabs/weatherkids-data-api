@@ -17,9 +17,9 @@ jobs:
               username: ${{ secrets.DROPLET_SSH_USERNAME }}
               key: ${{ secrets.DROPLET_SSH_KEY }}
               script: |
-                mkdir -p app
-                cd app
                 git clone https://github.com/gaveshalabs/weatherkids-data-api.git
+                cp .env.prod weatherkids-data-api/.env.prod
+                cd weatherkids-data-api
                 npm ci --only=production
                 npm run build
                 node dist/index.js
