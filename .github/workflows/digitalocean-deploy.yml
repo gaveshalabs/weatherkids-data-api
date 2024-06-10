@@ -32,7 +32,7 @@ jobs:
                   cp .env.prod "$TARGET_DIR/.env.prod"
                   cd "$TARGET_DIR"
                 fi
-                
+                nvm use 20
                 npm ci --only=production
                 npm run build
                 node dist/index.js
