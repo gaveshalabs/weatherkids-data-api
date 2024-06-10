@@ -17,9 +17,22 @@ jobs:
               username: ${{ secrets.DROPLET_SSH_USERNAME }}
               key: ${{ secrets.DROPLET_SSH_KEY }}
               script: |
-                git clone https://github.com/gaveshalabs/weatherkids-data-api.git
-                cp .env.prod weatherkids-data-api/.env.prod
-                cd weatherkids-data-api
+                # Variables
+                REPO_URL="https://github.com/gaveshalabs/weatherkids-data-api"
+                TARGET_DIR="~/weatherkids-data-api"
+                
+                # Check if the target directory exists
+                if [ -d "$TARGET_DIR" ]; then
+                  echo "Directory $TARGET_DIR exists. Performing git pull."
+                  cd "$TARGET_DIR"
+                  git pull
+                else
+                  echo "Directory $TARGET_DIR does not exist. Cloning repository."
+                  git clone "$REPO_URL" "$TARGET_DIR"
+                  cp .env.prod "$TARGET_DIR/.env.prod"
+                  cd "$TARGET_DIR"
+                fi
+                
                 npm ci --only=production
                 npm run build
                 node dist/index.js
