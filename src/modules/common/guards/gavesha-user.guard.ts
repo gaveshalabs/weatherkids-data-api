@@ -26,7 +26,7 @@ export class ValidateGaveshaUserGuard implements CanActivate {
       await this.tokenService.validateGaveshaUserApiKey(apikey);
       return true;
     } catch (error) {
-      console.error('Error validating admin user', error);
+      console.error('Error validating user', error);
       throw new HttpException(error, 401);
     }
   }

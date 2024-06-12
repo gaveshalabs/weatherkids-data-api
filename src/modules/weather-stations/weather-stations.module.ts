@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { WeatherStationsService } from './weather-stations.service';
 import { WeatherStationsController } from './weather-stations.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -14,7 +14,7 @@ import { TokenModule } from '../users/token/token.module';
 @Module({
   imports: [
     PointsModule,
-    WeatherDataModule,
+    forwardRef(()=>WeatherDataModule),
     UsersModule,
     TokenModule,
     MongooseModule.forFeature([

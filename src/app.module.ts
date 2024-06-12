@@ -14,6 +14,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PointsModule } from './modules/points/points.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TokenModule } from './modules/users/token/token.module';
+import { ClientsModule } from './modules/clients/clients.module';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -40,6 +41,7 @@ import { TokenModule } from './modules/users/token/token.module';
     WeatherDataModule,
     WeatherStationsModule,
     PointsModule,
+    ClientsModule,
 
     ScheduleModule.forRoot(),
   ],

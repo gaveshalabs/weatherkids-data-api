@@ -121,6 +121,13 @@ export class WeatherStationsService {
     });
   }
 
+  findByClient(clientId: string): Promise<WeatherStationDocument> {
+    return this.weatherStationModel.findOne({
+      client_id: clientId,
+      is_hidden: { $ne: true },
+    });
+  }
+
   async update(_id: string, updateWeatherStationDto: UpdateWeatherStationDto) {
     const updatedWeatherStation =
       await this.weatherStationModel.findByIdAndUpdate(

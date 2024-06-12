@@ -1,7 +1,8 @@
 import { IGenUserApiKey } from '../../common/interfaces/gen-user-api-key.interface';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { UsersService } from '../users.service';
 import { HttpException, Injectable } from '@nestjs/common';
+import { IGenClientKey } from '../../common/interfaces/gen-client-key.interface';
 
 @Injectable()
 export class TokenService {
@@ -61,5 +62,58 @@ export class TokenService {
 
   public validateComClientId(clientId: string) {
     return clientId === process.env.WEATHERCOM_CLIENT_ID;
+  }
+
+  public async generateClientAccessToken(
+    data: IGenClientKey,
+  ): Promise<string> {
+    const expiresIn: string = data.expiresIn || '1d'; // 1 day
+
+    try {
+      return await this.jwtService.signAsync(data.payload, {
+        expiresIn: expiresIn,
+        issuer: 'https://auth.gavesha.space/access',
+        subject: data.subject,
+      });
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  public async generateRefreshToken(data: IGenClientKey) {
+    return this.jwtService.signAsync(data.payload, {
+      expiresIn: data.expiresIn || '90d',
+      issuer: 'https://auth.gavesha.space/refresh',
+      subject: data.subject,
+    });
+  }
+
+  public async validateClientAccessToken(accessTokenHeader: string): Promise<IGenClientKey['payload'] & {sub: string, iss: string}> {
+    // Verify the refresh token
+    try {
+      return this.jwtService.verifyAsync(accessTokenHeader.split(' ')[1]);
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        throw new HttpException('Token expired, err 1004', 401);
+      }
+      throw new HttpException('Token validation failed, err 1005', 401);
+    }
+  }
+
+  public async verifyRefreshToken(refreshTokenHeader: string): Promise<IGenClientKey['payload'] & {sub: string, iss: string}> {
+    // Verify the refresh token
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshTokenHeader.split(' ')[1]);
+      if ((payload.iss as string).indexOf('refresh')) {
+        return payload;
+      }
+      throw new HttpException('Token validation failed, err 1003', 401);
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        throw new HttpException('Token expired, err 1004', 401);
+      }
+      throw new HttpException('Token validation failed, err 1005', 401);
+    }
   }
 }

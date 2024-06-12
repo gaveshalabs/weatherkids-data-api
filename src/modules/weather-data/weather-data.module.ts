@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { WeatherDataService } from './weather-data.service';
 import { WeatherDataController } from './weather-data.controller';
 import {
@@ -8,6 +8,7 @@ import {
 import { MongooseModule } from '@nestjs/mongoose';
 import { PointsModule } from '../points/points.module';
 import { TokenModule } from '../users/token/token.module';
+import { WeatherStationsModule } from '../weather-stations/weather-stations.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TokenModule } from '../users/token/token.module';
     ]),
     TokenModule,
     PointsModule,
+    forwardRef(()=>WeatherStationsModule),
   ],
   controllers: [WeatherDataController],
   providers: [WeatherDataService, WeatherDatum],
