@@ -90,9 +90,8 @@ export class TokenService {
   }
 
   public async validateClientAccessToken(accessTokenHeader: string): Promise<IGenClientKey['payload'] & {sub: string, iss: string}> {
-    // Verify the refresh token
     try {
-      return this.jwtService.verifyAsync(accessTokenHeader.split(' ')[1]);
+      return await this.jwtService.verifyAsync(accessTokenHeader.split(' ')[1]);
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         throw new HttpException('Token expired, err 1004', 401);
@@ -102,7 +101,6 @@ export class TokenService {
   }
 
   public async verifyRefreshToken(refreshTokenHeader: string): Promise<IGenClientKey['payload'] & {sub: string, iss: string}> {
-    // Verify the refresh token
     try {
       const payload = await this.jwtService.verifyAsync(refreshTokenHeader.split(' ')[1]);
       if ((payload.iss as string).indexOf('refresh')) {

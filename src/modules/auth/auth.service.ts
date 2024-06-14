@@ -67,7 +67,7 @@ export class AuthService {
     } catch (error) {
       ;
     }
-    const accessToken = await this.tokenService.generateClientAccessToken({ payload, subject: clientId });
+    const accessToken = await this.tokenService.generateClientAccessToken({ payload, subject: clientId, expiresIn: '1y' });
     const refreshToken = await this.tokenService.generateRefreshToken({ payload, subject: clientId });
 
     return {
