@@ -8,6 +8,10 @@ export class WeatherDataPoint {
 
   @IsOptional()
   @Prop()
+  timestamp_iso: string;
+
+  @IsOptional()
+  @Prop()
   temperature: number;
 
   @IsOptional()

@@ -30,4 +30,7 @@ export class CreateBulkWeatherDataDto {
 
   @IsOptional()
   readonly client_id?: string;
+
+  @IsOptional()
+  readonly sensor_id?: string;
 }
