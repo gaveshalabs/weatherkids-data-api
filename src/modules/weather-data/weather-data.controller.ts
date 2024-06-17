@@ -1,29 +1,28 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Delete,
-  ParseUUIDPipe,
-  UseGuards,
   BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Headers,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  Req,
+  UseGuards,
   UsePipes,
   ValidationPipe,
-  Query,
-  Headers,
-  Req,
-  ForbiddenException,
 } from '@nestjs/common';
-import { WeatherDataService } from './weather-data.service';
 import { ApiTags } from '@nestjs/swagger';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
-import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
-import { CreateBulkWeatherDataDto } from './dto/create-bulk-weather-data.dto';
-import { BulkCreateWeatherDataResponseDto } from './dto/bulk-create-weather-data-response.dto';
-import { GetWeatherDatumDto } from './dto/get-weather-datum.dto';
-import { CreateWeatherComBulkWeatherDataDto } from './dto/create-weathercom-bulk-weather-data.dto';
 import { WeatherStationsService } from '../weather-stations/weather-stations.service';
+import { BulkCreateWeatherDataResponseDto } from './dto/bulk-create-weather-data-response.dto';
+import { CreateBulkWeatherDataDto } from './dto/create-bulk-weather-data.dto';
+import { CreateWeatherComBulkWeatherDataDto } from './dto/create-weathercom-bulk-weather-data.dto';
+import { GetWeatherDatumDto } from './dto/get-weather-datum.dto';
+import { WeatherDataService } from './weather-data.service';
 
 @Controller('weather-data')
 @ApiTags('weather-data')
