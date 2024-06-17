@@ -184,7 +184,7 @@ export class WeatherDataService {
     });
 
     const returnObject = {
-       _id:null,
+       _id: null,
        timestamp_iso: moment().toISOString(true),
     }  as BulkCreateWeatherDataResponseDto;
 

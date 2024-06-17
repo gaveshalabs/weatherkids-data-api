@@ -23,6 +23,7 @@ import { CreateBulkWeatherDataDto } from './dto/create-bulk-weather-data.dto';
 import { CreateWeatherComBulkWeatherDataDto } from './dto/create-weathercom-bulk-weather-data.dto';
 import { GetWeatherDatumDto } from './dto/get-weather-datum.dto';
 import { WeatherDataService } from './weather-data.service';
+import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
 
 @Controller('weather-data')
 @ApiTags('weather-data')
@@ -46,7 +47,11 @@ export class WeatherDataController {
     @Body() createBulkWeatherData: CreateBulkWeatherDataDto,
   ): Promise<BulkCreateWeatherDataResponseDto[]> {
     const res = await this.weatherDataService.bulkCommit(createBulkWeatherData);
-    console.info(res.length, 'data committed to station', createBulkWeatherData.weather_station_id);
+    console.info(
+      res.length,
+      'data committed to station',
+      createBulkWeatherData.weather_station_id,
+    );
     return res;
   }
 
@@ -64,7 +69,6 @@ export class WeatherDataController {
     @Body() createBulkWeatherData: CreateWeatherComBulkWeatherDataDto,
     @Req() req: any,
   ): Promise<BulkCreateWeatherDataResponseDto[]> {
-
     const station = await this.weatherStationService.findByClient(req.clientId);
     if (!station) {
       console.error('Data commit attempted from invalid client:', req.clientId);
