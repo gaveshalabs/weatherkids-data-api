@@ -17,6 +17,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
+import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
 import { WeatherStationsService } from '../weather-stations/weather-stations.service';
 import { BulkCreateWeatherDataResponseDto } from './dto/bulk-create-weather-data-response.dto';
 import { CreateBulkWeatherDataDto } from './dto/create-bulk-weather-data.dto';
