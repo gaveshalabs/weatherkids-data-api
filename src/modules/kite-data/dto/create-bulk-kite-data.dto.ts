@@ -1,9 +1,9 @@
 import { Type } from "class-transformer";
 import { ArrayNotEmpty, IsArray, IsNotEmpty, IsOptional, ValidateNested } from "class-validator";
 import { ICoordinates } from "src/modules/common/interfaces/coordinates.interface";
-import { KiteDataPoint } from "../entities/kite-datapoint.entity";
+import { KiteDataPoint } from "./kite-datapoint.dto";
 
-export class createBulkKiteDataDto{
+export class CreateBulkKiteDataDto{
     @IsNotEmpty()
     readonly author_user_id: string;
   
@@ -27,4 +27,7 @@ export class createBulkKiteDataDto{
 
     @IsOptional()
     readonly sensor_id?: string;
+
+    @IsOptional()
+    readonly attempt_timestamp?: Date;
 }

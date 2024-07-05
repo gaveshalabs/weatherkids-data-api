@@ -1,7 +1,7 @@
 import { Prop } from "@nestjs/mongoose";
 import { ICoordinates } from "src/modules/common/interfaces/coordinates.interface";
 
-export class GetWeatherDatumDto {
+export class GetKiteDatumDto {
     @Prop()
     readonly _id: string;
   
