@@ -3,7 +3,7 @@ import { ArrayNotEmpty, IsArray, IsNotEmpty, IsOptional, ValidateNested } from "
 import { ICoordinates } from "src/modules/common/interfaces/coordinates.interface";
 import { KiteDataPoint } from "../entities/kite-datapoint.entity";
 
-export class createBulkKiteDataDto{
+export class CreateBulkKiteDataDto{
     @IsNotEmpty()
     readonly author_user_id: string;
   
