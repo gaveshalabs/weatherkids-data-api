@@ -54,7 +54,8 @@ export class WeatherDataService {
 
       if (
         weather_station_id === 'dbfb6590-93c1-455b-aaf2-668560a73e4b' ||
-        weather_station_id == '16c97b9b-f67f-4ab5-a6cb-730413ab4719'
+        weather_station_id === '16c97b9b-f67f-4ab5-a6cb-730413ab4719' ||
+        weather_station_id === '3337b81c-67d1-47c6-bdea-9f9b6c4d8977'
       ) {
         element.timestamp = new Date().getTime();
       }
