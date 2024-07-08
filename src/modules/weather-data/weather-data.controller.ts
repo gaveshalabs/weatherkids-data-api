@@ -79,9 +79,17 @@ export class WeatherDataController {
       author_user_id: station.user_ids[0],
       weather_station_id: station.id,
     };
-    const res = await this.weatherDataService.bulkCommit(dto);
-    console.info(res.length, 'data committed from weathercom', station.id);
-    return res;
+    try {
+      const res = await this.weatherDataService.bulkCommit(dto);
+      console.info(res.length, 'data committed from weathercom', station.id);
+      return res;
+    } catch (err) {
+      console.error(
+        'ERROR in bulk commit from weather computer. Request body=',
+        dto,
+        err,
+      );
+    }
   }
 
   @UseGuards(ValidateGaveshaClientGuard)
