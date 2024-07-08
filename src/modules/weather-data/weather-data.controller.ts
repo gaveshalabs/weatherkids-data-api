@@ -89,6 +89,7 @@ export class WeatherDataController {
         dto,
         err,
       );
+      throw new Error();
     }
   }
 
