@@ -1,12 +1,12 @@
-import { CreateSessionDto } from '../dto/create-session.dto';
-import { UsersService } from '../users.service';
-import { CreateUserDto } from '../dto/create-user.dto';
-import { User } from '../entities/user.entity';
 import { HttpException, Injectable } from '@nestjs/common';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { v4 as uuidv4 } from 'uuid';
 import { WeatherStationsService } from '../../weather-stations/weather-stations.service';
+import { CreateSessionDto } from '../dto/create-session.dto';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { User } from '../entities/user.entity';
 import { TokenService } from '../token/token.service';
+import { UsersService } from '../users.service';
 
 @Injectable()
 export class SessionService {
@@ -107,6 +107,7 @@ export class SessionService {
       is_active: true,
       gavesha_user_api_key: gaveshaUserApiKey,
       scopes: [],
+      new_user: true,
     };
 
     // Create user within the database.
