@@ -20,7 +20,7 @@ export class SessionService {
   async create(
     createSessionDto: CreateSessionDto,
     idToken: string,
-  ): Promise<User> {
+  ): Promise<User & {new_user: boolean}> {
     // Check auth.
     try {
       await this.authService.authenticateWithGoogle(idToken);
@@ -75,10 +75,10 @@ export class SessionService {
           gavesha_user_api_key: newApiKey,
         });
 
-        return updatedUser;
+        return { ...updatedUser, new_user: false };
       }
 
-      return user;
+      return  { ...user, new_user: false };
     }
 
     // Create a new userId.
@@ -107,11 +107,11 @@ export class SessionService {
       is_active: true,
       gavesha_user_api_key: gaveshaUserApiKey,
       scopes: [],
-      new_user: true,
     };
 
     // Create user within the database.
     // When creating a user, the uuidv4 userId is passed as the _id.
-    return await this.usersService.create(createUserDto, uuidV4Id);
+    const result = await this.usersService.create(createUserDto, uuidV4Id);
+    return { ...result, new_user: true };
   }
 }
