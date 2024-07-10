@@ -65,4 +65,11 @@ export class KitePlayersService {
   findAll(): Promise<GetKitePlayerDto[]> {
     return this.kitePlayerModel.find();
   }
+
+  findOne(id: string) {
+    return this.kitePlayerModel.findOne({
+      _id: id,
+    });
+  }
+
 }

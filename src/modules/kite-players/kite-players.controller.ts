@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Headers,
+  Param,
   Post,
   UseGuards
 } from '@nestjs/common';
@@ -39,4 +40,10 @@ export class KitePlayersController {
     findAll(): Promise<GetKitePlayerDto[]>{
         return this.kiteplayersService.findAll();
     }
+
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+      return this.kiteplayersService.findOne(id);
+    }
+
 }
