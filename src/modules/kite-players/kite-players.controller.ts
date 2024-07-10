@@ -4,6 +4,7 @@ import {
   Get,
   Headers,
   Param,
+  Patch,
   Post,
   UseGuards
 } from '@nestjs/common';
@@ -13,6 +14,8 @@ import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
 import { KiteDataService } from '../kite-data/kite-data.service';
 import { CreateKitePlayerDto } from './dto/create-kite-player-dto';
 import { GetKitePlayerDto } from './dto/get-kite-player-dto';
+import { KitePlayerUpdatedResponseDto } from './dto/kite-player-updated-response.dto';
+import { UpdateKitePlayerDto } from './dto/update-kite-player-dto';
 import { KitePlayersService } from './kite-players.service';
 
 
@@ -46,4 +49,12 @@ export class KitePlayersController {
       return this.kiteplayersService.findOne(id);
     }
 
+    @UseGuards(ValidateGaveshaClientGuard)
+    @Patch(':id')
+    async update(
+      @Param('id') id: string,
+      @Body() updateKiteplayerDto: UpdateKitePlayerDto,
+    ): Promise<KitePlayerUpdatedResponseDto> {
+      return this.kiteplayersService.update(id, updateKiteplayerDto);
+    }
 }
