@@ -1,12 +1,12 @@
-import { CreateSessionDto } from '../dto/create-session.dto';
-import { UsersService } from '../users.service';
-import { CreateUserDto } from '../dto/create-user.dto';
-import { User } from '../entities/user.entity';
 import { HttpException, Injectable } from '@nestjs/common';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { v4 as uuidv4 } from 'uuid';
 import { WeatherStationsService } from '../../weather-stations/weather-stations.service';
+import { CreateSessionDto } from '../dto/create-session.dto';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { User } from '../entities/user.entity';
 import { TokenService } from '../token/token.service';
+import { UsersService } from '../users.service';
 
 @Injectable()
 export class SessionService {
@@ -20,7 +20,7 @@ export class SessionService {
   async create(
     createSessionDto: CreateSessionDto,
     idToken: string,
-  ): Promise<User> {
+  ): Promise<User & {new_user: boolean}> {
     // Check auth.
     try {
       await this.authService.authenticateWithGoogle(idToken);
@@ -75,10 +75,10 @@ export class SessionService {
           gavesha_user_api_key: newApiKey,
         });
 
-        return updatedUser;
+        return { ...updatedUser, new_user: false };
       }
 
-      return user;
+      return  { ...user, new_user: false };
     }
 
     // Create a new userId.
@@ -111,6 +111,7 @@ export class SessionService {
 
     // Create user within the database.
     // When creating a user, the uuidv4 userId is passed as the _id.
-    return await this.usersService.create(createUserDto, uuidV4Id);
+    const result = await this.usersService.create(createUserDto, uuidV4Id);
+    return { ...result, new_user: true };
   }
 }
