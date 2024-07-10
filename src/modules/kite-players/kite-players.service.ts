@@ -86,4 +86,8 @@ export class KitePlayersService {
 
     return updatedKitePlayer;
   }
+
+  remove(id: number) {
+    return `This action removes a #${id} weatherStation`;
+  }
 }
