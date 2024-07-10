@@ -104,4 +104,19 @@ export class KiteDataService {
     } as GetKiteDatumDto;
     return transformed;
   }
+
+  async findLatestByKitePlayerId(
+    kitePlayerId: string,
+  ): Promise<GetKiteDatumDto> {
+    const datum = (await this.kiteDatumModel
+      .findOne({ 'metadata.kite_player_id': kitePlayerId })
+      .sort({ timestamp: -1 })
+      .exec()) as KiteDatum;
+
+    if (!datum) {
+      return null;
+    }
+
+    return this.transformKiteDatum(datum);
+  }
 }

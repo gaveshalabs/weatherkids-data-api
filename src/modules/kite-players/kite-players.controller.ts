@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   UseGuards
@@ -56,5 +58,33 @@ export class KitePlayersController {
       @Body() updateKiteplayerDto: UpdateKitePlayerDto,
     ): Promise<KitePlayerUpdatedResponseDto> {
       return this.kiteplayersService.update(id, updateKiteplayerDto);
+    }
+
+    @Get('latest/:kite_player_id')
+    async findLatestByKitePlayerId(
+      @Param('kite_player_id', new ParseUUIDPipe({ version: '4' }))
+      kitePlayerId: string,
+    ) {
+  
+      // Get kite data.
+      const kiteData =
+        await this.kiteDataService.findLatestByKitePlayerId(
+          kitePlayerId,
+        );
+  
+      if (!kiteData) {
+        return {
+          kiteData: null,
+        };
+      }
+      return {
+        kiteData,
+      };
+    }
+
+    @UseGuards(ValidateGaveshaClientGuard)
+    @Delete(':id')
+    remove(@Param('id') id: string) {
+      return this.kiteplayersService.remove(+id);
     }
 }
