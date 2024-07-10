@@ -3,8 +3,10 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
 import { CreateKitePlayerDto } from './dto/create-kite-player-dto';
+import { GetKitePlayerDto } from './dto/get-kite-player-dto';
 import { KitePlayerCreatedResponseDto } from './dto/kite-player-created-response.dto';
 import { KitePlayer, KitePlayerDocument } from './entities/kite-player.entity';
+
 
 @Injectable()
 export class KitePlayersService {
@@ -58,5 +60,9 @@ export class KitePlayersService {
     } catch (error) {
       throw error;
     }
+  }
+
+  findAll(): Promise<GetKitePlayerDto[]> {
+    return this.kitePlayerModel.find();
   }
 }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Headers,
   Post,
   UseGuards
@@ -10,6 +11,7 @@ import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guar
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
 import { KiteDataService } from '../kite-data/kite-data.service';
 import { CreateKitePlayerDto } from './dto/create-kite-player-dto';
+import { GetKitePlayerDto } from './dto/get-kite-player-dto';
 import { KitePlayersService } from './kite-players.service';
 
 
@@ -33,4 +35,8 @@ export class KitePlayersController {
      );
     }
 
+    @Get()
+    findAll(): Promise<GetKitePlayerDto[]>{
+        return this.kiteplayersService.findAll();
+    }
 }
