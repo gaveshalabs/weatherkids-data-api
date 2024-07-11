@@ -5,4 +5,5 @@ export class GetKitePlayerDto {
     readonly name: string;
     readonly birthday:Date;
     readonly coordinates: ICoordinates;
+    readonly city: string;
   }

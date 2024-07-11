@@ -16,11 +16,14 @@ export class KitePlayer {
     @Prop({ required: true })
     birthday: Date;
 
-    @Prop({ type: [{ type: String, default: uuidv4 }] })
+    @Prop({ required: true})
     user_id: string;
   
     @Prop({ required: true, type: Object })
     coordinates: ICoordinates;
+
+    @Prop({ required: true })
+    city: string;
 
     @Prop()
     client_id: string;

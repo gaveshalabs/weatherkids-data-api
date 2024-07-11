@@ -1,9 +1,11 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
 import { CreateKitePlayerDto } from './dto/create-kite-player-dto';
+import { GetKitePlayerDto } from './dto/get-kite-player-dto';
 import { KitePlayerCreatedResponseDto } from './dto/kite-player-created-response.dto';
+import { UpdateKitePlayerDto } from './dto/update-kite-player-dto';
 import { KitePlayer, KitePlayerDocument } from './entities/kite-player.entity';
 
 @Injectable()
@@ -52,11 +54,40 @@ export class KitePlayersService {
         name: kitePlayer.name,
         birthday: kitePlayer.birthday,
         coordinates: kitePlayer.coordinates,
+        city: kitePlayer.city
       };
       
       return response;
     } catch (error) {
       throw error;
     }
+  }
+
+  findAll(): Promise<GetKitePlayerDto[]> {
+    return this.kitePlayerModel.find();
+  }
+
+  findOne(id: string) {
+    return this.kitePlayerModel.findOne({
+      _id: id,
+    });
+  }
+
+  async update(_id: string, kitePlayerDto: UpdateKitePlayerDto) {
+    const updatedKitePlayer = await this.kitePlayerModel.findByIdAndUpdate(
+      _id,
+      kitePlayerDto, 
+      { new: true }, // Return the updated document instead of the original
+    ).exec();
+
+    if (!updatedKitePlayer) {
+      throw new NotFoundException(`Kite Player with ID '${_id}' not found`);
+    }
+
+    return updatedKitePlayer;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} weatherStation`;
   }
 }

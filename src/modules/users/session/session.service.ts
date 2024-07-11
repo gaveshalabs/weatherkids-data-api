@@ -17,6 +17,23 @@ export class SessionService {
     private weatherStationsService: WeatherStationsService,
   ) {}
 
+  private createUserResponse(user: User, newUser: boolean): User & { new_user: boolean } {
+    return {
+      _id:user._id,
+      email: user.email,
+      uid: user.uid,
+      name: user.name,
+      contact_no: user.contact_no,
+      nearest_city: user.nearest_city,
+      nearest_city_postalcode: user.nearest_city_postalcode,
+      photo_url: user.photo_url,
+      is_active: user.is_active,
+      gavesha_user_api_key: user.gavesha_user_api_key,
+      scopes: user.scopes,
+      new_user: newUser,
+    };
+  }
+
   async create(
     createSessionDto: CreateSessionDto,
     idToken: string,
@@ -75,10 +92,10 @@ export class SessionService {
           gavesha_user_api_key: newApiKey,
         });
 
-        return { ...updatedUser, new_user: false };
+        return this.createUserResponse(updatedUser, false);
       }
 
-      return  { ...user, new_user: false };
+      return this.createUserResponse(user, false);
     }
 
     // Create a new userId.
@@ -112,6 +129,6 @@ export class SessionService {
     // Create user within the database.
     // When creating a user, the uuidv4 userId is passed as the _id.
     const result = await this.usersService.create(createUserDto, uuidV4Id);
-    return { ...result, new_user: true };
+    return this.createUserResponse(result, true);
   }
 }

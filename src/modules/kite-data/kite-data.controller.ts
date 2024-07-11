@@ -1,54 +1,40 @@
-import { Controller } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Post, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
+import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
+import { KitePlayersService } from '../kite-players/kite-players.service';
+import { BulkCreateKiteDataResponseDto } from './dto/bulk-create-kite-data-response.dto';
+import { CreateBulkKiteDataDto } from './dto/create-bulk-kite-data.dto';
+import { KiteDataService } from './kite-data.service';
+import { Controller } from '@nestjs/common';
 
 @Controller('kite-data')
 @ApiTags('kite-data')
 export class KiteDataController {
-    // constructor(
-    //     private readonly kiteDataService: KiteDataService,
-    //     private readonly kitePlayerService: KitePlayersService,
-    //   ) {}
+    constructor(
+        private readonly kiteDataService: KiteDataService,
+        private readonly kitePlayerService: KitePlayersService,
+      ) {}
 
-    //   @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
-    //   @Post('bulk')
-    //   @UsePipes(
-    //   new ValidationPipe({
-    //     transform: true,
-    //     whitelist: true,
-    //     forbidNonWhitelisted: true,
-    //     exceptionFactory: (errors) => new BadRequestException(errors),
-    //   }),
-    // )
+      @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
+      @Post('bulk')
+      @UsePipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        exceptionFactory: (errors) => new BadRequestException(errors),
+      }),
+    )
 
-    // async bulkCommit(
-    //     @Body() createBulkKiteData: CreateBulkKiteDataDto,
-    //   ): Promise<BulkCreateKiteDataResponseDto[]> {
-    //     const res = await this.kiteDataService.bulkCommit(createBulkKiteData);
-    //     console.info(res.length, 'data committed to player', createBulkKiteData.kite_player_id);
-    //     return res;
-    //   }
-
-    //   @Get('all')
-    //   findAll() {
-    //     return this.kiteDataService.findAll();
-    //   }
-
-    //   @Get()
-    //   async findAllByKitePlayerId(
-    //     @Query('kite_player_id', new ParseUUIDPipe({ version: '4' }))
-    //     kitePlayerId: string,
-    //     @Query('from_date') dateFrom?: string, // Optional parameter
-    //     @Query('to_date') dateTo?: string, // Optional parameter
-    //   ): Promise<GetKiteDatumDto[]> {
-    //     return await this.kiteDataService.findAllByKitePlayerId(
-    //       kitePlayerId,
-    //       dateFrom,
-    //       dateTo,
-    //     );
-    //   }
+    async bulkCommit(
+        @Body() createBulkKiteData: CreateBulkKiteDataDto,
+      ): Promise<BulkCreateKiteDataResponseDto[]> {
+        const res = await this.kiteDataService.bulkCommit(createBulkKiteData);
+        console.info(res.length, 'data committed to player', createBulkKiteData.kite_player_id);
+        return res;
+      }
     
-    //   @Delete(':id')
-    //   remove(@Param('id') id: string) {
-    //     return this.kiteDataService.remove(+id);
-    //   }
+    
+    }
 }
