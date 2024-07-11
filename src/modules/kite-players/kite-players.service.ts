@@ -55,6 +55,7 @@ export class KitePlayersService {
         name: kitePlayer.name,
         birthday: kitePlayer.birthday,
         coordinates: kitePlayer.coordinates,
+        city: kitePlayer.city
       };
       
       return response;

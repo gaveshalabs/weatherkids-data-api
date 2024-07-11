@@ -39,6 +39,15 @@ export class KiteDataService {
     let insertedKiteData = [];
     let existingKiteData = [];
 
+    existingKiteData = await this.kiteDatumModel
+    .find({
+      timestamp: {
+        $in: data.map((datum) => datum.timestamp),
+      },
+      'metadata.author_user_id': author_user_id,
+    })
+    .exec();
+
     try {
       const currentUtcTimestamp = new Date().getTime(); // Get current UTC timestamp
 
@@ -116,7 +125,12 @@ export class KiteDataService {
     if (!datum) {
       return null;
     }
-
-    return this.transformKiteDatum(datum);
+    const transformedDatum = this.transformKiteDatum(datum);
+    const datumWithMaxHeight = {
+      ...transformedDatum,
+      max_height: 800,
+    };
+  
+    return datumWithMaxHeight;
   }
 }

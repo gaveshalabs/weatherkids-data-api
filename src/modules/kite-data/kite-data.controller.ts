@@ -33,6 +33,6 @@ export class KiteDataController {
         console.info(res.length, 'data committed to player', createBulkKiteData.kite_player_id);
         return res;
       }
-
-
-}
+    
+    
+    }
