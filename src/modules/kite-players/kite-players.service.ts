@@ -8,7 +8,6 @@ import { KitePlayerCreatedResponseDto } from './dto/kite-player-created-response
 import { UpdateKitePlayerDto } from './dto/update-kite-player-dto';
 import { KitePlayer, KitePlayerDocument } from './entities/kite-player.entity';
 
-
 @Injectable()
 export class KitePlayersService {
   constructor(

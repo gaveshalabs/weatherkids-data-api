@@ -6,6 +6,7 @@ import { KitePlayersService } from '../kite-players/kite-players.service';
 import { BulkCreateKiteDataResponseDto } from './dto/bulk-create-kite-data-response.dto';
 import { CreateBulkKiteDataDto } from './dto/create-bulk-kite-data.dto';
 import { KiteDataService } from './kite-data.service';
+import { Controller } from '@nestjs/common';
 
 @Controller('kite-data')
 @ApiTags('kite-data')
@@ -36,3 +37,4 @@ export class KiteDataController {
     
     
     }
+}

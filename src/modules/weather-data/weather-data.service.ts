@@ -52,8 +52,12 @@ export class WeatherDataService {
       //   element.timestamp = new Date(element.timestamp_iso).getTime();
       // }
 
-      if(weather_station_id === 'dbfb6590-93c1-455b-aaf2-668560a73e4b'){
-          element.timestamp = new Date().getTime();
+      if (
+        weather_station_id === 'dbfb6590-93c1-455b-aaf2-668560a73e4b' ||
+        weather_station_id === '16c97b9b-f67f-4ab5-a6cb-730413ab4719' ||
+        weather_station_id === '3337b81c-67d1-47c6-bdea-9f9b6c4d8977'
+      ) {
+        element.timestamp = new Date().getTime();
       }
     }
 
@@ -184,14 +188,13 @@ export class WeatherDataService {
     });
 
     const returnObject = {
-       _id:null,
-       timestamp_iso: moment().toISOString(true),
-    }  as BulkCreateWeatherDataResponseDto;
+      _id: null,
+      timestamp_iso: moment().toISOString(true),
+    } as BulkCreateWeatherDataResponseDto;
 
     finalResponse.push(returnObject);
 
     return finalResponse;
-
   }
 
   // TODO: Add types.
@@ -228,14 +231,14 @@ export class WeatherDataService {
       } else {
         transformed.temperature -= 12;
       }
-    // } else {
-    //   if (transformed.percentage_light_intensity == 0) {
-    //     transformed.temperature -= 3; // error is 5 degrees celsius
-    //   } else if (transformed.percentage_light_intensity < 50) {
-    //     transformed.temperature -= 6.5;
-    //   } else {
-    //     transformed.temperature -= 10;
-    //   }
+      // } else {
+      //   if (transformed.percentage_light_intensity == 0) {
+      //     transformed.temperature -= 3; // error is 5 degrees celsius
+      //   } else if (transformed.percentage_light_intensity < 50) {
+      //     transformed.temperature -= 6.5;
+      //   } else {
+      //     transformed.temperature -= 10;
+      //   }
     }
     return transformed;
   }
