@@ -15,14 +15,13 @@ export class KitePlayersService {
     private readonly kitePlayerModel: Model<KitePlayerDocument>,
     @InjectConnection() private readonly mongoConnection: Connection,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   // Protected by guards.
   async create(
     createKitePlayerDto: CreateKitePlayerDto,
     gaveshaUserApiKey: string,
   ): Promise<KitePlayerCreatedResponseDto> {
-
     try {
       // Step 1: Validate the API key
       let result = null;
@@ -32,21 +31,22 @@ export class KitePlayersService {
         throw new HttpException('API Key validation failed', 401);
       }
       // Step 2: Create Kite Player
-      const existingKitePlayer = await this.kitePlayerModel.findOne({
-        user_id: result._id,
-      }).exec();
-      
+      const existingKitePlayer = await this.kitePlayerModel
+        .findOne({
+          user_id: result._id,
+        })
+        .exec();
+
       let kitePlayer: typeof existingKitePlayer;
-      
+
       if (existingKitePlayer) {
         kitePlayer = existingKitePlayer;
       } else {
-        
         const newKitePlayer = new this.kitePlayerModel({
           ...createKitePlayerDto,
           user_id: result._id,
         });
-      
+
         kitePlayer = await newKitePlayer.save();
       }
       const response: KitePlayerCreatedResponseDto = {
@@ -54,9 +54,9 @@ export class KitePlayersService {
         name: kitePlayer.name,
         birthday: kitePlayer.birthday,
         coordinates: kitePlayer.coordinates,
-        city: kitePlayer.city
+        city: kitePlayer.city,
       };
-      
+
       return response;
     } catch (error) {
       throw error;
@@ -74,11 +74,13 @@ export class KitePlayersService {
   }
 
   async update(_id: string, kitePlayerDto: UpdateKitePlayerDto) {
-    const updatedKitePlayer = await this.kitePlayerModel.findByIdAndUpdate(
-      _id,
-      kitePlayerDto, 
-      { new: true }, // Return the updated document instead of the original
-    ).exec();
+    const updatedKitePlayer = await this.kitePlayerModel
+      .findByIdAndUpdate(
+        _id,
+        kitePlayerDto,
+        { new: true }, // Return the updated document instead of the original
+      )
+      .exec();
 
     if (!updatedKitePlayer) {
       throw new NotFoundException(`Kite Player with ID '${_id}' not found`);

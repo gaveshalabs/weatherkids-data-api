@@ -9,11 +9,11 @@ import { KitePlayersService } from './kite-players.service';
 
 @Module({
   imports: [
-    forwardRef(()=>KiteDataModule),
+    forwardRef(() => KiteDataModule),
     UsersModule,
     TokenModule,
     MongooseModule.forFeature([
-      {name: KitePlayer.name, schema: KitePlayerSchema},
+      { name: KitePlayer.name, schema: KitePlayerSchema },
     ]),
   ],
   controllers: [KitePlayersController],

@@ -17,9 +17,12 @@ export class SessionService {
     private weatherStationsService: WeatherStationsService,
   ) {}
 
-  private createUserResponse(user: User, newUser: boolean): User & { new_user: boolean } {
+  private createUserResponse(
+    user: User,
+    newUser: boolean,
+  ): User & { new_user: boolean } {
     return {
-      _id:user._id,
+      _id: user._id,
       email: user.email,
       uid: user.uid,
       name: user.name,
@@ -37,7 +40,7 @@ export class SessionService {
   async create(
     createSessionDto: CreateSessionDto,
     idToken: string,
-  ): Promise<User & {new_user: boolean}> {
+  ): Promise<User & { new_user: boolean }> {
     // Check auth.
     try {
       await this.authService.authenticateWithGoogle(idToken);

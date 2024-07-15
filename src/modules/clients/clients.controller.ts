@@ -5,11 +5,11 @@ import { ValidateAdminUserGuard } from '../common/guards/admin-user.guard';
 
 @Controller('clients')
 export class ClientsController {
-    constructor(private readonly clientService: ClientsService) {}
+  constructor(private readonly clientService: ClientsService) {}
 
-    @UseGuards(ValidateAdminUserGuard)
-    @Post()
-    create(@Body() createClientDto: CreateClientDto) {
-        return this.clientService.create(createClientDto);
-    }
+  @UseGuards(ValidateAdminUserGuard)
+  @Post()
+  create(@Body() createClientDto: CreateClientDto) {
+    return this.clientService.create(createClientDto);
+  }
 }

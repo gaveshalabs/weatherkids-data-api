@@ -16,14 +16,20 @@ export class KiteDataService {
     private readonly kiteDatumModel: Model<KiteDatumDocument>,
 
     @InjectConnection() private readonly mongoConnection: Connection,
-  ) { }
+  ) {}
 
   async bulkCommit(
     createBulkKiteData: CreateBulkKiteDataDto,
   ): Promise<BulkCreateKiteDataResponseDto[]> {
-    
     // Restructure the data to include the author_user_id, weather_station_id, metadata, coordinates.
-    const { author_user_id, kite_player_id, coordinates, sensor_id, data, attempt_timestamp } = createBulkKiteData;
+    const {
+      author_user_id,
+      kite_player_id,
+      coordinates,
+      sensor_id,
+      data,
+      attempt_timestamp,
+    } = createBulkKiteData;
 
     for (let i = 0; i < data.length; i++) {
       const element = data[i];
@@ -40,13 +46,13 @@ export class KiteDataService {
     let existingKiteData = [];
 
     existingKiteData = await this.kiteDatumModel
-    .find({
-      timestamp: {
-        $in: data.map((datum) => datum.timestamp),
-      },
-      'metadata.author_user_id': author_user_id,
-    })
-    .exec();
+      .find({
+        timestamp: {
+          $in: data.map((datum) => datum.timestamp),
+        },
+        'metadata.author_user_id': author_user_id,
+      })
+      .exec();
 
     try {
       const currentUtcTimestamp = new Date().getTime(); // Get current UTC timestamp
@@ -75,10 +81,14 @@ export class KiteDataService {
         };
       });
 
-      insertedKiteData = await this.kiteDatumModel.insertMany(populatedKiteData);
+      insertedKiteData =
+        await this.kiteDatumModel.insertMany(populatedKiteData);
 
       // Hacky checks to check if the data was inserted.
-      if (!insertedKiteData || insertedKiteData.length !== populatedKiteData.length) {
+      if (
+        !insertedKiteData ||
+        insertedKiteData.length !== populatedKiteData.length
+      ) {
         throw new Error('Error inserting kite data');
       }
     } catch (error) {
@@ -130,7 +140,7 @@ export class KiteDataService {
       ...transformedDatum,
       max_height: 800,
     };
-  
+
     return datumWithMaxHeight;
   }
 }

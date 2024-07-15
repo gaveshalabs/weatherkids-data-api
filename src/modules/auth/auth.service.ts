@@ -46,8 +46,13 @@ export class AuthService {
   }
 
   async authenticateClient(clientId: string, clientSecret: string) {
-    if (!await this.clientService.validateClientCredentials(clientId, clientSecret)) {
-        throw new UnauthorizedException('Invalid client credentials');
+    if (
+      !(await this.clientService.validateClientCredentials(
+        clientId,
+        clientSecret,
+      ))
+    ) {
+      throw new UnauthorizedException('Invalid client credentials');
     }
     return this.issueClientAuthToken(clientId);
   }
@@ -64,17 +69,22 @@ export class AuthService {
       if (station) {
         payload.weather_station_id = station.id;
       }
-    } catch (error) {
-      ;
-    }
-    const accessToken = await this.tokenService.generateClientAccessToken({ payload, subject: clientId, expiresIn: '1y' });
-    const refreshToken = await this.tokenService.generateRefreshToken({ payload, subject: clientId });
+    } catch (error) {}
+    const accessToken = await this.tokenService.generateClientAccessToken({
+      payload,
+      subject: clientId,
+      expiresIn: '1y',
+    });
+    const refreshToken = await this.tokenService.generateRefreshToken({
+      payload,
+      subject: clientId,
+    });
 
     return {
       access_token: accessToken,
       token_type: 'Bearer',
       refresh_token: refreshToken,
-      expires_in: new Date(new Date().getTime() + 86400000),  // in 1 day
+      expires_in: new Date(new Date().getTime() + 86400000), // in 1 day
     };
   }
 }

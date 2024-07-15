@@ -64,9 +64,7 @@ export class TokenService {
     return clientId === process.env.WEATHERCOM_CLIENT_ID;
   }
 
-  public async generateClientAccessToken(
-    data: IGenClientKey,
-  ): Promise<string> {
+  public async generateClientAccessToken(data: IGenClientKey): Promise<string> {
     const expiresIn: string = data.expiresIn || '1d'; // 1 day
 
     try {
@@ -89,7 +87,9 @@ export class TokenService {
     });
   }
 
-  public async validateClientAccessToken(accessTokenHeader: string): Promise<IGenClientKey['payload'] & {sub: string, iss: string}> {
+  public async validateClientAccessToken(
+    accessTokenHeader: string,
+  ): Promise<IGenClientKey['payload'] & { sub: string; iss: string }> {
     try {
       return await this.jwtService.verifyAsync(accessTokenHeader.split(' ')[1]);
     } catch (error) {
@@ -100,9 +100,13 @@ export class TokenService {
     }
   }
 
-  public async verifyRefreshToken(refreshTokenHeader: string): Promise<IGenClientKey['payload'] & {sub: string, iss: string}> {
+  public async verifyRefreshToken(
+    refreshTokenHeader: string,
+  ): Promise<IGenClientKey['payload'] & { sub: string; iss: string }> {
     try {
-      const payload = await this.jwtService.verifyAsync(refreshTokenHeader.split(' ')[1]);
+      const payload = await this.jwtService.verifyAsync(
+        refreshTokenHeader.split(' ')[1],
+      );
       if ((payload.iss as string).indexOf('refresh')) {
         return payload;
       }

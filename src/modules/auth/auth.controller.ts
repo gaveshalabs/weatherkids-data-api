@@ -1,4 +1,11 @@
-import { BadRequestException, Body, Controller, Headers, Post, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Headers,
+  Post,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -17,7 +24,14 @@ export class AuthController {
   }
 
   @Post('token')
-  async getAuthToken(@Body() body: { grant_type: string; client_id: string; client_secret: string }) {
+  async getAuthToken(
+    @Body()
+    body: {
+      grant_type: string;
+      client_id: string;
+      client_secret: string;
+    },
+  ) {
     const { grant_type, client_id, client_secret } = body;
 
     if (grant_type !== 'client_credentials') {

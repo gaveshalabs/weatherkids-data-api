@@ -9,10 +9,10 @@ import { KiteDataService } from './kite-data.service';
 @Module({
   imports: [
     MongooseModule.forFeature([
-      {name: KiteDatum.name, schema: KiteDatumSchema},
+      { name: KiteDatum.name, schema: KiteDatumSchema },
     ]),
     TokenModule,
-    forwardRef(()=>KitePlayersModule),
+    forwardRef(() => KitePlayersModule),
   ],
   controllers: [KiteDataController],
   providers: [KiteDataService, KiteDatum],

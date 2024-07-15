@@ -10,7 +10,13 @@ import { TokenModule } from '../token/token.module';
 import { ClientsModule } from '../../clients/clients.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, WeatherStationsModule, TokenModule, ClientsModule],
+  imports: [
+    AuthModule,
+    UsersModule,
+    WeatherStationsModule,
+    TokenModule,
+    ClientsModule,
+  ],
   controllers: [SessionController],
   providers: [SessionService, OAuth2Client, AuthService],
   exports: [SessionService],

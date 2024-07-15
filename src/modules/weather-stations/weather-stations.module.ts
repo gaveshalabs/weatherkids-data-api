@@ -14,7 +14,7 @@ import { TokenModule } from '../users/token/token.module';
 @Module({
   imports: [
     PointsModule,
-    forwardRef(()=>WeatherDataModule),
+    forwardRef(() => WeatherDataModule),
     UsersModule,
     TokenModule,
     MongooseModule.forFeature([
