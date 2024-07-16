@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
+  Param,
   Post,
   UseGuards,
   UsePipes,
@@ -44,4 +46,20 @@ export class KiteDataController {
     );
     return res;
   }
+
+      @Get('all')
+      findAll() {
+      return this.kiteDataService.findAll();
+    }
+
+    @Get('players-height')
+    async getPlayersHeight() {
+      return await this.kiteDataService.getKitePlayersHeight();
+    }
+
+    @Get('flying-mins/:kite_player_id')
+    async getFlyingMins(@Param('kite_player_id') kitePlayerId: string):Promise<{kite_player_id: string,flying_mins: number}>{
+      const flyingMins = await this.kiteDataService.getFlyingMinsByKitePlayerId(kitePlayerId);
+      return { kite_player_id: kitePlayerId,flying_mins: flyingMins };
+    }
 }

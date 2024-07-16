@@ -27,6 +27,9 @@ export class KitePlayer {
 
   @Prop()
   client_id: string;
+
+  @Prop({ required: true })
+  img_url: string;
 }
 
 export type KitePlayerDocument = KitePlayer & Document;

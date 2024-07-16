@@ -5,4 +5,5 @@ export class CreateKitePlayerDto {
   readonly coordinates: ICoordinates;
   readonly birthday: Date;
   readonly city: string;
+  readonly img_url: string;
 }
