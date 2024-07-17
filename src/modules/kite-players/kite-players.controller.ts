@@ -64,14 +64,12 @@ export class KitePlayersController {
     @Param('kite_player_id', new ParseUUIDPipe({ version: '4' }))
     kitePlayerId: string,
   ) {
-    // Get kite data.
-    const kiteData =
-      await this.kiteDataService.findLatestByKitePlayerId(kitePlayerId);
+    const kiteData = await this.kiteDataService.findLatestByKitePlayerId(kitePlayerId);
 
-      if (!kiteData) {
-        return { max_height: null };
-      }
-      return kiteData;
+    if (!kiteData) {
+      return { flying_mins: null, max_height: null, total_attempts: null };
+    }
+    return kiteData;
   }
 
   @UseGuards(ValidateGaveshaClientGuard)

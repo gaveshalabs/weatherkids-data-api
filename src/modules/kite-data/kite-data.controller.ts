@@ -3,11 +3,10 @@ import {
   Body,
   Controller,
   Get,
-  Param,
   Post,
   UseGuards,
   UsePipes,
-  ValidationPipe,
+  ValidationPipe
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
@@ -47,19 +46,14 @@ export class KiteDataController {
     return res;
   }
 
-      @Get('all')
-      findAll() {
-      return this.kiteDataService.findAll();
+  @Get('latest')
+  async findLatestByAllKitePlayers(): Promise<any> {
+    return await this.kiteDataService.findLatestByAllKitePlayers();
+  }
+
+    @Get('players-leaderboard')
+    async getPlayersLeaderBoard() {
+      return await this.kiteDataService.getPlayersLeaderBoard();
     }
 
-    @Get('players-height')
-    async getPlayersHeight() {
-      return await this.kiteDataService.getKitePlayersHeight();
-    }
-
-    @Get('flying-mins/:kite_player_id')
-    async getFlyingMins(@Param('kite_player_id') kitePlayerId: string):Promise<{kite_player_id: string,flying_mins: number}>{
-      const flyingMins = await this.kiteDataService.getFlyingMinsByKitePlayerId(kitePlayerId);
-      return { kite_player_id: kitePlayerId,flying_mins: flyingMins };
-    }
 }
