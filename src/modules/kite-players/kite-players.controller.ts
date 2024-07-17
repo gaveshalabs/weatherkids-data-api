@@ -68,14 +68,10 @@ export class KitePlayersController {
     const kiteData =
       await this.kiteDataService.findLatestByKitePlayerId(kitePlayerId);
 
-    if (!kiteData) {
-      return {
-        kiteData: null,
-      };
-    }
-    return {
-      kiteData,
-    };
+      if (!kiteData) {
+        return { max_height: null };
+      }
+      return kiteData;
   }
 
   @UseGuards(ValidateGaveshaClientGuard)

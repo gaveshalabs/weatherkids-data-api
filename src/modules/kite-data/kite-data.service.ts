@@ -126,24 +126,23 @@ export class KiteDataService {
 
   async findLatestByKitePlayerId(
     kitePlayerId: string,
-  ): Promise<GetKiteDatumDto> {
+  ): Promise<{ max_height: number }> {
     const datum = (await this.kiteDatumModel
       .findOne({ 'metadata.kite_player_id': kitePlayerId })
       .sort({ timestamp: -1 })
       .exec()) as KiteDatum;
-
+  
     if (!datum) {
       return null;
     }
-    const transformedDatum = this.transformKiteDatum(datum);
-    const datumWithMaxHeight = {
-      ...transformedDatum,
-      max_height: 800,
+  
+    const maxHeight = await this.getMaxHeightByKitePlayerId(kitePlayerId);
+  
+    return {
+      max_height: maxHeight
     };
-
-    return datumWithMaxHeight;
   }
-
+  
   async findAll(): Promise<GetKiteDatumDto[]> {
     const data = (await this.kiteDatumModel.find().exec()) as KiteDatum[];
 
@@ -282,5 +281,47 @@ export class KiteDataService {
 
     const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
     return result.length > 0 ? result[0].flying_mins : 0;
+  }
+
+  async getMaxHeightByKitePlayerId(kitePlayerId: string): Promise<number>{
+    const aggregationPipeline: any[] = [
+      {
+        $match:{
+          "metadata.kite_player_id": kitePlayerId
+        }
+      },
+      {
+        $group: {
+          _id: {
+            kite_player_id: "$metadata.kite_player_id",
+            attempt_timestamp: "$metadata.attempt_timestamp"
+          },
+          max_altitude: { $max: "$altitude" },
+          min_altitude: { $min: "$altitude" }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.kite_player_id",
+          attempts: {
+            $push: {
+              attempt_timestamp: "$_id.attempt_timestamp",
+              maxAltitude: "$max_altitude",
+              minAltitude: "$min_altitude",
+              height: { $subtract: ["$max_altitude", "$min_altitude"] }
+            }
+          },
+          max_height: { $max: { $subtract: ["$max_altitude", "$min_altitude"] } }
+        }
+      },
+      {
+        $project: {
+          max_height: 1
+        }
+      }
+    ];
+
+    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    return result.length>0 ? result[0].max_height : 0;
   }
 }
