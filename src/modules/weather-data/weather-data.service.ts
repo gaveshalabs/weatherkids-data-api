@@ -169,32 +169,14 @@ export class WeatherDataService {
     // Return the _id, timestamp, created_at fields.
     const responseData = [...insertedData, ...existingWeatherData];
 
-    // return responseData.map((datum) => {
-    //   return {
-    //     _id: datum._id,
-    //     timestamp: datum.timestamp,
-    //     timestamp_iso: moment(datum.timestamp).toISOString(true),
-    //     created_at: datum.createdAt,
-    //   } as BulkCreateWeatherDataResponseDto;
-    // }) as BulkCreateWeatherDataResponseDto[];
-
-    const finalResponse = responseData.map((datum) => {
+    return responseData.map((datum) => {
       return {
         _id: datum._id,
         timestamp: datum.timestamp,
         timestamp_iso: moment(datum.timestamp).toISOString(true),
         created_at: datum.createdAt,
       } as BulkCreateWeatherDataResponseDto;
-    });
-
-    const returnObject = {
-      _id: null,
-      timestamp_iso: moment().toISOString(true),
-    } as BulkCreateWeatherDataResponseDto;
-
-    finalResponse.push(returnObject);
-
-    return finalResponse;
+    }) as BulkCreateWeatherDataResponseDto[];
   }
 
   // TODO: Add types.

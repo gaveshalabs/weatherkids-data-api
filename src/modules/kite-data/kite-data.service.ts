@@ -4,7 +4,6 @@ import * as moment from 'moment';
 import { Connection, Model } from 'mongoose';
 import { BulkCreateKiteDataResponseDto } from './dto/bulk-create-kite-data-response.dto';
 import { CreateBulkKiteDataDto } from './dto/create-bulk-kite-data.dto';
-import { GetKiteDatumDto } from './dto/get-kite-datum.dto';
 import { KiteDataPoint } from './dto/kite-datapoint.dto';
 import { KiteDatum, KiteDatumDocument } from './entities/kite-datum-entity';
 import { KiteDataMetaData } from './schema/kitedata-metadata.schema';
@@ -109,38 +108,385 @@ export class KiteDataService {
     return finalKiteResponse;
   }
 
-  transformKiteDatum(datum): GetKiteDatumDto {
-    const transformed = {
-      _id: datum._id,
-      author_user_id: datum.metadata?.author_user_id,
-      sensor_id: datum.metadata?.sensor_id,
-      kite_player_id: datum.metadata?.kite_player_id,
-      coordinates: datum.metadata?.coordinates,
-      timestamp: datum.timestamp,
-      temperature: datum.temperature,
-      pressure: datum.pressure,
-      altitude: datum.altitude,
-    } as GetKiteDatumDto;
-    return transformed;
-  }
+  async findLatestByKitePlayerId(kitePlayerId: string): Promise<any> {
+    const [flying_mins, max_height, total_attempts] = await Promise.all([
+      this.getFlyingMinsByKitePlayerId(kitePlayerId),
+      this.getMaxHeightByKitePlayerId(kitePlayerId),
+      this.getTotalAttemptsByKitePlayerId(kitePlayerId),
+    ]);
 
-  async findLatestByKitePlayerId(
-    kitePlayerId: string,
-  ): Promise<GetKiteDatumDto> {
-    const datum = (await this.kiteDatumModel
-      .findOne({ 'metadata.kite_player_id': kitePlayerId })
-      .sort({ timestamp: -1 })
-      .exec()) as KiteDatum;
-
-    if (!datum) {
-      return null;
-    }
-    const transformedDatum = this.transformKiteDatum(datum);
-    const datumWithMaxHeight = {
-      ...transformedDatum,
-      max_height: 800,
+    return {
+      flying_mins,
+      max_height,
+      total_attempts,
     };
-
-    return datumWithMaxHeight;
   }
+
+  async findLatestByAllKitePlayers(): Promise<any> {
+    const [total_height, total_attempts, total_flying_mins] = await Promise.all([
+      this.getTotalHeightByAllKitePlayers(),
+      this.getTotalAttemptsByAllKitePlayers(),
+      this.getTotalFlyingMinsByAllKitePlayers(),
+  
+    ]);
+  
+    return {
+      total_height,
+      total_attempts,
+      total_flying_mins,
+    };
+  }
+
+  async getPlayersLeaderBoard() {
+    const aggregationPipeline: any[] = [
+      {
+        $group: {
+          _id: {
+            kite_player_id: "$metadata.kite_player_id",
+            attempt_timestamp: "$metadata.attempt_timestamp"
+          },
+          max_altitude: { $max: "$altitude" },
+          min_altitude: { $min: "$altitude" }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.kite_player_id",
+          attempts: {
+            $push: {
+              attempt_timestamp: "$_id.attempt_timestamp",
+              maxAltitude: "$max_altitude",
+              minAltitude: "$min_altitude",
+              height: { $subtract: ["$max_altitude", "$min_altitude"] }
+            }
+          },
+          kite_height: { $max: { $subtract: ["$max_altitude", "$min_altitude"] } }
+        }
+      },
+      {
+        $sort: { kite_height: -1 }
+      },
+      {
+        $lookup: {
+          from: "kite_players", 
+          localField: "_id",
+          foreignField: "_id",
+          as: "player_details"
+        }
+      },
+      {
+        $unwind: {
+          path: "$player_details",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          id: "$_id",
+          name: "$player_details.name",
+          city: "$player_details.city",
+          img_url: "$player_details.img_url",
+          kite_height: 1,
+        }
+      }
+    ];
+  
+    return await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+  }
+
+  async getTotalHeightByAllKitePlayers(): Promise<number> {
+    const aggregationPipeline: any[] = [
+      {
+        $group: {
+          _id: {
+            kite_player_id: "$metadata.kite_player_id",
+            attempt_timestamp: "$metadata.attempt_timestamp"
+          },
+          max_altitude: { $max: "$altitude" },
+          min_altitude: { $min: "$altitude" }
+        }
+      },
+      {
+        $addFields: {
+          height: { $subtract: ["$max_altitude", "$min_altitude"] }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.kite_player_id",
+          total_height: { $sum: "$height" }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total_height: { $sum: "$total_height" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          total_height: 1
+        }
+      }
+    ];
+
+    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    return result.length > 0 ? result[0].total_height : 0;
+  }
+
+  async getTotalAttemptsByAllKitePlayers(): Promise<number> {
+    const aggregationPipeline: any[] = [
+      {
+        $group: {
+          _id: {
+            kite_player_id: "$metadata.kite_player_id",
+            attempt_timestamp: "$metadata.attempt_timestamp"
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.kite_player_id",
+          count_attempt_timestamp: { $sum: 1 }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total_attempts: { $sum: "$count_attempt_timestamp" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          total_attempts: 1
+        }
+      }
+    ];
+
+    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    return result.length > 0 ? result[0].total_attempts : 0;
+  }
+
+  async getTotalFlyingMinsByAllKitePlayers(): Promise<number> {
+    const aggregationPipeline: any[] = [
+      {
+        $group: {
+          _id: {
+            kite_player_id: "$metadata.kite_player_id",
+            attempt_timestamp: "$metadata.attempt_timestamp"
+          },
+          data: {
+            $push: {
+              timestamp: "$timestamp",
+              altitude: "$altitude"
+            }
+          },
+          min_altitude: { $min: "$altitude" }
+        }
+      },
+      {
+        $addFields: {
+          filteredData: {
+            $filter: {
+              input: "$data",
+              as: "entry",
+              cond: { $gte: ["$$entry.altitude", { $add: ["$min_altitude", 10] }] }
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          minTimestamp: { $min: "$filteredData.timestamp" },
+          maxTimestamp: { $max: "$filteredData.timestamp" }
+        }
+      },
+      {
+        $addFields: {
+          timestampDifference: {
+            $divide: [
+              { $subtract: ["$maxTimestamp", "$minTimestamp"] },
+              60000 
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.kite_player_id",
+          flying_mins: { $sum: "$timestampDifference" },
+          timestampDifferences: { $push: "$timestampDifference" },
+          attempt_timestamp: { $first: "$_id.attempt_timestamp" }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total_flying_mins: { $sum: "$flying_mins" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          total_flying_mins: 1
+        }
+      }
+    ];
+
+    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    return result.length > 0 ? result[0].total_flying_mins : 0;
+  }
+  
+  async getFlyingMinsByKitePlayerId(kitePlayerId:string): Promise<number> {
+    const aggregationPipeline: any[] = [
+      {
+        $match: {
+          "metadata.kite_player_id": kitePlayerId
+        }
+      },
+      {
+        $group: {
+          _id: {
+            kite_player_id: "$metadata.kite_player_id",
+            attempt_timestamp: "$metadata.attempt_timestamp"
+          },
+          data: {
+            $push: {
+              timestamp: "$timestamp",
+              altitude: "$altitude"
+            }
+          },
+          min_altitude: { $min: "$altitude" }
+        }
+      },
+      {
+        $addFields: {
+          filteredData: {
+            $filter: {
+              input: "$data",
+              as: "entry",
+              cond: { $gte: ["$$entry.altitude", { $add: ["$min_altitude", 10] }] }
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          minTimestamp: {
+            $min: "$filteredData.timestamp"
+          },
+          maxTimestamp: {
+            $max: "$filteredData.timestamp"
+          }
+        }
+      },
+      {
+        $addFields: {
+          timestampDifference: {
+            $divide: [
+              { $subtract: ["$maxTimestamp", "$minTimestamp"] },
+              60000 
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.kite_player_id",
+          flying_mins: { $sum: "$timestampDifference" },
+          timestampDifferences: { $push: "$timestampDifference" },
+          attempt_timestamp: { $first: "$_id.attempt_timestamp" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          kite_player_id: "$_id",
+          flying_mins: 1
+        }
+      }
+    ];
+
+    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    return result.length > 0 ? result[0].flying_mins : 0;
+  }
+
+  async getMaxHeightByKitePlayerId(kitePlayerId: string): Promise<number>{
+    const aggregationPipeline: any[] = [
+      {
+        $match:{
+          "metadata.kite_player_id": kitePlayerId
+        }
+      },
+      {
+        $group: {
+          _id: {
+            kite_player_id: "$metadata.kite_player_id",
+            attempt_timestamp: "$metadata.attempt_timestamp"
+          },
+          max_altitude: { $max: "$altitude" },
+          min_altitude: { $min: "$altitude" }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.kite_player_id",
+          attempts: {
+            $push: {
+              attempt_timestamp: "$_id.attempt_timestamp",
+              maxAltitude: "$max_altitude",
+              minAltitude: "$min_altitude",
+              height: { $subtract: ["$max_altitude", "$min_altitude"] }
+            }
+          },
+          max_height: { $max: { $subtract: ["$max_altitude", "$min_altitude"] } }
+        }
+      },
+      {
+        $project: {
+          max_height: 1
+        }
+      }
+    ];
+
+    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    return result.length>0 ? result[0].max_height : 0;
+  }
+
+  async getTotalAttemptsByKitePlayerId(kitePlayerId: string): Promise<number> {
+    const aggregationPipeline = [
+      {
+        $match: {
+          "metadata.kite_player_id": kitePlayerId
+        }
+      },
+      {
+        $group: {
+          _id: {
+            attempt_timestamp: "$metadata.attempt_timestamp"
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          attempts: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          attempts: 1
+        }
+      }
+    ];
+
+    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    return result.length > 0 ? result[0].attempts : 0;
+  }
+
+
 }
