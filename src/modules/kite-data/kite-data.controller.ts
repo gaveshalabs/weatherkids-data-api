@@ -3,6 +3,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  ParseUUIDPipe,
   Post,
   UseGuards,
   UsePipes,
@@ -50,6 +52,20 @@ export class KiteDataController {
   async findLatestByAllKitePlayers(): Promise<any> {
     return await this.kiteDataService.findLatestByAllKitePlayers();
   }
+
+  @Get('latest/:kite_player_id')
+  async findLatestByKitePlayerId(
+    @Param('kite_player_id', new ParseUUIDPipe({ version: '4' }))
+    kitePlayerId: string,
+  ) {
+    const kiteData = await this.kiteDataService.findLatestByKitePlayerId(kitePlayerId);
+
+    if (!kiteData) {
+      return { flying_mins: null, max_height: null, total_attempts: null };
+    }
+    return kiteData;
+  }
+
 
     @Get('players-leaderboard')
     async getPlayersLeaderBoard() {
