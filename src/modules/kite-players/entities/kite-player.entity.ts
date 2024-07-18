@@ -30,6 +30,9 @@ export class KitePlayer {
 
   @Prop({ required: true })
   img_url: string;
+
+  @Prop({ default: false })
+  isBot?: boolean;
 }
 
 export type KitePlayerDocument = KitePlayer & Document;
