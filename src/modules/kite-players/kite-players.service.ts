@@ -52,7 +52,7 @@ export class KitePlayersService {
 
   private getRandomAvatarUrl(): string {
     const randomFilename = this.avatarFilenames[Math.floor(Math.random() * this.avatarFilenames.length)];
-    return `https://data.gavesha.space/assets/avatars/Avatar_Icons/${randomFilename}`;
+    return `assets/avatars/Avatar_Icons/${randomFilename}`;
   }
 
   // Protected by guards.
