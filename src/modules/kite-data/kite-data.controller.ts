@@ -55,7 +55,6 @@ export class KiteDataController {
     return await this.kiteDataService.findLatestByAllKitePlayers(includeCurrentWeek);
   }
   
-
   @Get('latest/:kite_player_id')
   async findLatestByKitePlayerId(
     @Param('kite_player_id', new ParseUUIDPipe({ version: '4' })) kitePlayerId: string,
@@ -70,7 +69,6 @@ export class KiteDataController {
     return kiteData;
   }
   
-
   @Get('players-leaderboard')
   async getPlayersLeaderBoard() {
     return await this.kiteDataService.getPlayersLeaderBoard();

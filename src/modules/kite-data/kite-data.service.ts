@@ -210,7 +210,6 @@ export class KiteDataService {
     }
   }
   
-
   async getPlayersLeaderBoard() {
     const aggregationPipeline: any[] = [
       {
