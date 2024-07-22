@@ -52,7 +52,7 @@ export class KitePlayersService {
 
   private getRandomAvatarUrl(): string {
     const randomFilename = this.avatarFilenames[Math.floor(Math.random() * this.avatarFilenames.length)];
-    return `https://data.gavesha.space/assets/avatars/Avatar_Icons/${randomFilename}`;
+    return `assets/avatars/Avatar_Icons/${randomFilename}`;
   }
 
   // Protected by guards.
@@ -87,7 +87,6 @@ export class KitePlayersService {
           user_id: result._id,
           img_url: randomAvatarUrl,
         });
-
         kitePlayer = await newKitePlayer.save();
       }
       const response: KitePlayerCreatedResponseDto = {
@@ -123,14 +122,11 @@ export class KitePlayersService {
         { new: true }, // Return the updated document instead of the original
       )
       .exec();
-
     if (!updatedKitePlayer) {
       throw new NotFoundException(`Kite Player with ID '${_id}' not found`);
     }
-
     return updatedKitePlayer;
   }
-
   remove(id: number) {
     return `This action removes a #${id} weatherStation`;
   }

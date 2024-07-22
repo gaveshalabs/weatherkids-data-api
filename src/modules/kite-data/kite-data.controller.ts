@@ -6,6 +6,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   UseGuards,
   UsePipes,
   ValidationPipe
@@ -49,27 +50,27 @@ export class KiteDataController {
   }
 
   @Get('latest')
-  async findLatestByAllKitePlayers(): Promise<any> {
-    return await this.kiteDataService.findLatestByAllKitePlayers();
+  async findLatestByAllKitePlayers(@Query('include') include?: string): Promise<any> {
+    const includeCurrentWeek = include === 'current_week';
+    return await this.kiteDataService.findLatestByAllKitePlayers(includeCurrentWeek);
   }
-
+  
   @Get('latest/:kite_player_id')
   async findLatestByKitePlayerId(
-    @Param('kite_player_id', new ParseUUIDPipe({ version: '4' }))
-    kitePlayerId: string,
+    @Param('kite_player_id', new ParseUUIDPipe({ version: '4' })) kitePlayerId: string,
+    @Query('include') include?: string
   ) {
-    const kiteData = await this.kiteDataService.findLatestByKitePlayerId(kitePlayerId);
-
+    const includeCurrentWeek = include === 'current_week';
+    const kiteData = await this.kiteDataService.findLatestByKitePlayerId(kitePlayerId, includeCurrentWeek);
+  
     if (!kiteData) {
       return { flying_mins: null, max_height: null, total_attempts: null };
     }
     return kiteData;
   }
-
-
-    @Get('players-leaderboard')
-    async getPlayersLeaderBoard() {
-      return await this.kiteDataService.getPlayersLeaderBoard();
-    }
-
+  
+  @Get('players-leaderboard')
+  async getPlayersLeaderBoard() {
+    return await this.kiteDataService.getPlayersLeaderBoard();
+  }
 }
