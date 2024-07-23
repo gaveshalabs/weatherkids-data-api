@@ -1,5 +1,6 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { AuthService } from 'src/modules/auth/auth.service';
+import { KitePlayersService } from 'src/modules/kite-players/kite-players.service';
 import { v4 as uuidv4 } from 'uuid';
 import { WeatherStationsService } from '../../weather-stations/weather-stations.service';
 import { CreateSessionDto } from '../dto/create-session.dto';
@@ -10,11 +11,13 @@ import { UsersService } from '../users.service';
 
 @Injectable()
 export class SessionService {
+  kitePlayerModel: any;
   constructor(
     private authService: AuthService,
     private usersService: UsersService,
     private tokenService: TokenService,
     private weatherStationsService: WeatherStationsService,
+    private kitePlayersService: KitePlayersService, 
   ) {}
 
   private createUserResponse(
@@ -95,10 +98,16 @@ export class SessionService {
           gavesha_user_api_key: newApiKey,
         });
 
-        return this.createUserResponse(updatedUser, false);
+        const existingPlayer = await this.kitePlayerModel.findOne({ user_id: user._id }).exec();
+        const newUserFlag = !existingPlayer; 
+  
+        return this.createUserResponse(updatedUser, newUserFlag);
       }
 
-      return this.createUserResponse(user, false);
+      const existingPlayer = await this.kitePlayerModel.findOne({ user_id: user._id }).exec();
+      const newUserFlag = !existingPlayer; 
+  
+      return this.createUserResponse(user, newUserFlag);
     }
 
     // Create a new userId.
