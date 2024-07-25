@@ -262,6 +262,9 @@ export class KiteDataService {
           img_url: "$player_details.img_url",
           kite_height: 1,
         }
+      },
+      {
+        $limit: 10
       }
     ];
   
