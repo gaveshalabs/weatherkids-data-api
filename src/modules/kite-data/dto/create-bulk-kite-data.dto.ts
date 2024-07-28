@@ -1,33 +1,39 @@
-import { Type } from "class-transformer";
-import { ArrayNotEmpty, IsArray, IsNotEmpty, IsOptional, ValidateNested } from "class-validator";
-import { ICoordinates } from "src/modules/common/interfaces/coordinates.interface";
-import { KiteDataPoint } from "./kite-datapoint.dto";
+import { Type } from 'class-transformer';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  ValidateNested,
+} from 'class-validator';
+import { ICoordinates } from 'src/modules/common/interfaces/coordinates.interface';
+import { KiteDataPoint } from './kite-datapoint.dto';
 
-export class CreateBulkKiteDataDto{
-    @IsNotEmpty()
-    readonly author_user_id: string;
-  
-    @IsNotEmpty()
-    readonly kite_player_id: string;
-  
-    @IsNotEmpty()
-    readonly coordinates: ICoordinates;
+export class CreateBulkKiteDataDto {
+  @IsNotEmpty()
+  readonly author_user_id: string;
 
-    @IsArray()
-    @ArrayNotEmpty()
-    @ValidateNested({ each: true })
-    @Type(() => KiteDataPoint)
-    readonly data: KiteDataPoint[];
+  @IsNotEmpty()
+  readonly kite_player_id: string;
 
-    @IsOptional()
-    readonly gavesha_user_api_key?: string;
-  
-    @IsOptional()
-    readonly client_id?: string;
+  @IsNotEmpty()
+  readonly coordinates: ICoordinates;
 
-    @IsOptional()
-    readonly sensor_id?: string;
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => KiteDataPoint)
+  readonly data: KiteDataPoint[];
 
-    @IsOptional()
-    readonly attempt_timestamp?: Date;
+  @IsOptional()
+  readonly gavesha_user_api_key?: string;
+
+  @IsOptional()
+  readonly client_id?: string;
+
+  @IsOptional()
+  readonly sensor_id?: string;
+
+  @IsOptional()
+  readonly attempt_timestamp?: Date;
 }

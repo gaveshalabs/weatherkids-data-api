@@ -1,26 +1,49 @@
-import { CreateSessionDto } from '../dto/create-session.dto';
-import { UsersService } from '../users.service';
-import { CreateUserDto } from '../dto/create-user.dto';
-import { User } from '../entities/user.entity';
 import { HttpException, Injectable } from '@nestjs/common';
 import { AuthService } from 'src/modules/auth/auth.service';
+import { KitePlayersService } from 'src/modules/kite-players/kite-players.service';
 import { v4 as uuidv4 } from 'uuid';
 import { WeatherStationsService } from '../../weather-stations/weather-stations.service';
+import { CreateSessionDto } from '../dto/create-session.dto';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { User } from '../entities/user.entity';
 import { TokenService } from '../token/token.service';
+import { UsersService } from '../users.service';
 
 @Injectable()
 export class SessionService {
+  kitePlayerModel: any;
   constructor(
     private authService: AuthService,
     private usersService: UsersService,
     private tokenService: TokenService,
     private weatherStationsService: WeatherStationsService,
+    private kitePlayersService: KitePlayersService, 
   ) {}
+
+  private createUserResponse(
+    user: User,
+    newUser: boolean,
+  ): User & { new_user: boolean } {
+    return {
+      _id: user._id,
+      email: user.email,
+      uid: user.uid,
+      name: user.name,
+      contact_no: user.contact_no,
+      nearest_city: user.nearest_city,
+      nearest_city_postalcode: user.nearest_city_postalcode,
+      photo_url: user.photo_url,
+      is_active: user.is_active,
+      gavesha_user_api_key: user.gavesha_user_api_key,
+      scopes: user.scopes,
+      new_user: newUser,
+    };
+  }
 
   async create(
     createSessionDto: CreateSessionDto,
     idToken: string,
-  ): Promise<User> {
+  ): Promise<User & { new_user: boolean }> {
     // Check auth.
     try {
       await this.authService.authenticateWithGoogle(idToken);
@@ -75,10 +98,16 @@ export class SessionService {
           gavesha_user_api_key: newApiKey,
         });
 
-        return updatedUser;
+        const existingPlayer = await this.kitePlayerModel.findOne({ user_id: user._id }).exec();
+        const newUserFlag = !existingPlayer; 
+  
+        return this.createUserResponse(updatedUser, newUserFlag);
       }
 
-      return user;
+      const existingPlayer = await this.kitePlayerModel.findOne({ user_id: user._id }).exec();
+      const newUserFlag = !existingPlayer; 
+  
+      return this.createUserResponse(user, newUserFlag);
     }
 
     // Create a new userId.
@@ -111,6 +140,7 @@ export class SessionService {
 
     // Create user within the database.
     // When creating a user, the uuidv4 userId is passed as the _id.
-    return await this.usersService.create(createUserDto, uuidV4Id);
+    const result = await this.usersService.create(createUserDto, uuidV4Id);
+    return this.createUserResponse(result, true);
   }
 }

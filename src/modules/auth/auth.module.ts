@@ -8,12 +8,7 @@ import { TokenModule } from '../users/token/token.module';
 import { WeatherStationsModule } from '../weather-stations/weather-stations.module';
 
 @Module({
-  imports: [
-    UsersModule,
-    ClientsModule,
-    TokenModule,
-    WeatherStationsModule,
-  ],
+  imports: [UsersModule, ClientsModule, TokenModule, WeatherStationsModule],
   controllers: [AuthController],
   providers: [AuthService, OAuth2Client],
 })

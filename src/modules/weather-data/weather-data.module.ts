@@ -17,7 +17,7 @@ import { WeatherStationsModule } from '../weather-stations/weather-stations.modu
     ]),
     TokenModule,
     PointsModule,
-    forwardRef(()=>WeatherStationsModule),
+    forwardRef(() => WeatherStationsModule),
   ],
   controllers: [WeatherDataController],
   providers: [WeatherDataService, WeatherDatum],

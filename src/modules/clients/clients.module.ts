@@ -8,10 +8,10 @@ import { TokenModule } from '../users/token/token.module';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Client.name, schema: ClientSchema }]),
-    TokenModule,    // for api guards
+    TokenModule, // for api guards
   ],
   providers: [ClientsService],
   exports: [ClientsService],
-  controllers: [ClientsController]
+  controllers: [ClientsController],
 })
 export class ClientsModule {}

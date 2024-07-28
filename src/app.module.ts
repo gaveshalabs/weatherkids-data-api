@@ -39,7 +39,15 @@ import { WeatherStationsModule } from './modules/weather-stations/weather-statio
     ConfigModule.forRoot({
       envFilePath: ['.env.local', '.env.dev', '.env.prod'],
     }),
-    MongooseModule.forRoot(process.env.MONGO_URL),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        return {
+          uri: configService.get<string>('MONGO_URL'),
+        };
+      },
+      inject: [ConfigService],
+    }),
     WeatherDataModule,
     WeatherStationsModule,
     PointsModule,

@@ -16,7 +16,8 @@ export class ValidateGaveshaClientGuard implements CanActivate {
 
     const authHeader = request.headers['authorization'];
     if (authHeader) {
-      const jwtpaylod = await this.tokenService.validateClientAccessToken(authHeader);
+      const jwtpaylod =
+        await this.tokenService.validateClientAccessToken(authHeader);
       if (!jwtpaylod.iss.endsWith('access')) {
         return false;
       }
