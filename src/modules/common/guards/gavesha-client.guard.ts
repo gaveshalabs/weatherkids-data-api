@@ -1,8 +1,8 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
   HttpException,
+  Injectable,
 } from '@nestjs/common';
 import { TokenService } from '../../users/token/token.service';
 
