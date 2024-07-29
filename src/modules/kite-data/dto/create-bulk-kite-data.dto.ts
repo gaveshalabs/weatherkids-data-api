@@ -7,14 +7,14 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { ICoordinates } from 'src/modules/common/interfaces/coordinates.interface';
-import { WeatherDataPoint } from '../entities/weather-datapoint.entity';
+import { KiteDataPoint } from './kite-datapoint.dto';
 
-export class CreateBulkWeatherDataDto {
+export class CreateBulkKiteDataDto {
   @IsNotEmpty()
   readonly author_user_id: string;
 
   @IsNotEmpty()
-  readonly weather_station_id: string;
+  readonly kite_player_id: string;
 
   @IsNotEmpty()
   readonly coordinates: ICoordinates;
@@ -22,8 +22,8 @@ export class CreateBulkWeatherDataDto {
   @IsArray()
   @ArrayNotEmpty()
   @ValidateNested({ each: true })
-  @Type(() => WeatherDataPoint)
-  readonly data: WeatherDataPoint[];
+  @Type(() => KiteDataPoint)
+  readonly data: KiteDataPoint[];
 
   @IsOptional()
   readonly gavesha_user_api_key?: string;
@@ -33,4 +33,7 @@ export class CreateBulkWeatherDataDto {
 
   @IsOptional()
   readonly sensor_id?: string;
+
+  @IsOptional()
+  readonly attempt_timestamp?: Date;
 }

@@ -1,4 +1,4 @@
-export class BulkCreateWeatherDataResponseDto {
+export class BulkCreateKiteDataResponseDto {
   readonly _id: string;
   readonly timestamp: Date;
   readonly timestamp_iso: string;

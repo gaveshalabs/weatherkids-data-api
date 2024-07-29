@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import * as moment from 'moment';
 import { Connection, Model } from 'mongoose';
 import { PointsService } from '../points/points.service';
+import { BulkCreateWeatherDataResponseDto } from './dto/bulk-create-weather-data-response.dto';
+import { CreateBulkWeatherDataDto } from './dto/create-bulk-weather-data.dto';
 import { GetWeatherDatumDto } from './dto/get-weather-datum.dto';
+import { WeatherDataPoint } from './entities/weather-datapoint.entity';
 import {
   WeatherDatum,
   WeatherDatumDocument,
 } from './entities/weather-datum.entity';
-import { CreateBulkWeatherDataDto } from './dto/create-bulk-weather-data.dto';
-import { BulkCreateWeatherDataResponseDto } from './dto/bulk-create-weather-data-response.dto';
 import { WeatherDataMetadata } from './schema/weatherdata-metadata.schema';
-import { WeatherDataPoint } from './entities/weather-datapoint.entity';
 
 @Injectable()
 export class WeatherDataService {
@@ -39,8 +40,26 @@ export class WeatherDataService {
     createBulkWeatherData: CreateBulkWeatherDataDto,
   ): Promise<BulkCreateWeatherDataResponseDto[]> {
     // Restructure the data to include the author_user_id, weather_station_id, metadata, coordinates.
-    const { author_user_id, weather_station_id, coordinates, data } =
+    const { author_user_id, weather_station_id, coordinates, sensor_id, data } =
       createBulkWeatherData;
+
+    for (let i = 0; i < data.length; i++) {
+      const element = data[i];
+      // if (!element.timestamp) {
+      //   if (!element.timestamp_iso) {
+      //     throw new BadRequestException('Invalid data');
+      //   }
+      //   element.timestamp = new Date(element.timestamp_iso).getTime();
+      // }
+
+      if (
+        weather_station_id === 'dbfb6590-93c1-455b-aaf2-668560a73e4b' ||
+        weather_station_id === '16c97b9b-f67f-4ab5-a6cb-730413ab4719' ||
+        weather_station_id === '3337b81c-67d1-47c6-bdea-9f9b6c4d8977'
+      ) {
+        element.timestamp = new Date().getTime();
+      }
+    }
 
     let filteredDataPoints: WeatherDataPoint[] = [];
 
@@ -90,7 +109,7 @@ export class WeatherDataService {
               author_user_id: author_user_id,
               weather_station_id: weather_station_id,
               coordinates: coordinates,
-              sensor_id: 'weathercomv3',
+              sensor_id: sensor_id || 'weathercomv3',
             } as WeatherDataMetadata,
           };
         });
@@ -139,25 +158,25 @@ export class WeatherDataService {
 
       // Commit the point calculation transaction if all goes well.
       await session.commitTransaction();
-
-      // Return the _id, timestamp, created_at fields.
-      const responseData = [...insertedData, ...existingWeatherData];
-
-      return responseData.map((datum) => {
-        return {
-          _id: datum._id,
-          timestamp: datum.timestamp,
-          created_at: datum.createdAt,
-        } as BulkCreateWeatherDataResponseDto;
-      }) as BulkCreateWeatherDataResponseDto[];
     } catch (error) {
       // Abort the point calculation transaction if any error occurs during the above.
       await session.abortTransaction();
-
       throw error;
     } finally {
       session.endSession();
     }
+
+    // Return the _id, timestamp, created_at fields.
+    const responseData = [...insertedData, ...existingWeatherData];
+
+    return responseData.map((datum) => {
+      return {
+        _id: datum._id,
+        timestamp: datum.timestamp,
+        timestamp_iso: moment(datum.timestamp).toISOString(true),
+        created_at: datum.createdAt,
+      } as BulkCreateWeatherDataResponseDto;
+    }) as BulkCreateWeatherDataResponseDto[];
   }
 
   // TODO: Add types.
@@ -194,14 +213,14 @@ export class WeatherDataService {
       } else {
         transformed.temperature -= 12;
       }
-    // } else {
-    //   if (transformed.percentage_light_intensity == 0) {
-    //     transformed.temperature -= 3; // error is 5 degrees celsius
-    //   } else if (transformed.percentage_light_intensity < 50) {
-    //     transformed.temperature -= 6.5;
-    //   } else {
-    //     transformed.temperature -= 10;
-    //   }
+      // } else {
+      //   if (transformed.percentage_light_intensity == 0) {
+      //     transformed.temperature -= 3; // error is 5 degrees celsius
+      //   } else if (transformed.percentage_light_intensity < 50) {
+      //     transformed.temperature -= 6.5;
+      //   } else {
+      //     transformed.temperature -= 10;
+      //   }
     }
     return transformed;
   }

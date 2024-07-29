@@ -21,6 +21,9 @@ export class WeatherStation {
   @Prop({ type: [{ type: String, default: uuidv4, ref: User.name }] })
   user_ids: string[];
 
+  @Prop()
+  client_id: string;
+
   @Prop({ type: Boolean, default: false })
   is_hidden: boolean;
 }

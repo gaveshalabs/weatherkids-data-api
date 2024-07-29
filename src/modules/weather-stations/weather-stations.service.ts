@@ -1,17 +1,17 @@
 import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
-import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
+import { JwtService } from '@nestjs/jwt';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { Connection, Model } from 'mongoose';
+import { TokenService } from '../users/token/token.service';
+import { UsersService } from '../users/users.service';
+import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
+import { GetWeatherStationDto } from './dto/get-weather-station.dto';
+import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
+import { WeatherStationCreatedResponseDto } from './dto/weather-station-created-response.dto';
 import {
   WeatherStation,
   WeatherStationDocument,
 } from './entities/weather-station.entity';
-import { Connection, Model } from 'mongoose';
-import { GetWeatherStationDto } from './dto/get-weather-station.dto';
-import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
-import { WeatherStationCreatedResponseDto } from './dto/weather-station-created-response.dto';
-import { TokenService } from '../users/token/token.service';
 
 @Injectable()
 export class WeatherStationsService {
@@ -117,6 +117,13 @@ export class WeatherStationsService {
   findByUser(user_id: string): Promise<WeatherStationDocument[]> {
     return this.weatherStationModel.find({
       user_ids: user_id,
+      is_hidden: { $ne: true },
+    });
+  }
+
+  findByClient(clientId: string): Promise<WeatherStationDocument> {
+    return this.weatherStationModel.findOne({
+      client_id: clientId,
       is_hidden: { $ne: true },
     });
   }

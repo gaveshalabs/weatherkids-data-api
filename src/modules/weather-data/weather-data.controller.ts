@@ -1,29 +1,39 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Delete,
-  ParseUUIDPipe,
-  UseGuards,
   BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Headers,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  Req,
+  UseGuards,
   UsePipes,
   ValidationPipe,
-  Query,
 } from '@nestjs/common';
-import { WeatherDataService } from './weather-data.service';
 import { ApiTags } from '@nestjs/swagger';
+import * as moment from 'moment';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
-import { CreateBulkWeatherDataDto } from './dto/create-bulk-weather-data.dto';
+import { WeatherStationsService } from '../weather-stations/weather-stations.service';
 import { BulkCreateWeatherDataResponseDto } from './dto/bulk-create-weather-data-response.dto';
+import { CreateBulkWeatherDataDto } from './dto/create-bulk-weather-data.dto';
+import { CreateWeatherComBulkWeatherDataDto } from './dto/create-weathercom-bulk-weather-data.dto';
 import { GetWeatherDatumDto } from './dto/get-weather-datum.dto';
+import { WeatherDataService } from './weather-data.service';
+
 
 @Controller('weather-data')
 @ApiTags('weather-data')
 export class WeatherDataController {
-  constructor(private readonly weatherDataService: WeatherDataService) {}
+  constructor(
+    private readonly weatherDataService: WeatherDataService,
+    private readonly weatherStationService: WeatherStationsService,
+  ) {}
 
   @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
   @Post('bulk')
@@ -38,7 +48,73 @@ export class WeatherDataController {
   async bulkCommit(
     @Body() createBulkWeatherData: CreateBulkWeatherDataDto,
   ): Promise<BulkCreateWeatherDataResponseDto[]> {
-    return await this.weatherDataService.bulkCommit(createBulkWeatherData);
+    const res = await this.weatherDataService.bulkCommit(createBulkWeatherData);
+    console.info(
+      res.length,
+      'data committed to station',
+      createBulkWeatherData.weather_station_id,
+    );
+    return res;
+  }
+
+  @UseGuards(ValidateGaveshaClientGuard)
+  @Post('bulk/weathercom')
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      exceptionFactory: (errors) => new BadRequestException(errors),
+    }),
+  )
+  async bulkCommitFromWeatherComputer(
+    @Body() createBulkWeatherData: CreateWeatherComBulkWeatherDataDto,
+    @Req() req: any,
+  ): Promise<BulkCreateWeatherDataResponseDto[]> {
+    const station = await this.weatherStationService.findByClient(req.clientId);
+    if (!station) {
+      console.error('Data commit attempted from invalid client:', req.clientId);
+      throw new ForbiddenException('Invalid weather station');
+    }
+    const dto: CreateBulkWeatherDataDto = {
+      ...createBulkWeatherData,
+      author_user_id: station.user_ids[0],
+      weather_station_id: station.id,
+    };
+
+    let res;
+    try {    
+      res = await this.weatherDataService.bulkCommit(dto);
+      console.info(res.length, 'data committed from weathercom', station.id);
+    } catch (err) {
+      console.error(
+        'ERROR in bulk commit from weather computer. Request body=',
+        dto,
+        err,
+      );
+      throw new Error();
+    }
+    const finalResponse = res.map((datum) => {
+      return {
+        _id: datum._id,
+        timestamp: datum.timestamp,
+        timestamp_iso: moment(datum.timestamp).toISOString(true),
+        created_at: (datum as any).createdAt,
+      } as BulkCreateWeatherDataResponseDto;
+    });
+
+    const returnObject = {
+       _id:null,
+       timestamp_iso: moment().toISOString(true),
+    }  as BulkCreateWeatherDataResponseDto;  
+    finalResponse.push(returnObject);
+    return finalResponse;
+  }
+
+  @UseGuards(ValidateGaveshaClientGuard)
+  @Post('test')
+  async reissueAuthToken(@Headers('authorization') h) {
+    return h;
   }
 
   @Get('all')

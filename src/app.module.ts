@@ -1,19 +1,22 @@
 import { AuthModule } from './modules/auth/auth.module';
 
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { MongooseModule } from '@nestjs/mongoose';
-import { WeatherDataModule } from './modules/weather-data/weather-data.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { WeatherStationsModule } from './modules/weather-stations/weather-stations.module';
-import { UsersModule } from './modules/users/users.module';
-import { SessionModule } from './modules/users/session/session.module';
+import { ClientsModule } from './modules/clients/clients.module';
 import { GuardsModule } from './modules/common/guards/guards.module';
-import { JwtModule } from '@nestjs/jwt';
+import { KiteDataModule } from './modules/kite-data/kite-data.module';
+import { KitePlayersModule } from './modules/kite-players/kite-players.module';
 import { PointsModule } from './modules/points/points.module';
-import { ScheduleModule } from '@nestjs/schedule';
+import { SessionModule } from './modules/users/session/session.module';
 import { TokenModule } from './modules/users/token/token.module';
+import { UsersModule } from './modules/users/users.module';
+import { WeatherDataModule } from './modules/weather-data/weather-data.module';
+import { WeatherStationsModule } from './modules/weather-stations/weather-stations.module';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -36,11 +39,21 @@ import { TokenModule } from './modules/users/token/token.module';
     ConfigModule.forRoot({
       envFilePath: ['.env.local', '.env.dev', '.env.prod'],
     }),
-    MongooseModule.forRoot(process.env.MONGO_URL),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        return {
+          uri: configService.get<string>('MONGO_URL'),
+        };
+      },
+      inject: [ConfigService],
+    }),
     WeatherDataModule,
     WeatherStationsModule,
     PointsModule,
-
+    ClientsModule,
+    KitePlayersModule,
+    KiteDataModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

@@ -1,7 +1,7 @@
 import { Prop } from '@nestjs/mongoose';
 import { IsOptional } from 'class-validator';
 
-export class WeatherDataPoint {
+export class KiteDataPoint {
   @IsOptional()
   @Prop()
   timestamp: number;
@@ -16,25 +16,9 @@ export class WeatherDataPoint {
 
   @IsOptional()
   @Prop()
-  humidity: number;
-
-  @IsOptional()
-  @Prop()
   pressure: number;
 
   @IsOptional()
   @Prop()
-  precipitation: number;
-
-  @IsOptional()
-  @Prop()
-  solar_irradiance: number;
-
-  @IsOptional()
-  @Prop()
-  percentage_light_intensity: number;
-
-  @IsOptional()
-  @Prop()
-  tvoc: number;
+  altitude: number;
 }

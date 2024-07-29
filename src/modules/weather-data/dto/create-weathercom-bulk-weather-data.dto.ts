@@ -9,28 +9,16 @@ import {
 import { ICoordinates } from 'src/modules/common/interfaces/coordinates.interface';
 import { WeatherDataPoint } from '../entities/weather-datapoint.entity';
 
-export class CreateBulkWeatherDataDto {
-  @IsNotEmpty()
-  readonly author_user_id: string;
-
-  @IsNotEmpty()
-  readonly weather_station_id: string;
-
+export class CreateWeatherComBulkWeatherDataDto {
   @IsNotEmpty()
   readonly coordinates: ICoordinates;
+
+  @IsOptional()
+  readonly sensor_id?: string;
 
   @IsArray()
   @ArrayNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => WeatherDataPoint)
   readonly data: WeatherDataPoint[];
-
-  @IsOptional()
-  readonly gavesha_user_api_key?: string;
-
-  @IsOptional()
-  readonly client_id?: string;
-
-  @IsOptional()
-  readonly sensor_id?: string;
 }
