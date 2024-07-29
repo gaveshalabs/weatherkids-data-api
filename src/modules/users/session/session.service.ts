@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { KitePlayersService } from 'src/modules/kite-players/kite-players.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +11,6 @@ import { UsersService } from '../users.service';
 
 @Injectable()
 export class SessionService {
-  kitePlayerModel: any;
   constructor(
     private authService: AuthService,
     private usersService: UsersService,
@@ -64,6 +63,18 @@ export class SessionService {
 
       console.log('User exists. No need to re-create within Gavesha db.', user);
 
+      let newUserFlag = true;
+      try {
+        await this.kitePlayersService.findKitePlayerByUserId(user._id);
+        newUserFlag = false;
+      } catch (err) {
+        if (err instanceof NotFoundException) {
+          newUserFlag = true;
+        } else {
+          throw err;
+        }
+      }
+
       // Try to validate the User API key in the database.
       try {
         await this.tokenService.validateGaveshaUserApiKey(
@@ -97,15 +108,9 @@ export class SessionService {
         const updatedUser = await this.usersService.update(user._id, {
           gavesha_user_api_key: newApiKey,
         });
-
-        const existingPlayer = await this.kitePlayerModel.findOne({ user_id: user._id }).exec();
-        const newUserFlag = !existingPlayer; 
   
         return this.createUserResponse(updatedUser, newUserFlag);
       }
-
-      const existingPlayer = await this.kitePlayerModel.findOne({ user_id: user._id }).exec();
-      const newUserFlag = !existingPlayer; 
   
       return this.createUserResponse(user, newUserFlag);
     }
