@@ -130,4 +130,12 @@ export class KitePlayersService {
   remove(id: number) {
     return `This action removes a #${id} weatherStation`;
   }
+
+  async findKitePlayerByUserId(_id: string): Promise<KitePlayer> {
+    const kitePlayer = await this.kitePlayerModel.findOne({ user_id: _id }).exec();
+    if (!kitePlayer) {
+      throw new NotFoundException(`Kite player with user_id ${_id} not found`);
+    }
+    return kitePlayer;
+  }
 }

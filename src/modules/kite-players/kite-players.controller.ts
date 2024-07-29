@@ -17,6 +17,7 @@ import { CreateKitePlayerDto } from './dto/create-kite-player-dto';
 import { GetKitePlayerDto } from './dto/get-kite-player-dto';
 import { KitePlayerUpdatedResponseDto } from './dto/kite-player-updated-response.dto';
 import { UpdateKitePlayerDto } from './dto/update-kite-player-dto';
+import { KitePlayer } from './entities/kite-player.entity';
 import { KitePlayersService } from './kite-players.service';
 
 @Controller('kite-players')
@@ -62,5 +63,10 @@ export class KitePlayersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.kiteplayersService.remove(+id);
+  }
+
+  @Get('users/:userId')
+  async getKitePlayerByUserId(@Param('userId') userId: string): Promise<KitePlayer> {
+    return this.kiteplayersService.findKitePlayerByUserId(userId);
   }
 }
