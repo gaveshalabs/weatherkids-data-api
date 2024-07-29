@@ -76,7 +76,7 @@ export class KiteDataController {
     }
     return kiteData;
   }
-
+  
   @Get('players-leaderboard')
   async getPlayersLeaderBoard() {
     return await this.kiteDataService.getPlayersLeaderBoard();
