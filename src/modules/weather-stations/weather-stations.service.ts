@@ -8,6 +8,7 @@ import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
 import { GetWeatherStationDto } from './dto/get-weather-station.dto';
 import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
 import { WeatherStationCreatedResponseDto } from './dto/weather-station-created-response.dto';
+import { SyncDataDocument } from './entities/sync-data.schema';
 import {
   WeatherStation,
   WeatherStationDocument,
@@ -18,7 +19,7 @@ export class WeatherStationsService {
   constructor(
     @InjectModel(WeatherStation.name)
     private readonly weatherStationModel: Model<WeatherStationDocument>,
-
+    @InjectModel('SyncData') private readonly syncDataModel: Model<SyncDataDocument>,
     @InjectConnection() private readonly mongoConnection: Connection,
 
     private readonly jwtService: JwtService,
@@ -191,5 +192,18 @@ export class WeatherStationsService {
       );
 
     return updatedWeatherStation;
+  }
+
+  async findByClientId(clientId: string): Promise<WeatherStationDocument | null> {
+    const weatherStation = await this.weatherStationModel.findOne({ client_id: clientId }).exec();
+    if (!weatherStation) {
+      throw new NotFoundException('Weather station not found');
+    }
+    return weatherStation;
+  }
+
+  async saveSyncData(clientId: string, weatherStationId: string): Promise<SyncDataDocument> {
+    const syncData = new this.syncDataModel({ client_id: clientId,weather_station_id: weatherStationId });
+    return syncData.save();
   }
 }
