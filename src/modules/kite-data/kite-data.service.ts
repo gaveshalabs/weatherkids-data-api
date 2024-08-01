@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import * as moment from 'moment';
+import * as moment from 'moment-timezone';
 import { Connection, Model } from 'mongoose';
 import { BulkCreateKiteDataResponseDto } from './dto/bulk-create-kite-data-response.dto';
 import { CreateBulkKiteDataDto } from './dto/create-bulk-kite-data.dto';
@@ -1245,8 +1245,7 @@ export class KiteDataService {
     try {
       const startOfCurrentWeek = moment().startOf('week').toDate();
       const endOfCurrentWeek = moment().endOf('week').toDate();
-
-
+      
       const aggregationPipeline = [
         {
           $match: {
@@ -1298,5 +1297,119 @@ export class KiteDataService {
       console.error("Error in getTotalHeightForDateRange:", error);
       throw error;
     }
+  }
+
+  async getAttemptsByPlayerId(kitePlayerId: string, sortByHeight?: string, sortByAttempt?: string): Promise<{ attempt_timestamp: string, height: number }[]> {
+
+    const pipeline: any[] = [
+      {
+        $match: {
+          "metadata.kite_player_id": kitePlayerId
+        }
+      },
+      {
+        $group: {
+          _id: {
+            kite_player_id: "$metadata.kite_player_id",
+            attempt_timestamp: "$metadata.attempt_timestamp"
+          },
+          max_altitude: { $max: "$altitude" },
+          min_altitude: { $min: "$altitude" }
+        }
+      },
+      {
+        $addFields: {
+          height: { $subtract: ["$max_altitude", "$min_altitude"] }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          attempt_timestamp: "$_id.attempt_timestamp",
+          height: 1
+        }
+      }
+    ];
+
+    if (sortByHeight === 'desc') {
+      pipeline.push({
+        $sort: { height: -1 } as any 
+      });
+    } else if (sortByHeight === 'asc') {
+      pipeline.push({
+        $sort: { height: 1 } as any 
+      });
+    }
+
+    if (sortByAttempt === 'desc') {
+      pipeline.push({
+        $sort: { attempt_timestamp: -1 } as any 
+      });
+    } else if (sortByAttempt === 'asc') {
+      pipeline.push({
+        $sort: { attempt_timestamp: 1 } as any 
+      });
+    }
+
+    const results = await this.kiteDatumModel.aggregate(pipeline).exec();
+    return results.map(result => ({
+      attempt_timestamp: moment(result.attempt_timestamp).tz('Asia/Colombo').format('YYYY-MM-DDTHH:mm:ss'),
+      height: result.height
+    }));
+  }
+
+  async attemptsByKitePlayerIdAndAttemptTimestamp(
+    kitePlayerId: string,
+    attemptTimestamp: Date
+  ): Promise<{ data: { timestamp: string, height: number }[] }> {
+  
+      const pipeline: any[] = [
+        {
+          $match: {
+            "metadata.kite_player_id": kitePlayerId,
+            "metadata.attempt_timestamp": attemptTimestamp
+          }
+        },
+        {
+          $group: {
+            _id: "$metadata.kite_player_id",
+            min_altitude: { $min: "$altitude" },
+            data: {
+              $push: {
+                timestamp: "$timestamp",
+                altitude: "$altitude",
+              }
+            }
+          }
+        },
+        {
+          $addFields: {
+            data: {
+              $map: {
+                input: "$data",
+                as: "pair",
+                in: {
+                  timestamp: "$$pair.timestamp",
+                  altitude: "$$pair.altitude",
+                  height: { $subtract: ["$$pair.altitude", "$min_altitude"] }
+                }
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            data: {
+              timestamp: 1,
+              height: 1
+            }
+          }
+        }
+      ];
+      const result = await this.kiteDatumModel.aggregate(pipeline).exec();
+      return {
+        data: result.length > 0 ? result[0].data : []
+      };
   }
 }
