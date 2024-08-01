@@ -3,7 +3,7 @@ name: Deploy NestJS API to Firebase
 on:
   push:
     branches:
-      - main
+      # - main
       - dev
 
 jobs:
