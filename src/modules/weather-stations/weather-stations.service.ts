@@ -8,6 +8,7 @@ import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
 import { GetWeatherStationDto } from './dto/get-weather-station.dto';
 import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
 import { WeatherStationCreatedResponseDto } from './dto/weather-station-created-response.dto';
+import { GeoJsonHexagonDocument } from './entities/geojson-hexagon-coordinates';
 import { SyncDataDocument } from './entities/sync-data.schema';
 import {
   WeatherStation,
@@ -20,6 +21,7 @@ export class WeatherStationsService {
     @InjectModel(WeatherStation.name)
     private readonly weatherStationModel: Model<WeatherStationDocument>,
     @InjectModel('SyncData') private readonly syncDataModel: Model<SyncDataDocument>,
+    @InjectModel('GeoJsonHexaCoordinates') private geojsonhexagonModel: Model<GeoJsonHexagonDocument>,
     @InjectConnection() private readonly mongoConnection: Connection,
 
     private readonly jwtService: JwtService,
@@ -36,10 +38,15 @@ export class WeatherStationsService {
     session.startTransaction();
 
     try {
-      // Step 1: Save the new weather station
-      const newWeatherStation = new this.weatherStationModel(
-        createWeatherStationDto,
-      );
+      const coordinates = createWeatherStationDto.coordinates;
+      const point = [coordinates.longitude, coordinates.latitude];
+      const hexagon_name = await this.findHexagonByCoordinates(point[0], point[1]);
+  
+      // Step 2: Save the new weather station with hexagon_name
+      const newWeatherStation = new this.weatherStationModel({
+        ...createWeatherStationDto,
+         hexagon_name,
+      });
       const savedWeatherStation = await newWeatherStation.save({ session });
 
       // Step 2: Update the user API key with the new weather station ID
@@ -88,6 +95,7 @@ export class WeatherStationsService {
         coordinates: savedWeatherStation.coordinates,
         user_ids: savedWeatherStation.user_ids,
         gavesha_user_api_key: updatedApiKey,
+        hexagon_name: savedWeatherStation.hexagon_name,
       };
 
       return response;
@@ -205,5 +213,49 @@ export class WeatherStationsService {
   async saveSyncData(clientId: string, weatherStationId: string): Promise<SyncDataDocument> {
     const syncData = new this.syncDataModel({ client_id: clientId,weather_station_id: weatherStationId });
     return syncData.save();
+  }
+
+  async findHexagonByCoordinates(lng: number, lat: number): Promise<string | null> {
+    const point = {
+      type: 'Point',
+      coordinates: [lng, lat],
+    };
+
+    const hexagon = await this.geojsonhexagonModel.findOne({
+      location: {
+        $geoIntersects: {
+          $geometry: point,
+        },
+      },
+    });
+
+    return hexagon ? hexagon.hexagon_name : null;
+  }
+
+  async findWeatherStationByHexagonName(hexagonName: string) {
+    const aggregationPipeline = [
+      {
+        $match: {
+          hexagon_name: hexagonName
+        }
+      },
+      {
+        $group: {
+          _id: "$hexagon_name",
+          count: { $sum: 1 },
+          names: { $push: "$name" }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          count: 1,
+          names: 1
+        }
+      }
+    ];
+
+    const result = await this.weatherStationModel.aggregate(aggregationPipeline).exec();
+    return result.length ? result[0] : null;
   }
 }

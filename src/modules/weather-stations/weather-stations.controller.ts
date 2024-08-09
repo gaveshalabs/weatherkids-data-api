@@ -16,7 +16,7 @@ import {
   ValidationPipe
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
 import { PointsService } from '../points/points.service';
@@ -77,6 +77,15 @@ export class WeatherStationsController {
     return {
       server_timestamp: sriLankanTime,
     };
+  }
+
+  @Get('hexagon/:hexagonName')
+  async findWeatherStationByHexagonId(@Param('hexagonName') hexagonName: string) {
+    const weatherStationData = await this.weatherStationsService.findWeatherStationByHexagonName(hexagonName);
+    if (!weatherStationData) {
+      return { message: `No weather stations found for hexagon name: ${hexagonName}` };
+    }
+    return weatherStationData;
   }
 
   @Get(':id')

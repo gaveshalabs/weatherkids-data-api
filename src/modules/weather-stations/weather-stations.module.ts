@@ -4,6 +4,7 @@ import { PointsModule } from '../points/points.module';
 import { TokenModule } from '../users/token/token.module';
 import { UsersModule } from '../users/users.module';
 import { WeatherDataModule } from '../weather-data/weather-data.module';
+import { GeoJsonHexagonSchema } from './entities/geojson-hexagon-coordinates';
 import { SyncDataSchema } from './entities/sync-data.schema';
 import {
   WeatherStation,
@@ -20,7 +21,8 @@ import { WeatherStationsService } from './weather-stations.service';
     TokenModule,
     MongooseModule.forFeature([
       { name: WeatherStation.name, schema: WeatherStationSchema },
-      { name: 'SyncData', schema: SyncDataSchema }
+      { name: 'SyncData', schema: SyncDataSchema },
+      {name:'GeoJsonHexaCoordinates', schema: GeoJsonHexagonSchema}
     ]),
   ],
   controllers: [WeatherStationsController],

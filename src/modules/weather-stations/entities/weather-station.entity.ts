@@ -18,6 +18,9 @@ export class WeatherStation {
   @Prop({ required: true, type: Object })
   coordinates: ICoordinates;
 
+  @Prop()
+  hexagon_name: string;
+
   @Prop({ type: [{ type: String, default: uuidv4, ref: User.name }] })
   user_ids: string[];
 
