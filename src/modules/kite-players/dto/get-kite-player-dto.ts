@@ -6,5 +6,7 @@ export class GetKitePlayerDto {
   readonly birthday:Date;
   readonly coordinates: ICoordinates;
   readonly city: string;
+  readonly nearest_city: string;
+  readonly nearest_district: string;
   readonly img_url: string;
 }

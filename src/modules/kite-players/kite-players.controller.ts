@@ -46,6 +46,21 @@ export class KitePlayersController {
     return this.kiteplayersService.findAll();
   }
 
+  @Get('nearest-district')
+  async getKitePlayersCountByNearestDistrict() {
+    return this.kiteplayersService.getKitePlayersCountByNearestDistrict();
+  }
+
+  @Get('age-group')
+  async getKitePlayerStatsByAgeRange(): Promise<any> {
+    try {
+      const stats = await this.kiteplayersService.getKitePlayerStatsByAgeRange();
+      return stats;
+    } catch (error) {
+      throw new Error('Failed to retrieve kite player statistics by age group.');
+    }
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string, @Query('sortByHeight') sortByHeight?: string, @Query('sortByAttempt') sortByAttempt?: string) {
     const kitePlayer = await this.kiteplayersService.findOne(id);

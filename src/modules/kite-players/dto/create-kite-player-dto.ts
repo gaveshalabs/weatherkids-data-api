@@ -6,6 +6,8 @@ export class CreateKitePlayerDto {
   readonly coordinates: ICoordinates;
   readonly birthday: Date;
   readonly city: string;
+  readonly nearest_city: string;
+  readonly nearest_district: string;
   readonly img_url: string;
 
   @IsOptional()
