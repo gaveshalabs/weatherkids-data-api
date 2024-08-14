@@ -40,6 +40,16 @@ export class KitePlayersController {
     );
   }
 
+  @Get('age-group')
+  async getKitePlayerStatsByAgeRange(): Promise<any> {
+    try {
+      const stats = await this.kiteplayersService.getKitePlayerStatsByAgeRange();
+      return stats;
+    } catch (error) {
+      throw new Error('Failed to retrieve kite player statistics by age group.');
+    }
+  }
+
   @Get()
   findAll(): Promise<GetKitePlayerDto[]> {
     return this.kiteplayersService.findAll();

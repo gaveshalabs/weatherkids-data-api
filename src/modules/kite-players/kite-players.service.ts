@@ -138,4 +138,90 @@ export class KitePlayersService {
     }
     return kitePlayer;
   }
+
+  async getKitePlayerStatsByAgeRange(): Promise<any> {
+    const ageGroups = [
+      { minAge: 0, maxAge: 5 },
+      { minAge: 6, maxAge: 10 },
+      { minAge: 11, maxAge: 15 },
+      { minAge: 16, maxAge: 20 },
+      { minAge: 21, maxAge: 25 },
+      { minAge: 26, maxAge: 30 },
+      { minAge: 31, maxAge: 35 },
+      { minAge: 36, maxAge: 40 },
+      { minAge: 41, maxAge: 45 },
+      { minAge: 46, maxAge: 50 },
+      { minAge: 51, maxAge: 55 },
+      { minAge: 56, maxAge: 60 },
+    ];
+    const pipelines = ageGroups.map(group => [
+      {
+        $addFields: {
+          age: {
+            $floor: {
+              $divide: [
+                {
+                  $subtract: [
+                    "$$NOW", 
+                    "$birthday"
+                  ]
+                },
+                1000 * 60 * 60 * 24 * 365.25 
+              ]
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          age: { $gte: group.minAge, $lte: group.maxAge } 
+        }
+      },
+      {
+        $lookup: {
+          from: "kite_data", 
+          localField: "_id", 
+          foreignField: "metadata.kite_player_id", 
+          as: "kite_data" 
+        }
+      },
+      {
+        $unwind: {
+          path: "$kite_data",
+          preserveNullAndEmptyArrays: true 
+        }
+      },
+      {
+        $group: {
+          _id: "$_id", 
+          unique_attempt_timestamps: { $addToSet: "$kite_data.metadata.attempt_timestamp" },
+          attempts: { $sum: 1 } 
+        }
+      },
+      {
+        $group: {
+          _id: null, 
+          total_kite_players: { $sum: 1 },
+          total_attempts: { $sum: { $size: "$unique_attempt_timestamps" } } 
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          total_kite_players: 1,
+          total_attempts: 1
+        }
+      },
+      {
+        $addFields: {
+          age_group: `${group.minAge}-${group.maxAge}`
+        }
+      }
+    ]);
+    const results = await Promise.all(pipelines.map(pipeline =>
+      this.kitePlayerModel.aggregate(pipeline).exec()
+    ));
+    const aggregatedResults = results.flat();
+    return aggregatedResults;
+  }
 }
