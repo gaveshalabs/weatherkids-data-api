@@ -26,6 +26,12 @@ export class KitePlayer {
   city: string;
 
   @Prop()
+  nearest_city: string;
+
+  @Prop()
+  nearest_district: string;
+
+  @Prop()
   client_id: string;
 
   @Prop({ required: true })

@@ -40,6 +40,11 @@ export class KitePlayersController {
     );
   }
 
+  @Get('nearest-district')
+  async getKitePlayersCountByNearestDistrict() {
+    return this.kiteplayersService.getKitePlayersCountByNearestDistrict();
+  }
+
   @Get()
   findAll(): Promise<GetKitePlayerDto[]> {
     return this.kiteplayersService.findAll();
