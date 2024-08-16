@@ -152,6 +152,91 @@ export class KitePlayersService {
     return kitePlayer;
   }
 
+ async getKitePlayerStatsByAgeRange(): Promise<any> {
+  const pipeline = [
+    {
+      $addFields: {
+        age: {
+          $floor: {
+            $divide: [
+              {
+                $subtract: [new Date(), "$birthday"]
+              },
+              1000 * 60 * 60 * 24 * 365.25
+            ]
+          }
+        }
+      }
+    },
+    {
+      $bucket: {
+        groupBy: "$age", 
+        boundaries: [0, 6, 11, 16, 21, 26, 31, 36, 41, 46, 51, 56, 61], 
+        default: "Other", 
+        output: {
+          total_kite_players: { $sum: 1 },
+          kite_player_ids: { $push: "$_id" }
+        }
+      }
+    },
+    {
+      $addFields: {
+        age_group: {
+          $switch: {
+            branches: [
+              { case: { $eq: ["$_id", 0] }, then: "0-5" },
+              { case: { $eq: ["$_id", 6] }, then: "6-10" },
+              { case: { $eq: ["$_id", 11] }, then: "11-15" },
+              { case: { $eq: ["$_id", 16] }, then: "16-20" },
+              { case: { $eq: ["$_id", 21] }, then: "21-25" },
+              { case: { $eq: ["$_id", 26] }, then: "26-30" },
+              { case: { $eq: ["$_id", 31] }, then: "31-35" },
+              { case: { $eq: ["$_id", 36] }, then: "36-40" },
+              { case: { $eq: ["$_id", 41] }, then: "41-45" },
+              { case: { $eq: ["$_id", 46] }, then: "46-50" },
+              { case: { $eq: ["$_id", 51] }, then: "51-55" },
+              { case: { $eq: ["$_id", 56] }, then: "56-60" }
+            ],
+            default: "Other"
+          }
+        }
+      }
+    },
+    {
+      $lookup: {
+        from: "kite_data",
+        localField: "kite_player_ids",
+        foreignField: "metadata.kite_player_id",
+        as: "kite_data"
+      }
+    },
+    {
+      $unwind: {
+        path: "$kite_data",
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $group: {
+        _id: "$age_group", 
+        total_kite_players: { $first: "$total_kite_players" },
+        unique_attempt_timestamps: { $addToSet: "$kite_data.metadata.attempt_timestamp" }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        age_group: "$_id",
+        total_kite_players: 1,
+        total_attempts: { $size: "$unique_attempt_timestamps" }
+      }
+    }
+  ];
+
+  const results = await this.kitePlayerModel.aggregate(pipeline).exec();
+  return results;
+ }
+  
   async findNearestCity(coordinates: [number, number]) {
     const nearestCity = await this.CityDataModel.aggregate([
       {
