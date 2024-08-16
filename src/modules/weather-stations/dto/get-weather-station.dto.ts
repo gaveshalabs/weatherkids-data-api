@@ -5,4 +5,5 @@ export class GetWeatherStationDto {
   readonly name: string;
   readonly coordinates: ICoordinates;
   readonly user_ids: string[];
+  readonly hexagon_name: string;
 }

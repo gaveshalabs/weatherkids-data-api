@@ -6,6 +6,7 @@ import { CreateKitePlayerDto } from './dto/create-kite-player-dto';
 import { GetKitePlayerDto } from './dto/get-kite-player-dto';
 import { KitePlayerCreatedResponseDto } from './dto/kite-player-created-response.dto';
 import { UpdateKitePlayerDto } from './dto/update-kite-player-dto';
+import { CityDataDocument } from './entities/cities.schema';
 import { KitePlayer, KitePlayerDocument } from './entities/kite-player.entity';
 
 @Injectable()
@@ -14,6 +15,8 @@ export class KitePlayersService {
   constructor(
     @InjectModel(KitePlayer.name)
     private readonly kitePlayerModel: Model<KitePlayerDocument>,
+    @InjectModel('CityData')
+    private readonly CityDataModel: Model<CityDataDocument>,
     @InjectConnection() private readonly mongoConnection: Connection,
     private readonly jwtService: JwtService,
   ) {}
@@ -81,11 +84,19 @@ export class KitePlayersService {
         kitePlayer = existingKitePlayer;
       } else {
         
+        const coordinatesArray: [number, number] = [
+          createKitePlayerDto.coordinates.long,
+          createKitePlayerDto.coordinates.lat,
+        ];
+
+        const nearestCity = await this.findNearestCity(coordinatesArray);
         const randomAvatarUrl = this.getRandomAvatarUrl();
         const newKitePlayer = new this.kitePlayerModel({
           ...createKitePlayerDto,
           user_id: result._id,
           img_url: randomAvatarUrl,
+          nearest_city: nearestCity.city_name_en,
+          nearest_district: nearestCity.district_name_en,
         });
         kitePlayer = await newKitePlayer.save();
       }
@@ -96,6 +107,8 @@ export class KitePlayersService {
         coordinates: kitePlayer.coordinates,
         city: kitePlayer.city,
         img_url: kitePlayer.img_url,
+        nearest_city: kitePlayer.nearest_city,
+        nearest_district: kitePlayer.nearest_district,
       };
 
       return response;
@@ -222,5 +235,87 @@ export class KitePlayersService {
 
   const results = await this.kitePlayerModel.aggregate(pipeline).exec();
   return results;
+ }
+  
+  async findNearestCity(coordinates: [number, number]) {
+    const nearestCity = await this.CityDataModel.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: 'Point',
+            coordinates: coordinates,
+          },
+          distanceField: 'distance',
+          spherical: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'districts',
+          localField: 'district_id',
+          foreignField: 'id',
+          as: 'district',
+        },
+      },
+      {
+        $unwind: '$district',
+      },
+      {
+        $project: {
+          city_name_en: '$name_en',
+          district_name_en: '$district.name_en',
+          _id: 0,
+        },
+      },
+      {
+        $limit: 1, 
+      },
+    ]).exec();
+
+    if (!nearestCity || nearestCity.length === 0) {
+      throw new Error('No city found near these coordinates');
+    }
+    return nearestCity[0]; 
+  }
+
+  async getKitePlayersCountByNearestDistrict() {
+    return this.kitePlayerModel.aggregate([
+      {
+        $group: {
+          _id: "$nearest_district", 
+          kite_player_ids: { $addToSet: "$_id" }, 
+          total_players: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "kite_data", 
+          localField: "kite_player_ids", 
+          foreignField: "metadata.kite_player_id", 
+          as: "kite_data" 
+        }
+      },
+      {
+        $unwind: {
+          path: "$kite_data",
+          preserveNullAndEmptyArrays: false 
+        }
+      },
+      {
+        $group: {
+          _id: "$_id", 
+          total_players: { $first: "$total_players" }, 
+          unique_attempt_timestamps: { $addToSet: "$kite_data.metadata.attempt_timestamp" } 
+        }
+      },
+      {
+        $project: {
+          _id: 0, 
+          nearest_district: "$_id", 
+          total_players: 1, 
+          total_attempts: { $size: "$unique_attempt_timestamps" } 
+        }
+      }
+    ]);
   }
 }
