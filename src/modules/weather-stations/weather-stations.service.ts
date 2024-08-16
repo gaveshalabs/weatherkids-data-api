@@ -8,7 +8,6 @@ import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
 import { GetWeatherStationDto } from './dto/get-weather-station.dto';
 import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
 import { WeatherStationCreatedResponseDto } from './dto/weather-station-created-response.dto';
-import { GeoJsonHexagonDocument } from './entities/geojson-hexagon-coordinates';
 import { SyncDataDocument } from './entities/sync-data.schema';
 import {
   WeatherStation,
@@ -20,8 +19,6 @@ export class WeatherStationsService {
   constructor(
     @InjectModel(WeatherStation.name)
     private readonly weatherStationModel: Model<WeatherStationDocument>,
-    @InjectModel('SyncData') private readonly syncDataModel: Model<SyncDataDocument>,
-    @InjectModel('GeoJsonHexaCoordinates') private geojsonhexagonModel: Model<GeoJsonHexagonDocument>,
     @InjectConnection() private readonly mongoConnection: Connection,
 
     private readonly jwtService: JwtService,

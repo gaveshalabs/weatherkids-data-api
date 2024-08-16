@@ -6,6 +6,7 @@ import { UsersModule } from '../users/users.module';
 import { WeatherDataModule } from '../weather-data/weather-data.module';
 import { GeoJsonHexagonSchema } from './entities/geojson-hexagon-coordinates';
 import { SyncDataSchema } from './entities/sync-data.schema';
+
 import {
   WeatherStation,
   WeatherStationSchema,

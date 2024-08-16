@@ -7,6 +7,8 @@ export class CreateKitePlayerDto {
   readonly birthday: Date;
   readonly city: string;
   readonly img_url: string;
+  readonly nearest_city: string;
+  readonly nearest_district: string;
 
   @IsOptional()
   readonly isBot?: boolean;
