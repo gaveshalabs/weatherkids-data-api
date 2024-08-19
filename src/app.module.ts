@@ -9,6 +9,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ClientsModule } from './modules/clients/clients.module';
 import { GuardsModule } from './modules/common/guards/guards.module';
+import { DownloadsModule } from './modules/downloads/downloads.module';
 import { KiteDataModule } from './modules/kite-data/kite-data.module';
 import { KitePlayersModule } from './modules/kite-players/kite-players.module';
 import { PointsModule } from './modules/points/points.module';
@@ -55,6 +56,7 @@ import { WeatherStationsModule } from './modules/weather-stations/weather-statio
     KitePlayersModule,
     KiteDataModule,
     ScheduleModule.forRoot(),
+    DownloadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
