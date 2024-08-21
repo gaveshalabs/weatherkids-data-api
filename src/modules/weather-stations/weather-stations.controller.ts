@@ -76,14 +76,13 @@ export class WeatherStationsController {
     const utcTimestamp = new Date().toISOString();
     const sriLankanTime = moment.utc(utcTimestamp).tz('Asia/Colombo').format('YYYY-MM-DDTHH:mm:ss');
     
-    const topFirmware = this.downloadsService.getTopFirmware();
-    const { version_number, crc } = topFirmware;
+    const LatestFirmware = this.downloadsService.getLatestFirmware();
+    const { version_number} = LatestFirmware;
 
     await this.weatherStationsService.saveSyncData(req.clientId,station._id);
     return {
       server_timestamp: sriLankanTime,
-      version_number,
-      crc,
+      version_number
     };
   }
 

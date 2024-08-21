@@ -8,33 +8,33 @@ export class DownloadsService {
   // Add new version to the top of this array. Because sync endpoint get the version number and crc from here. 
   private firmwareFiles = [
     {
-      version_number: 123,
+      version_number: 'abc25d',
       filename: 'Version_1.2.3.txt',
       crc: 'Defined',
     },
     {
-      version_number: 124,
-      filename: 'Version_1.2.4.txt',
+      version_number: '2dr',
+      filename: 'Version_1.2.4.bin',
       crc: 'Defined',
     },
     {
-      version_number: 125,
-      filename: 'Version_1.2.5.txt',
+      version_number: '12552d',
+      filename: 'Version_1.2.5.exe',
       crc: 'Defined',
     },
     {
-      version_number: 126,
+      version_number: 'hgt',
       filename: 'Version_1.2.6.txt',
       crc: 'Defined',
     },
     {
-      version_number: 127,
+      version_number: 'cvt',
       filename: 'Version_1.2.7.txt',
       crc: 'Defined',
     },
   ];
 
-  getTopFirmware() {
+  getLatestFirmware() {
     return this.firmwareFiles[0];
   }
 
@@ -48,7 +48,7 @@ export class DownloadsService {
     }
   }
 
-  mapFilename(versionNumber: number): string {
+  mapFilename(versionNumber: string): string {
     const firmware = this.firmwareFiles.find(
       (file) => file.version_number === versionNumber,
     );
@@ -61,7 +61,7 @@ export class DownloadsService {
   }
 
   getFilePath(versionNumber: string): string {
-    const actualFilename = this.mapFilename(parseInt(versionNumber));
+    const actualFilename = this.mapFilename(versionNumber);
     const directoryPath = this.getDirectoryPath();
     const filePath = path.join(directoryPath, actualFilename);
 

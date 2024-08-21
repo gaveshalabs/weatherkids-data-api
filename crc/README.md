@@ -1,3 +1,7 @@
+## Usage
+
+This script is used to generate a CRC-32 checksum for a given file.
+
 ## Running the app
 
 ```bash
