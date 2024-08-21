@@ -5,6 +5,7 @@ import * as path from 'path';
 
 @Injectable()
 export class DownloadsService {
+  // Add new version to the top of this array. Because sync endpoint get the version number and crc from here. 
   private firmwareFiles = [
     {
       version_number: 123,
@@ -32,6 +33,10 @@ export class DownloadsService {
       crc: 'Defined',
     },
   ];
+
+  getTopFirmware() {
+    return this.firmwareFiles[0];
+  }
 
   getDirectoryPath(): string {
     if (process.env.NODE_ENV === 'local') {

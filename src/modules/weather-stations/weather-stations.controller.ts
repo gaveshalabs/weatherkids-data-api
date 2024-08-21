@@ -16,9 +16,10 @@ import {
   ValidationPipe
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import moment from 'moment-timezone';
+import * as moment from 'moment-timezone';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
+import { DownloadsService } from '../downloads/downloads.service';
 import { PointsService } from '../points/points.service';
 import { WeatherDataService } from '../weather-data/weather-data.service';
 import { AddUsersToWeatherStationDto } from './dto/add-users-to-weather-station.dto';
@@ -35,6 +36,7 @@ export class WeatherStationsController {
     private readonly weatherStationsService: WeatherStationsService,
     private readonly weatherDataService: WeatherDataService,
     private readonly pointsService: PointsService,
+    private readonly downloadsService: DownloadsService
   ) {}
 
   @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
@@ -73,9 +75,15 @@ export class WeatherStationsController {
     }
     const utcTimestamp = new Date().toISOString();
     const sriLankanTime = moment.utc(utcTimestamp).tz('Asia/Colombo').format('YYYY-MM-DDTHH:mm:ss');
+    
+    const topFirmware = this.downloadsService.getTopFirmware();
+    const { version_number, crc } = topFirmware;
+
     await this.weatherStationsService.saveSyncData(req.clientId,station._id);
     return {
       server_timestamp: sriLankanTime,
+      version_number,
+      crc,
     };
   }
 

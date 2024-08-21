@@ -8,6 +8,7 @@ import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
 import { GetWeatherStationDto } from './dto/get-weather-station.dto';
 import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
 import { WeatherStationCreatedResponseDto } from './dto/weather-station-created-response.dto';
+import { GeoJsonHexagonDocument } from './entities/geojson-hexagon-coordinates';
 import { SyncDataDocument } from './entities/sync-data.schema';
 import {
   WeatherStation,
@@ -19,6 +20,8 @@ export class WeatherStationsService {
   constructor(
     @InjectModel(WeatherStation.name)
     private readonly weatherStationModel: Model<WeatherStationDocument>,
+    @InjectModel('SyncData') private readonly syncDataModel: Model<SyncDataDocument>,
+    @InjectModel('GeoJsonHexaCoordinates') private geojsonhexagonModel: Model<GeoJsonHexagonDocument>,
     @InjectConnection() private readonly mongoConnection: Connection,
 
     private readonly jwtService: JwtService,
@@ -36,7 +39,7 @@ export class WeatherStationsService {
 
     try {
       const coordinates = createWeatherStationDto.coordinates;
-      const point = [coordinates.longitude, coordinates.latitude];
+      const point = [coordinates.long, coordinates.lat];
       const hexagon_name = await this.findHexagonByCoordinates(point[0], point[1]);
   
       // Step 2: Save the new weather station with hexagon_name

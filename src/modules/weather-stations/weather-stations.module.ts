@@ -7,6 +7,7 @@ import { WeatherDataModule } from '../weather-data/weather-data.module';
 import { GeoJsonHexagonSchema } from './entities/geojson-hexagon-coordinates';
 import { SyncDataSchema } from './entities/sync-data.schema';
 
+import { DownloadsModule } from '../downloads/downloads.module';
 import {
   WeatherStation,
   WeatherStationSchema,
@@ -20,6 +21,7 @@ import { WeatherStationsService } from './weather-stations.service';
     forwardRef(()=>WeatherDataModule),
     UsersModule,
     TokenModule,
+    DownloadsModule,
     MongooseModule.forFeature([
       { name: WeatherStation.name, schema: WeatherStationSchema },
       { name: 'SyncData', schema: SyncDataSchema },
