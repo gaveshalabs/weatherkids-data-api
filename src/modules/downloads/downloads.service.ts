@@ -8,7 +8,7 @@ export class DownloadsService {
   // Add new version to the top of this array. Because sync endpoint get the version number and crc from here. 
   private firmwareFiles = [
     {
-      version_number: '001002003',
+      version_number: '1002003',
       filename: 'Version_1.2.3.txt',
       crc: 'Defined',
     },
