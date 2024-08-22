@@ -8,6 +8,7 @@ import { KiteDataService } from './kite-data.service';
 
 @Module({
   imports: [
+    KitePlayersModule,
     MongooseModule.forFeature([
       { name: KiteDatum.name, schema: KiteDatumSchema },
     ]),
