@@ -13,8 +13,8 @@ export class DownloadsService {
       crc: 'Defined',
     },
     {
-      version_number: '2dr',
-      filename: 'Version_1.2.4.bin',
+      version_number: '1002004',
+      filename: 'WeatherKids V4 1.2.4.bin',
       crc: 'Defined',
     },
     {
