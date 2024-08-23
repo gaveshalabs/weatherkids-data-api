@@ -1,11 +1,13 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
+import { DownloadsService } from '../downloads/downloads.service';
 import { TokenService } from '../users/token/token.service';
 import { UsersService } from '../users/users.service';
 import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
 import { GetWeatherStationDto } from './dto/get-weather-station.dto';
+import { SyncWeatherStationDto } from './dto/sync-weather-station.dto';
 import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
 import { WeatherStationCreatedResponseDto } from './dto/weather-station-created-response.dto';
 import { GeoJsonHexagonDocument } from './entities/geojson-hexagon-coordinates';
@@ -27,6 +29,7 @@ export class WeatherStationsService {
     private readonly jwtService: JwtService,
     private readonly tokenService: TokenService,
     private readonly usersService: UsersService,
+    private readonly downloadsService: DownloadsService,
   ) {}
 
   // Protected by guards.
@@ -211,7 +214,7 @@ export class WeatherStationsService {
   }
 
   async saveSyncData(clientId: string, weatherStationId: string): Promise<SyncDataDocument> {
-    const syncData = new this.syncDataModel({ client_id: clientId,weather_station_id: weatherStationId });
+    const syncData = new this.syncDataModel({ client_id: clientId,weather_station_id: weatherStationId, status: "SYNC",});
     return syncData.save();
   }
 
@@ -257,5 +260,43 @@ export class WeatherStationsService {
 
     const result = await this.weatherStationModel.aggregate(aggregationPipeline).exec();
     return result.length ? result[0] : null;
+  }
+
+  async handleSyncRequest(syncWeatherStationDto: SyncWeatherStationDto, clientId: string, weatherStationId: string): Promise<{ crc32?: string }> {
+    const { update_begin, update_version, update_done } = syncWeatherStationDto;
+
+    if (update_begin && update_version) {
+      // Create a new document with status "UPDATE_BEGIN"
+      await this.createSyncData('UPDATE_BEGIN', update_version, clientId, weatherStationId);
+      return this.getCrc32ByVersion(update_version);
+    }
+
+    if (update_done) {
+      // Create a new document with status "UPDATE_DONE"
+      await this.createSyncData('UPDATE_DONE', update_version, clientId, weatherStationId);
+      return {}; // Return empty response body
+    }
+
+    throw new BadRequestException('Invalid request body');
+  }
+
+  private async getCrc32ByVersion(version_number: string): Promise<{ crc32: string }> {
+    const crc32 = await this.downloadsService.findCrcByVersion(version_number);
+    if (!crc32) {
+      throw new NotFoundException(`CRC32 not found for version: ${version_number}`);
+    }
+    return { crc32 };
+  }
+
+  private async createSyncData(status: string, version_number: string, client_id: string, weather_station_id: string): Promise<void> {
+    // Create a new document
+    const newSyncData = new this.syncDataModel({
+      client_id,
+      weather_station_id,
+      status,
+      version_number,
+    });
+
+    await newSyncData.save();
   }
 }

@@ -8,6 +8,7 @@ import { GeoJsonHexagonSchema } from './entities/geojson-hexagon-coordinates';
 import { SyncDataSchema } from './entities/sync-data.schema';
 
 import { DownloadsModule } from '../downloads/downloads.module';
+import { DownloadsService } from '../downloads/downloads.service';
 import {
   WeatherStation,
   WeatherStationSchema,
@@ -29,7 +30,7 @@ import { WeatherStationsService } from './weather-stations.service';
     ]),
   ],
   controllers: [WeatherStationsController],
-  providers: [WeatherStationsService, WeatherStation],
+  providers: [WeatherStationsService, WeatherStation, DownloadsService],
   exports: [WeatherStationsService],
 })
 export class WeatherStationsModule {}

@@ -8,14 +8,14 @@ export class DownloadsService {
   // Add new version to the top of this array. Because sync endpoint get the version number and crc from here. 
   private firmwareFiles = [
     {
-      version_number: '1002003',
+      version_number: 'abc25d',
       filename: 'Version_1.2.3.txt',
-      crc: 'Defined',
+      crc: '12345',
     },
     {
-      version_number: '1002004',
-      filename: 'WeatherKids V4 1.2.4.bin',
-      crc: 'Defined',
+      version_number: '2dr',
+      filename: 'Version_1.2.4.bin',
+      crc: 'fgd254rg',
     },
     {
       version_number: '12552d',
@@ -78,5 +78,12 @@ export class DownloadsService {
 
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
+  }
+
+  findCrcByVersion(version_number: string): string {
+    const firmware = this.firmwareFiles.find(
+      (file) => file.version_number === version_number,
+    );
+    return firmware.crc;
   }
 }

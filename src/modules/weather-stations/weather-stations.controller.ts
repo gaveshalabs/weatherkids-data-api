@@ -10,6 +10,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Req,
   UseGuards,
   UsePipes,
@@ -25,6 +26,7 @@ import { WeatherDataService } from '../weather-data/weather-data.service';
 import { AddUsersToWeatherStationDto } from './dto/add-users-to-weather-station.dto';
 import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
 import { GetWeatherStationDto } from './dto/get-weather-station.dto';
+import { SyncWeatherStationDto } from './dto/sync-weather-station.dto';
 import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
 import { WeatherStationUpdatedResponseDto } from './dto/weather-station-updated-response.dto';
 import { WeatherStationsService } from './weather-stations.service';
@@ -57,7 +59,7 @@ export class WeatherStationsController {
   }
 
   @UseGuards(ValidateGaveshaClientGuard)
-  @Get('/sync')
+  @Post('/sync')
   @UsePipes(
     new ValidationPipe({
       transform: true,
@@ -159,5 +161,19 @@ export class WeatherStationsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.weatherStationsService.remove(+id);
+  }
+
+  @UseGuards(ValidateGaveshaClientGuard)
+  @Put('sync')
+  async syncWeatherStation(
+    @Req() req: any,
+    @Body() syncWeatherStationDto: SyncWeatherStationDto,
+  ): Promise<{ crc32?: string }> {
+    const clientId = req.clientId; 
+    const station = await this.weatherStationsService.findByClientId(clientId);
+    if (!station) {
+      throw new NotFoundException('Weather station not found');
+    }
+    return await this.weatherStationsService.handleSyncRequest(syncWeatherStationDto, clientId, station._id);
   }
 }
