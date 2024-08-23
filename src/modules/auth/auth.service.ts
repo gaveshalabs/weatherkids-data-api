@@ -73,11 +73,12 @@ export class AuthService {
     const accessToken = await this.tokenService.generateClientAccessToken({
       payload,
       subject: clientId,
-      expiresIn: '1y',
+      expiresIn: '1d',
     });
     const refreshToken = await this.tokenService.generateRefreshToken({
       payload,
       subject: clientId,
+      expiresIn: '60d',
     });
 
     return {

@@ -22,6 +22,9 @@ import { KitePlayersService } from './kite-players.service';
   ],
   controllers: [KitePlayersController],
   providers: [KitePlayersService, KitePlayer],
-  exports: [KitePlayersService],
+  exports: [
+    KitePlayersService,
+    MongooseModule.forFeature([{ name: KitePlayer.name, schema: KitePlayerSchema }]),
+  ],
 })
 export class KitePlayersModule {}
