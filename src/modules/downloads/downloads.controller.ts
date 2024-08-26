@@ -1,5 +1,5 @@
-import { BadRequestException, Controller, Get, Param, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { BadRequestException, Controller, Get, Param, Req, Res } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { DownloadsService } from './downloads.service';
 
 @Controller('downloads')
@@ -10,10 +10,12 @@ export class DownloadsController {
   async downloadFile(
     @Param('version_number') versionNumber: string,
     @Res() res: Response,
+    @Req() req: Request,
   ): Promise<void> {
     try {
       const filePath = this.downloadsService.getFilePath(versionNumber);
-      this.downloadsService.streamFile(filePath, res);
+      const rangeHeader = req.headers['range'] as string | undefined;
+      this.downloadsService.streamFile(filePath, res, rangeHeader);
     } catch (error) {
       console.error(`Error downloading file: ${error.message}`);
       throw new BadRequestException('Could not download the file.');

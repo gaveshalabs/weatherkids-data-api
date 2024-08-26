@@ -72,12 +72,37 @@ export class DownloadsService {
     }
   }
 
-  streamFile(filePath: string, res: Response): void {
-    res.setHeader('Content-Disposition', `attachment; filename=${path.basename(filePath)}`);
-    res.setHeader('Content-Type', 'application/octet-stream');
+  streamFile(filePath: string, res: Response, range: string | undefined): void {
+    const stat = fs.statSync(filePath);
+    const fileSize = stat.size;
 
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      if (start >= fileSize || end >= fileSize) {
+        res.status(416).send('Requested range not satisfiable');
+        return;
+      }
+
+      const chunksize = (end - start) + 1;
+      const fileStream = fs.createReadStream(filePath, { start, end });
+      const head = {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
+        'Content-Type': 'application/octet-stream',
+      };
+
+      res.writeHead(206, head);
+      fileStream.pipe(res);
+    } else {
+      res.setHeader('Content-Disposition', `attachment; filename=${path.basename(filePath)}`);
+      res.setHeader('Content-Type', 'application/octet-stream');
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+    }
   }
 
   findCrcByVersion(version_number: string): string {
