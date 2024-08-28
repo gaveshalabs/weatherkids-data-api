@@ -2,12 +2,12 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import * as moment from 'moment-timezone';
 import { Connection, Model } from 'mongoose';
+import { KitePlayer } from '../kite-players/entities/kite-player.entity';
 import { BulkCreateKiteDataResponseDto } from './dto/bulk-create-kite-data-response.dto';
 import { CreateBulkKiteDataDto } from './dto/create-bulk-kite-data.dto';
 import { KiteDataPoint } from './dto/kite-datapoint.dto';
 import { KiteDatum, KiteDatumDocument } from './entities/kite-datum-entity';
 import { KiteDataMetaData } from './schema/kitedata-metadata.schema';
-import { KitePlayer } from '../kite-players/entities/kite-player.entity';
 
 @Injectable()
 export class KiteDataService {
@@ -1546,7 +1546,7 @@ async getCurrentWeekPlayersCount() {
 
     const results = await this.kiteDatumModel.aggregate(pipeline).exec();
     return results.map(result => ({
-      attempt_timestamp: moment(result.attempt_timestamp).tz('Asia/Colombo').format('YYYY-MM-DDTHH:mm:ss'),
+      attempt_timestamp: result.attempt_timestamp,
       height: result.height
     }));
   }
