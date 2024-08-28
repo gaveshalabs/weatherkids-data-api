@@ -241,6 +241,7 @@ export class KiteDataService {
           rank: playerDetails?.rank ?? null,
           img_url: playerDetails?.img_url ?? null,
           user_id: playerDetails?.user_id ?? null,
+          id:playerDetails?.id ?? null,
         },
 
         "stat": {
