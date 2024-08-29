@@ -1547,7 +1547,8 @@ async getCurrentWeekPlayersCount() {
 
     const results = await this.kiteDatumModel.aggregate(pipeline).exec();
     return results.map(result => ({
-      attempt_timestamp: moment(result.attempt_timestamp).tz('Asia/Colombo').format('YYYY-MM-DDTHH:mm:ss'),
+      // attempt_timestamp: moment(result.attempt_timestamp).tz('Asia/Colombo').format('YYYY-MM-DDTHH:mm:ss'),
+      attempt_timestamp: result.attempt_timestamp,
       height: result.height
     }));
   }
