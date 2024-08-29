@@ -241,6 +241,7 @@ export class KiteDataService {
           rank: playerDetails?.rank ?? null,
           img_url: playerDetails?.img_url ?? null,
           user_id: playerDetails?.user_id ?? null,
+          id:playerDetails?.id ?? null,
         },
 
         "stat": {
@@ -1546,6 +1547,7 @@ async getCurrentWeekPlayersCount() {
 
     const results = await this.kiteDatumModel.aggregate(pipeline).exec();
     return results.map(result => ({
+      // attempt_timestamp: moment(result.attempt_timestamp).tz('Asia/Colombo').format('YYYY-MM-DDTHH:mm:ss'),
       attempt_timestamp: result.attempt_timestamp,
       height: result.height
     }));
