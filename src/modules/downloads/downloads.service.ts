@@ -12,7 +12,7 @@ export class DownloadsService {
       version_number: '1002004',
       filename: 'WeatherKids V4 1.2.4.bin',
       crc: '12345678',
-      file_size:'900',
+      file_size:'78084',
     },
     {
       version_number: 'abc25d',
