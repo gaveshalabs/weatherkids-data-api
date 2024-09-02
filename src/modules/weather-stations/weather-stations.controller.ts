@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,14 +9,12 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Put,
   Req,
   UseGuards,
   UsePipes,
   ValidationPipe
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import * as moment from 'moment-timezone';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
 import { DownloadsService } from '../downloads/downloads.service';
@@ -26,7 +23,6 @@ import { WeatherDataService } from '../weather-data/weather-data.service';
 import { AddUsersToWeatherStationDto } from './dto/add-users-to-weather-station.dto';
 import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
 import { GetWeatherStationDto } from './dto/get-weather-station.dto';
-import { SyncWeatherStationDto } from './dto/sync-weather-station.dto';
 import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
 import { WeatherStationUpdatedResponseDto } from './dto/weather-station-updated-response.dto';
 import { WeatherStationsService } from './weather-stations.service';
@@ -56,36 +52,6 @@ export class WeatherStationsController {
   @Get()
   findAll(): Promise<GetWeatherStationDto[]> {
     return this.weatherStationsService.findAll();
-  }
-
-  @UseGuards(ValidateGaveshaClientGuard)
-  @Post('/sync')
-  @UsePipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      exceptionFactory: (errors) => new BadRequestException(errors),
-    }),
-  )
-  async sync(
-    @Req() req: any,
-  ){
-    const station = await this.weatherStationsService.findByClientId(req.clientId);
-    if (!station) {
-      throw new NotFoundException('Weather station not found');
-    }
-    const utcTimestamp = new Date().toISOString();
-    const sriLankanTime = moment.utc(utcTimestamp).tz('Asia/Colombo').format('YYYY-MM-DDTHH:mm:ss');
-    
-    const LatestFirmware = this.downloadsService.getLatestFirmware();
-    const { version_number} = LatestFirmware;
-
-    await this.weatherStationsService.saveSyncData(req.clientId,station._id);
-    return {
-      server_timestamp: sriLankanTime,
-      version_number
-    };
   }
 
   @Get('hexagon/:hexagonName')
@@ -163,17 +129,24 @@ export class WeatherStationsController {
     return this.weatherStationsService.remove(+id);
   }
 
-  @UseGuards(ValidateGaveshaClientGuard)
-  @Put('sync')
-  async syncWeatherStation(
-    @Req() req: any,
-    @Body() syncWeatherStationDto: SyncWeatherStationDto,
-  ): Promise<{ crc32?: string }> {
-    const clientId = req.clientId; 
-    const station = await this.weatherStationsService.findByClientId(clientId);
-    if (!station) {
-      throw new NotFoundException('Weather station not found');
-    }
-    return await this.weatherStationsService.handleSyncRequest(syncWeatherStationDto, clientId, station._id);
+@UseGuards(ValidateGaveshaClientGuard)
+@Post('/sync')
+@UsePipes(
+  new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  }),
+)
+async syncWeatherStation(
+  @Req() req: any,
+  @Body() syncWeatherStationDto?: { update_begin?: boolean; update_version?: string; update_done?: boolean },
+): Promise<{ server_timestamp?: string; version_number?: string; crc32?: string }> {
+  const clientId = req.clientId;
+  const station = await this.weatherStationsService.findByClientId(clientId);
+  if (!station) {
+    throw new NotFoundException('Weather station not found');
   }
+  return this.weatherStationsService.handleSyncRequest(syncWeatherStationDto, clientId, station._id);
+}
 }

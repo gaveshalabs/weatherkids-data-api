@@ -1,16 +1,16 @@
 import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import * as moment from 'moment-timezone';
 import { Connection, Model } from 'mongoose';
 import { DownloadsService } from '../downloads/downloads.service';
 import { TokenService } from '../users/token/token.service';
 import { UsersService } from '../users/users.service';
 import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
 import { GetWeatherStationDto } from './dto/get-weather-station.dto';
-import { SyncWeatherStationDto } from './dto/sync-weather-station.dto';
 import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
 import { WeatherStationCreatedResponseDto } from './dto/weather-station-created-response.dto';
-import { GeoJsonHexagonDocument } from './entities/geojson-hexagon-coordinates';
+import { GeoJsonHexagonDocument } from './entities/geojson-hexagon-coordinates.schema';
 import { SyncDataDocument } from './entities/sync-data.schema';
 import {
   WeatherStation,
@@ -23,7 +23,7 @@ export class WeatherStationsService {
     @InjectModel(WeatherStation.name)
     private readonly weatherStationModel: Model<WeatherStationDocument>,
     @InjectModel('SyncData') private readonly syncDataModel: Model<SyncDataDocument>,
-    @InjectModel('GeoJsonHexaCoordinates') private geojsonhexagonModel: Model<GeoJsonHexagonDocument>,
+    @InjectModel('GeoJsonHexagonCoordinates') private geojsonhexagonModel: Model<GeoJsonHexagonDocument>,
     @InjectConnection() private readonly mongoConnection: Connection,
 
     private readonly jwtService: JwtService,
@@ -213,11 +213,6 @@ export class WeatherStationsService {
     return weatherStation;
   }
 
-  async saveSyncData(clientId: string, weatherStationId: string): Promise<SyncDataDocument> {
-    const syncData = new this.syncDataModel({ client_id: clientId,weather_station_id: weatherStationId, status: "SYNC",});
-    return syncData.save();
-  }
-
   async findHexagonByCoordinates(lng: number, lat: number): Promise<string | null> {
     const point = {
       type: 'Point',
@@ -262,41 +257,62 @@ export class WeatherStationsService {
     return result.length ? result[0] : null;
   }
 
-  async handleSyncRequest(syncWeatherStationDto: SyncWeatherStationDto, clientId: string, weatherStationId: string): Promise<{ crc32?: string }> {
+  async handleSyncRequest(syncWeatherStationDto: { update_begin?: boolean; update_version?: string; update_done?: boolean }, clientId: string, stationId: string) {
     const { update_begin, update_version, update_done } = syncWeatherStationDto;
 
-    if (update_begin && update_version) {
-      // Create a new document with status "UPDATE_BEGIN"
-      await this.createSyncData('UPDATE_BEGIN', update_version, clientId, weatherStationId);
-      return this.getCrc32ByVersion(update_version);
-    }
 
+    if (!syncWeatherStationDto || Object.keys(syncWeatherStationDto).length === 0) {
+        const utcTimestamp = new Date().toISOString();
+        const sriLankanTime = moment.utc(utcTimestamp).tz('Asia/Colombo').format('YYYY-MM-DDTHH:mm:ss');
+
+        const latestFirmware = await this.downloadsService.getLatestFirmware();
+        const { version_number } = latestFirmware;
+        const syncData = new this.syncDataModel({
+            client_id: clientId,
+            weather_station_id: stationId,
+            status: 'SYNC'
+        });
+        await syncData.save();
+        return {
+            server_timestamp: sriLankanTime,
+            version_number
+        };
+    }
+    if (update_begin) {
+        if (!update_version) {
+            throw new BadRequestException('Update version must be provided for update begin');
+        }
+
+        await this.createSyncData('UPDATE_BEGIN', update_version, clientId, stationId);
+        const crc32Obj = await this.getCrc32ByVersion(update_version);
+        return { 
+                 crc32: crc32Obj.crc32,
+                 file_size: crc32Obj.file_size, 
+                };
+    }
     if (update_done) {
-      // Create a new document with status "UPDATE_DONE"
-      await this.createSyncData('UPDATE_DONE', update_version, clientId, weatherStationId);
-      return {}; // Return empty response body
+        if (!update_version) {
+            throw new BadRequestException('Update version must be provided for update done');
+        }
+        await this.createSyncData('UPDATE_DONE', update_version, clientId, stationId);
+        return {};
     }
-
     throw new BadRequestException('Invalid request body');
-  }
+}
 
-  private async getCrc32ByVersion(version_number: string): Promise<{ crc32: string }> {
-    const crc32 = await this.downloadsService.findCrcByVersion(version_number);
-    if (!crc32) {
+  private async getCrc32ByVersion(version_number: string): Promise<{ crc32: string, file_size: string }> {
+    const firmwareData = await this.downloadsService.findCrcByVersion(version_number);
+    if (!firmwareData) {
       throw new NotFoundException(`CRC32 not found for version: ${version_number}`);
     }
-    return { crc32 };
+    return { 
+            crc32: firmwareData.crc,
+            file_size: firmwareData.file_size
+          };
   }
 
-  private async createSyncData(status: string, version_number: string, client_id: string, weather_station_id: string): Promise<void> {
-    // Create a new document
-    const newSyncData = new this.syncDataModel({
-      client_id,
-      weather_station_id,
-      status,
-      version_number,
-    });
-
-    await newSyncData.save();
+  async createSyncData(status: string, updateVersion: string, clientId: string, weatherStationId: string): Promise<SyncDataDocument> {
+    const syncData = new this.syncDataModel({ client_id: clientId, weather_station_id: weatherStationId, status, version_number: updateVersion });
+    return syncData.save();
   }
 }
