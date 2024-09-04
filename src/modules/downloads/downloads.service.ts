@@ -1,11 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import * as crc32 from 'crc-32';
 import { Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class DownloadsService {
+
+  private readonly crc32Table: number[];
+
   // Add new version to the top of this array. Because sync endpoint get the version number and crc from here. 
   private firmwareFiles = [
     {
@@ -51,6 +53,10 @@ export class DownloadsService {
       file_size: '24',
     },
   ];
+
+  constructor() {
+    this.crc32Table = this.generateCrc32Table();
+  }
 
   getLatestFirmware() {
     return this.firmwareFiles[0];
@@ -144,23 +150,46 @@ export class DownloadsService {
     }
   }
 
-  async  calculateCrc32ForRange(filePath: string, start: number, end: number): Promise<string> {
+  private generateCrc32Table(): number[] {
+    const table = new Array(256);
+    const polynomial = 0x04C11DB7;
+
+    for (let i = 0; i < 256; i++) {
+      let crc = i << 24;
+      for (let j = 0; j < 8; j++) {
+        if ((crc & 0x80000000) !== 0) {
+          crc = (crc << 1) ^ polynomial;
+        } else {
+          crc = crc << 1;
+        }
+      }
+      table[i] = crc >>> 0;
+    }
+    return table;
+  }
+
+  async calculateCrc32ForRange(filePath: string, start: number, end: number): Promise<string> {
     return new Promise((resolve, reject) => {
       const fileStream = fs.createReadStream(filePath, { start, end });
-      let crc32Sum = 0;
-  
+      let crc32Sum = 0xFFFFFFFF; 
+
       fileStream.on('data', (chunk) => {
-        crc32Sum = crc32.bstr(chunk.toString('binary'), crc32Sum);
+        for (let i = 0; i < chunk.length; i++) {
+          const byte = chunk[i] as number; 
+          const tableIndex = (crc32Sum >>> 24) ^ byte;
+          crc32Sum = (crc32Sum << 8) ^ this.crc32Table[tableIndex];
+        }
       });
-  
+
       fileStream.on('end', () => {
-        const crc32Value = (crc32Sum >>> 0).toString(16).toUpperCase().padStart(8, '0');
+        crc32Sum = crc32Sum >>> 0; 
+        const crc32Value = crc32Sum.toString(16).toUpperCase().padStart(8, '0');
         resolve(crc32Value);
       });
-  
+
       fileStream.on('error', (err) => {
         reject(err);
       });
-    });}
-
+    });
+  }
 }
