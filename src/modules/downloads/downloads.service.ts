@@ -11,6 +11,12 @@ export class DownloadsService {
   // Add new version to the top of this array. Because sync endpoint get the version number and crc from here. 
   private firmwareFiles = [
     {
+      version_number: '1002005',
+      filename: 'WeatherKids V4.bin',
+      crc: '6E17F172',
+      file_size: '82336',
+    },
+    {
       version_number: '1002004',
       filename: 'WeatherKids V4 1.2.4.bin',
       crc: '12345678',
