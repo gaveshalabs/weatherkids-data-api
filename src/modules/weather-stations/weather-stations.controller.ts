@@ -1,26 +1,26 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseGuards,
+  Get,
   Headers,
+  Param,
   ParseUUIDPipe,
+  Patch,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
-import { WeatherStationsService } from './weather-stations.service';
-import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
-import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
-import { GetWeatherStationDto } from './dto/get-weather-station.dto';
-import { AddUsersToWeatherStationDto } from './dto/add-users-to-weather-station.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
-import { WeatherDataService } from '../weather-data/weather-data.service';
 import { PointsService } from '../points/points.service';
+import { WeatherDataService } from '../weather-data/weather-data.service';
+import { AddUsersToWeatherStationDto } from './dto/add-users-to-weather-station.dto';
+import { CreateWeatherStationDto } from './dto/create-weather-station.dto';
+import { GetWeatherStationDto } from './dto/get-weather-station.dto';
+import { UpdateWeatherStationDto } from './dto/update-weather-station.dto';
 import { WeatherStationUpdatedResponseDto } from './dto/weather-station-updated-response.dto';
+import { WeatherStationsService } from './weather-stations.service';
 
 @Controller('weather-stations')
 @ApiTags('weather-stations')
@@ -47,6 +47,16 @@ export class WeatherStationsController {
   findAll(): Promise<GetWeatherStationDto[]> {
     return this.weatherStationsService.findAll();
   }
+
+  @Get('hexagon/:hexagonName')
+  async findWeatherStationByHexagonId(@Param('hexagonName') hexagonName: string) {
+    const weatherStationData = await this.weatherStationsService.findWeatherStationByHexagonName(hexagonName);
+    if (!weatherStationData) {
+      return { message: `No weather stations found for hexagon name: ${hexagonName}` };
+    }
+    return weatherStationData;
+  }
+
 
   @Get(':id')
   findOne(@Param('id') id: string) {

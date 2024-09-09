@@ -24,8 +24,8 @@ import { KiteDataService } from './kite-data.service';
 export class KiteDataController {
   constructor(
     private readonly kiteDataService: KiteDataService,
-    private readonly kitePlayerService: KitePlayersService,
-  ) {}
+    private readonly kiteplayersService: KitePlayersService,
+  ) { }
 
   @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
   @Post('bulk')
@@ -49,7 +49,7 @@ export class KiteDataController {
     return res;
   }
 
-  @Get('latest')
+  @Get('latest/player')
   async findLatestByAllKitePlayers(
     @Query('include') include?: string,
   ): Promise<any> {
@@ -59,26 +59,75 @@ export class KiteDataController {
     );
   }
 
+  //this is the old version of endpoint.mobile app used this endpoint so that not removed it yet.
+  // this is replace with latest/player/:kite_player_id' new endoint in desktop application.
+
   @Get('latest/:kite_player_id')
   async findLatestByKitePlayerId(
-    @Param('kite_player_id', new ParseUUIDPipe({ version: '4' }))
-    kitePlayerId: string,
+    @Param('kite_player_id', new ParseUUIDPipe({ version: '4' })) kitePlayerId: string,
     @Query('include') include?: string,
   ) {
     const includeCurrentWeek = include === 'current_week';
-    const kiteData = await this.kiteDataService.findLatestByKitePlayerId(
-      kitePlayerId,
-      includeCurrentWeek,
-    );
+    const kiteData = await this.kiteDataService.findLatestByKitePlayerId(kitePlayerId, includeCurrentWeek);
 
     if (!kiteData) {
-      return { flying_mins: null, max_height: null, total_attempts: null };
+      return {
+       
+          all_time: { max_height: null, total_attempts: null, total_flying_mins: null, total_height: null },
+          current_week: { total_height: null, total_attempts: null, total_flying_mins: null, max_height: null, min_height: null },
+      
+      };
     }
     return kiteData;
   }
-  
+
+  //this is the new endpoint for  'latest/:kite_player_id'
+  @Get('latest/player/:kite_player_id')
+  async findLatestByKitePlayerIdNewFunction(
+    @Param('kite_player_id', new ParseUUIDPipe({ version: '4' })) kitePlayerId: string,
+    @Query('include') include?: string,
+  ) {
+    const includeCurrentWeek = include === 'current_week';
+    const kiteData = await this.kiteDataService.findLatestByKitePlayerIdNewFunction(kitePlayerId, includeCurrentWeek);
+
+    if (!kiteData) {
+      return {
+        player: null,
+        stat: {
+          all_time: { max_height: null, total_attempts: null, total_flying_mins: null, total_height: null },
+          current_week: { total_height: null, total_attempts: null, total_flying_mins: null, max_height: null, min_height: null },
+        },
+      };
+    }
+    return kiteData;
+  }
+
+
+  @Get('latest/user/:user_id')
+  async findLatestByKiteUserId(
+    @Param('user_id', new ParseUUIDPipe({ version: '4' })) kiteUserId: string,
+    @Query('include') include?: string,
+  ) {
+    const includeCurrentWeek = include === 'current_week';
+    const kiteData = await this.kiteDataService.findLatestByKiteUserId(kiteUserId, includeCurrentWeek);
+
+    if (!kiteData) {
+      return {
+        player: null,
+        stat: {
+          all_time: { max_height: null, total_attempts: null, total_flying_mins: null, total_height: null },
+          current_week: { total_height: null, total_attempts: null, total_flying_mins: null, max_height: null, min_height: null },
+        },
+      };
+    }
+    return kiteData;
+  }
+
   @Get('players-leaderboard')
   async getPlayersLeaderBoard() {
     return await this.kiteDataService.getPlayersLeaderBoard();
   }
+
+
+
 }

@@ -1,0 +1,250 @@
+[{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e49b"
+  },
+  "id": 1,
+  "province_id": 6,
+  "name_en": "Ampara",
+  "name_si": "අම්පාර",
+  "name_ta": "அம்பாறை"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e49c"
+  },
+  "id": 2,
+  "province_id": 8,
+  "name_en": "Anuradhapura",
+  "name_si": "අනුරාධපුරය",
+  "name_ta": "அனுராதபுரம்"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e49d"
+  },
+  "id": 3,
+  "province_id": 7,
+  "name_en": "Badulla",
+  "name_si": "බදුල්ල",
+  "name_ta": "பதுளை"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e49e"
+  },
+  "id": 4,
+  "province_id": 6,
+  "name_en": "Batticaloa",
+  "name_si": "මඩකලපුව",
+  "name_ta": "மட்டக்களப்பு"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e49f"
+  },
+  "id": 5,
+  "province_id": 1,
+  "name_en": "Colombo",
+  "name_si": "කොළඹ",
+  "name_ta": "கொழும்பு"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4a0"
+  },
+  "id": 6,
+  "province_id": 3,
+  "name_en": "Galle",
+  "name_si": "ගාල්ල",
+  "name_ta": "காலி"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4a1"
+  },
+  "id": 7,
+  "province_id": 1,
+  "name_en": "Gampaha",
+  "name_si": "ගම්පහ",
+  "name_ta": "கம்பஹா"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4a2"
+  },
+  "id": 8,
+  "province_id": 3,
+  "name_en": "Hambantota",
+  "name_si": "හම්බන්තොට",
+  "name_ta": "அம்பாந்தோட்டை"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4a3"
+  },
+  "id": 9,
+  "province_id": 9,
+  "name_en": "Jaffna",
+  "name_si": "යාපනය",
+  "name_ta": "யாழ்ப்பாணம்"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4a4"
+  },
+  "id": 10,
+  "province_id": 1,
+  "name_en": "Kalutara",
+  "name_si": "කළුතර",
+  "name_ta": "களுத்துறை"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4a5"
+  },
+  "id": 11,
+  "province_id": 2,
+  "name_en": "Kandy",
+  "name_si": "මහනුවර",
+  "name_ta": "கண்டி"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4a6"
+  },
+  "id": 12,
+  "province_id": 5,
+  "name_en": "Kegalle",
+  "name_si": "කෑගල්ල",
+  "name_ta": "கேகாலை"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4a7"
+  },
+  "id": 13,
+  "province_id": 9,
+  "name_en": "Kilinochchi",
+  "name_si": "කිලිනොච්චිය",
+  "name_ta": "கிளிநொச்சி"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4a8"
+  },
+  "id": 14,
+  "province_id": 4,
+  "name_en": "Kurunegala",
+  "name_si": "කුරුණෑගල",
+  "name_ta": "குருணாகல்"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4a9"
+  },
+  "id": 15,
+  "province_id": 9,
+  "name_en": "Mannar",
+  "name_si": "මන්නාරම",
+  "name_ta": "மன்னார்"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4aa"
+  },
+  "id": 16,
+  "province_id": 2,
+  "name_en": "Matale",
+  "name_si": "මාතලේ",
+  "name_ta": "மாத்தளை"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4ab"
+  },
+  "id": 17,
+  "province_id": 3,
+  "name_en": "Matara",
+  "name_si": "මාතර",
+  "name_ta": "மாத்தறை"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4ac"
+  },
+  "id": 18,
+  "province_id": 7,
+  "name_en": "Monaragala",
+  "name_si": "මොණරාගල",
+  "name_ta": "மொணராகலை"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4ad"
+  },
+  "id": 19,
+  "province_id": 9,
+  "name_en": "Mullaitivu",
+  "name_si": "මුලතිව්",
+  "name_ta": "முல்லைத்தீவு"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4ae"
+  },
+  "id": 20,
+  "province_id": 2,
+  "name_en": "Nuwara Eliya",
+  "name_si": "නුවර එළිය",
+  "name_ta": "நுவரேலியா"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4af"
+  },
+  "id": 21,
+  "province_id": 8,
+  "name_en": "Polonnaruwa",
+  "name_si": "පොළොන්නරුව",
+  "name_ta": "பொலன்னறுவை"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4b0"
+  },
+  "id": 22,
+  "province_id": 4,
+  "name_en": "Puttalam",
+  "name_si": "පුත්තලම",
+  "name_ta": "புத்தளம்"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4b1"
+  },
+  "id": 23,
+  "province_id": 5,
+  "name_en": "Ratnapura",
+  "name_si": "රත්නපුර",
+  "name_ta": "இரத்தினபுரி"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4b2"
+  },
+  "id": 24,
+  "province_id": 6,
+  "name_en": "Trincomalee",
+  "name_si": "ත්‍රිකුණාමලය",
+  "name_ta": "திருகோணமலை"
+},
+{
+  "_id": {
+    "$oid": "66b9c3a49cafb60a4dc4e4b3"
+  },
+  "id": 25,
+  "province_id": 9,
+  "name_en": "Vavuniya",
+  "name_si": "වව්නියාව",
+  "name_ta": "வவுனியா"
+}]
