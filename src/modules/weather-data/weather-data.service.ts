@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import * as moment from 'moment';
 import { Connection, Model } from 'mongoose';
@@ -45,19 +45,18 @@ export class WeatherDataService {
 
     for (let i = 0; i < data.length; i++) {
       const element = data[i];
-      // if (!element.timestamp) {
-      //   if (!element.timestamp_iso) {
-      //     throw new BadRequestException('Invalid data');
-      //   }
-      //   element.timestamp = new Date(element.timestamp_iso).getTime();
-      // }
 
       if (
-        weather_station_id === 'dbfb6590-93c1-455b-aaf2-668560a73e4b' ||
+        weather_station_id === 'dbfb6590-93c1-455b-aaf2-668560a73e4b' /* ||
         weather_station_id === '16c97b9b-f67f-4ab5-a6cb-730413ab4719' ||
-        weather_station_id === '3337b81c-67d1-47c6-bdea-9f9b6c4d8977'
+        weather_station_id === '3337b81c-67d1-47c6-bdea-9f9b6c4d8977' */
       ) {
         element.timestamp = new Date().getTime();
+      } else if (!element.timestamp) {
+        if (!element.timestamp_iso) {
+          throw new BadRequestException('timestamp required');
+        }
+        element.timestamp = new Date(element.timestamp_iso).getTime();
       }
     }
 

@@ -4,15 +4,20 @@ import {
   Delete,
   Get,
   Headers,
+  NotFoundException,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
+  Req,
   UseGuards,
+  UsePipes,
+  ValidationPipe
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
 import { ValidateGaveshaUserGuard } from '../common/guards/gavesha-user.guard';
+import { DownloadsService } from '../downloads/downloads.service';
 import { PointsService } from '../points/points.service';
 import { WeatherDataService } from '../weather-data/weather-data.service';
 import { AddUsersToWeatherStationDto } from './dto/add-users-to-weather-station.dto';
@@ -29,6 +34,7 @@ export class WeatherStationsController {
     private readonly weatherStationsService: WeatherStationsService,
     private readonly weatherDataService: WeatherDataService,
     private readonly pointsService: PointsService,
+    private readonly downloadsService: DownloadsService
   ) {}
 
   @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
@@ -56,7 +62,6 @@ export class WeatherStationsController {
     }
     return weatherStationData;
   }
-
 
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -123,4 +128,25 @@ export class WeatherStationsController {
   remove(@Param('id') id: string) {
     return this.weatherStationsService.remove(+id);
   }
+
+@UseGuards(ValidateGaveshaClientGuard)
+@Post('/sync')
+@UsePipes(
+  new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  }),
+)
+async syncWeatherStation(
+  @Req() req: any,
+  @Body() syncWeatherStationDto?: { update_begin?: boolean; update_version?: string; update_done?: boolean },
+): Promise<{ server_timestamp?: string; version_number?: string; crc32?: string }> {
+  const clientId = req.clientId;
+  const station = await this.weatherStationsService.findByClientId(clientId);
+  if (!station) {
+    throw new NotFoundException('Weather station not found');
+  }
+  return this.weatherStationsService.handleSyncRequest(syncWeatherStationDto, clientId, station._id);
+}
 }
