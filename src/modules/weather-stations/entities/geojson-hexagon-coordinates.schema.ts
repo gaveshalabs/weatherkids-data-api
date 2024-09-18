@@ -25,4 +25,4 @@ export const GeoJsonHexagonSchema = new Schema({
 GeoJsonHexagonSchema.index({ location: '2dsphere' });
 
 export type GeoJsonHexagonDocument = GeoJsonHexagon & Document;
-export const GeoJsonHexagonCoordinatesModel = model<GeoJsonHexagonDocument>('GeoJsonHexagonCoordinates', GeoJsonHexagonSchema);
+export const GeoJsonHexagonCoordinatesModel = model<GeoJsonHexagonDocument>('GeoJsonHexagonCoordinates', GeoJsonHexagonSchema,);
