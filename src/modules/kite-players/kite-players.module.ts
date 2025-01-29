@@ -16,15 +16,17 @@ import { KitePlayersService } from './kite-players.service';
     TokenModule,
     MongooseModule.forFeature([
       { name: KitePlayer.name, schema: KitePlayerSchema },
-      { name: 'CityData', schema: CityDataSchema},
-      { name: 'DistrictData', schema: DistrictDataSchema},
+      { name: 'CityData', schema: CityDataSchema },
+      { name: 'DistrictData', schema: DistrictDataSchema },
     ]),
   ],
   controllers: [KitePlayersController],
   providers: [KitePlayersService, KitePlayer],
   exports: [
     KitePlayersService,
-    MongooseModule.forFeature([{ name: KitePlayer.name, schema: KitePlayerSchema }]),
+    MongooseModule.forFeature([
+      { name: KitePlayer.name, schema: KitePlayerSchema },
+    ]),
   ],
 })
 export class KitePlayersModule {}

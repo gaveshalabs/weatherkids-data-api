@@ -12,12 +12,13 @@ import { KiteDataMetaData } from './schema/kitedata-metadata.schema';
 @Injectable()
 export class KiteDataService {
   constructor(
-    @InjectModel(KitePlayer.name) private readonly kitePlayerModel: Model<KitePlayer>,
+    @InjectModel(KitePlayer.name)
+    private readonly kitePlayerModel: Model<KitePlayer>,
     @InjectModel(KiteDatum.name)
     private readonly kiteDatumModel: Model<KiteDatumDocument>,
 
     @InjectConnection() private readonly mongoConnection: Connection,
-  ) { }
+  ) {}
 
   async bulkCommit(
     createBulkKiteData: CreateBulkKiteDataDto,
@@ -110,8 +111,10 @@ export class KiteDataService {
     return finalKiteResponse;
   }
 
-
-  async findLatestByKiteUserId(kiteUserId: string, includeCurrentWeek: boolean = false): Promise<any> {
+  async findLatestByKiteUserId(
+    kiteUserId: string,
+    includeCurrentWeek: boolean = false,
+  ): Promise<any> {
     try {
       // Find the kitePlayerId associated with the given kiteUserId
       const kitePlayerId = await this.getKitePlayerIdByUserId(kiteUserId);
@@ -121,7 +124,10 @@ export class KiteDataService {
       }
 
       // Use the existing findLatestByKitePlayerId method
-      return this.findLatestByKitePlayerIdNewFunction(kitePlayerId, includeCurrentWeek);
+      return this.findLatestByKitePlayerIdNewFunction(
+        kitePlayerId,
+        includeCurrentWeek,
+      );
     } catch (error) {
       console.error('Error in findLatestByKiteUserId:', error);
       throw error;
@@ -130,7 +136,7 @@ export class KiteDataService {
 
   // Method to get kitePlayerId from kiteUserId
   async getKitePlayerIdByUserId(kiteUserId: string): Promise<string | null> {
-    const player = await this.kitePlayerModel 
+    const player = await this.kitePlayerModel
       .findOne({ user_id: kiteUserId }) // Query based on user_id
       .select('_id') // Select the _id field which corresponds to kite_player_id
       .exec();
@@ -138,76 +144,21 @@ export class KiteDataService {
     return player ? player._id : null;
   }
 
-
-  async findLatestByKitePlayerId(kitePlayerId: string, includeCurrentWeek: boolean = false): Promise<any> {
+  async findLatestByKitePlayerId(
+    kitePlayerId: string,
+    includeCurrentWeek: boolean = false,
+  ): Promise<any> {
     try {
-      
       const [
         allTimeMaxHeight,
         allTimeTotalAttempts,
         allTimeTotalFlyingMins,
-        allTimeTotalHeight
+        allTimeTotalHeight,
       ] = await Promise.all([
         this.getMaxHeightByKitePlayerId(kitePlayerId),
         this.getTotalAttemptsByKitePlayerId(kitePlayerId),
         this.getFlyingMinsByKitePlayerId(kitePlayerId),
-        this.getTotalHeightByKitePlayerId(kitePlayerId)
-      ]);
-
-      let currentWeekData = {};
-      if (includeCurrentWeek) {
-        const [
-          currentWeekTotalHeight,
-          currentWeekTotalAttempts,
-          currentWeekTotalFlyingMins,
-          currentWeekMaxHeight,
-        ] = await Promise.all([
-          this.getTotalHeightForCurrentWeekByPlayerId(kitePlayerId),
-          this.getTotalAttemptsForCurrentWeekByPlayerId(kitePlayerId),
-          this.getTotalFlyingMinsForCurrentWeekByPlayerId(kitePlayerId),
-          this.getMaxHeightForCurrentWeekByPlayerId(kitePlayerId)
-        ]);
-
-        currentWeekData = {
-          current_week: {
-            total_height: currentWeekTotalHeight,
-            total_attempts: currentWeekTotalAttempts,
-            total_flying_mins: currentWeekTotalFlyingMins,
-            max_height: currentWeekMaxHeight,
-          }
-        };
-      }
-
-      return {
-          all_time: {
-            max_height: allTimeMaxHeight,
-            total_attempts: allTimeTotalAttempts,
-            total_flying_mins: allTimeTotalFlyingMins,
-            total_height: allTimeTotalHeight
-          },
-          ...currentWeekData,
-        }
-      
-    } catch (error) {
-      console.error("Error in findLatestByKitePlayerId:", error);
-      throw error;
-    }
-  }
-
-
-  async findLatestByKitePlayerIdNewFunction(kitePlayerId: string, includeCurrentWeek: boolean = false): Promise<any> {
-    try {
-      const playerDetails = await this.getPlayerDetailsByKitePlayerId(kitePlayerId);
-      const [
-        allTimeMaxHeight,
-        allTimeTotalAttempts,
-        allTimeTotalFlyingMins,
-        allTimeTotalHeight
-      ] = await Promise.all([
-        this.getMaxHeightByKitePlayerId(kitePlayerId),
-        this.getTotalAttemptsByKitePlayerId(kitePlayerId),
-        this.getFlyingMinsByKitePlayerId(kitePlayerId),
-        this.getTotalHeightByKitePlayerId(kitePlayerId)
+        this.getTotalHeightByKitePlayerId(kitePlayerId),
       ]);
 
       let currentWeekData = {};
@@ -230,120 +181,185 @@ export class KiteDataService {
             total_attempts: currentWeekTotalAttempts,
             total_flying_mins: currentWeekTotalFlyingMins,
             max_height: currentWeekMaxHeight,
-          }
+          },
         };
       }
 
       return {
-        "player": {
+        all_time: {
+          max_height: allTimeMaxHeight,
+          total_attempts: allTimeTotalAttempts,
+          total_flying_mins: allTimeTotalFlyingMins,
+          total_height: allTimeTotalHeight,
+        },
+        ...currentWeekData,
+      };
+    } catch (error) {
+      console.error('Error in findLatestByKitePlayerId:', error);
+      throw error;
+    }
+  }
+
+  async findLatestByKitePlayerIdNewFunction(
+    kitePlayerId: string,
+    includeCurrentWeek: boolean = false,
+  ): Promise<any> {
+    try {
+      const playerDetails =
+        await this.getPlayerDetailsByKitePlayerId(kitePlayerId);
+      const [
+        allTimeMaxHeight,
+        allTimeTotalAttempts,
+        allTimeTotalFlyingMins,
+        allTimeTotalHeight,
+      ] = await Promise.all([
+        this.getMaxHeightByKitePlayerId(kitePlayerId),
+        this.getTotalAttemptsByKitePlayerId(kitePlayerId),
+        this.getFlyingMinsByKitePlayerId(kitePlayerId),
+        this.getTotalHeightByKitePlayerId(kitePlayerId),
+      ]);
+
+      let currentWeekData = {};
+      if (includeCurrentWeek) {
+        const [
+          currentWeekTotalHeight,
+          currentWeekTotalAttempts,
+          currentWeekTotalFlyingMins,
+          currentWeekMaxHeight,
+        ] = await Promise.all([
+          this.getTotalHeightForCurrentWeekByPlayerId(kitePlayerId),
+          this.getTotalAttemptsForCurrentWeekByPlayerId(kitePlayerId),
+          this.getTotalFlyingMinsForCurrentWeekByPlayerId(kitePlayerId),
+          this.getMaxHeightForCurrentWeekByPlayerId(kitePlayerId),
+        ]);
+
+        currentWeekData = {
+          current_week: {
+            total_height: currentWeekTotalHeight,
+            total_attempts: currentWeekTotalAttempts,
+            total_flying_mins: currentWeekTotalFlyingMins,
+            max_height: currentWeekMaxHeight,
+          },
+        };
+      }
+
+      return {
+        player: {
           name: playerDetails?.name ?? null,
           city: playerDetails?.city ?? null,
           rank: playerDetails?.rank ?? null,
           img_url: playerDetails?.img_url ?? null,
           user_id: playerDetails?.user_id ?? null,
-          id:playerDetails?.id ?? null,
+          id: playerDetails?.id ?? null,
         },
 
-        "stat": {
+        stat: {
           all_time: {
             max_height: allTimeMaxHeight,
             total_attempts: allTimeTotalAttempts,
             total_flying_mins: allTimeTotalFlyingMins,
-            total_height: allTimeTotalHeight
+            total_height: allTimeTotalHeight,
           },
           ...currentWeekData,
-        }
+        },
       };
     } catch (error) {
-      console.error("Error in findLatestByKitePlayerId:", error);
+      console.error('Error in findLatestByKitePlayerId:', error);
       throw error;
     }
   }
 
-
   async getPlayerDetailsByKitePlayerId(kitePlayerId: string): Promise<any> {
     const aggregationPipeline: any[] = [
-
       {
         $group: {
           _id: {
-            kite_player_id: "$metadata.kite_player_id",
-            attempt_timestamp: "$metadata.attempt_timestamp"
+            kite_player_id: '$metadata.kite_player_id',
+            attempt_timestamp: '$metadata.attempt_timestamp',
           },
-          max_altitude: { $max: "$altitude" },
-          min_altitude: { $min: "$altitude" }
-        }
+          max_altitude: { $max: '$altitude' },
+          min_altitude: { $min: '$altitude' },
+        },
       },
       {
         $group: {
-          _id: "$_id.kite_player_id",
+          _id: '$_id.kite_player_id',
           attempts: {
             $push: {
-              attempt_timestamp: "$_id.attempt_timestamp",
-              maxAltitude: "$max_altitude",
-              minAltitude: "$min_altitude",
-              height: { $subtract: ["$max_altitude", "$min_altitude"] }
-            }
+              attempt_timestamp: '$_id.attempt_timestamp',
+              maxAltitude: '$max_altitude',
+              minAltitude: '$min_altitude',
+              height: { $subtract: ['$max_altitude', '$min_altitude'] },
+            },
           },
-          kite_height: { $max: { $subtract: ["$max_altitude", "$min_altitude"] } }
-        }
+          kite_height: {
+            $max: { $subtract: ['$max_altitude', '$min_altitude'] },
+          },
+        },
       },
       {
-        $sort: { kite_height: -1 }
+        $sort: { kite_height: -1 },
       },
       {
         $setWindowFields: {
           sortBy: { kite_height: -1 },
           output: {
             rank: {
-              $rank: {}
-            }
-          }
-        }
+              $rank: {},
+            },
+          },
+        },
       },
       {
         $lookup: {
-          from: "kite_players",
-          localField: "_id",
-          foreignField: "_id",
-          as: "player_details"
-        }
+          from: 'kite_players',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'player_details',
+        },
       },
       {
         $unwind: {
-          path: "$player_details",
-          preserveNullAndEmptyArrays: true
-        }
+          path: '$player_details',
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $project: {
           _id: 0,
-          id: "$_id",
-          user_id: "$player_details.user_id",
-          name: "$player_details.name",
-          city: "$player_details.city",
-          img_url: "$player_details.img_url",
+          id: '$_id',
+          user_id: '$player_details.user_id',
+          name: '$player_details.name',
+          city: '$player_details.city',
+          img_url: '$player_details.img_url',
           kite_height: 1,
-          rank: 1
-        }
+          rank: 1,
+        },
       },
       {
         $match: {
-          id: kitePlayerId
-        }
-      }
+          id: kitePlayerId,
+        },
+      },
     ];
 
-    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    const result = await this.kiteDatumModel
+      .aggregate(aggregationPipeline)
+      .exec();
     return result.length > 0 ? result[0] : null;
   }
 
-
-
-  async findLatestByAllKitePlayers(includeCurrentWeek: boolean = false): Promise<any> {
+  async findLatestByAllKitePlayers(
+    includeCurrentWeek: boolean = false,
+  ): Promise<any> {
     try {
-      
-      const [totalHeight, totalAttempts, totalFlyingMins, totalMaxHeight,playerCount] = await Promise.all([
+      const [
+        totalHeight,
+        totalAttempts,
+        totalFlyingMins,
+        totalMaxHeight,
+        playerCount,
+      ] = await Promise.all([
         this.getTotalHeightByAllKitePlayers(),
         this.getTotalAttemptsByAllKitePlayers(),
         this.getTotalFlyingMinsByAllKitePlayers(),
@@ -376,96 +392,96 @@ export class KiteDataService {
             total_flying_mins: currentWeekTotalFlyingMins,
             max_height: currentWeekMaxHeight,
             min_height: currentWeekMinHeight,
-            player_count:currentWeekPlayerCount,
-          }
+            player_count: currentWeekPlayerCount,
+          },
         };
       }
 
       return {
-        "stat": {
+        stat: {
           all_time: {
             total_height: totalHeight,
             total_attempts: totalAttempts,
             total_flying_mins: totalFlyingMins,
             max_height: totalMaxHeight,
-            player_count:playerCount
+            player_count: playerCount,
           },
           ...currentWeekData,
-        }
+        },
       };
     } catch (error) {
-      console.error("Error in findLatestByAllKitePlayers:", error);
+      console.error('Error in findLatestByAllKitePlayers:', error);
       throw error;
     }
   }
-
-
 
   async getPlayersLeaderBoard() {
     const aggregationPipeline: any[] = [
       {
         $group: {
           _id: {
-            kite_player_id: "$metadata.kite_player_id",
-            attempt_timestamp: "$metadata.attempt_timestamp"
+            kite_player_id: '$metadata.kite_player_id',
+            attempt_timestamp: '$metadata.attempt_timestamp',
           },
-          max_altitude: { $max: "$altitude" },
-          min_altitude: { $min: "$altitude" }
-        }
+          max_altitude: { $max: '$altitude' },
+          min_altitude: { $min: '$altitude' },
+        },
       },
       {
         $group: {
-          _id: "$_id.kite_player_id",
+          _id: '$_id.kite_player_id',
           attempts: {
             $push: {
-              attempt_timestamp: "$_id.attempt_timestamp",
-              maxAltitude: "$max_altitude",
-              minAltitude: "$min_altitude",
-              height: { $subtract: ["$max_altitude", "$min_altitude"] }
-            }
+              attempt_timestamp: '$_id.attempt_timestamp',
+              maxAltitude: '$max_altitude',
+              minAltitude: '$min_altitude',
+              height: { $subtract: ['$max_altitude', '$min_altitude'] },
+            },
           },
-          kite_height: { $max: { $subtract: ["$max_altitude", "$min_altitude"] } }
-        }
+          kite_height: {
+            $max: { $subtract: ['$max_altitude', '$min_altitude'] },
+          },
+        },
       },
       {
-        $sort: { kite_height: -1 }
+        $sort: { kite_height: -1 },
       },
       {
         $setWindowFields: {
           sortBy: { kite_height: -1 },
           output: {
             rank: {
-              $rank: {}
-            }
-          }
-        }
+              $rank: {},
+            },
+          },
+        },
       },
 
       {
         $lookup: {
-          from: "kite_players",
-          localField: "_id",
-          foreignField: "_id",
-          as: "player_details"
-        }
+          from: 'kite_players',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'player_details',
+        },
       },
       {
         $unwind: {
-          path: "$player_details",
-          preserveNullAndEmptyArrays: true
-        }
+          path: '$player_details',
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $project: {
           _id: 0,
-          id: "$_id",
-          name: "$player_details.name",
-          city: "$player_details.city",
-          img_url: "$player_details.img_url",
+          id: '$_id',
+          name: '$player_details.name',
+          city: '$player_details.city',
+          img_url: '$player_details.img_url',
           kite_height: 1,
-          rank: 1
-        }
-      }
+          rank: 1,
+        },
+      },
       // {
       //   $limit: 10
       // }
@@ -474,98 +490,101 @@ export class KiteDataService {
     return await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
   }
 
-
-
   async getTotalPlayersCount() {
     const aggregationPipeline: any[] = [
-      { // Group by unique player ID
-          $group: {
-              _id: "$metadata.kite_player_id" 
-          }
+      {
+        // Group by unique player ID
+        $group: {
+          _id: '$metadata.kite_player_id',
+        },
       },
       {
-          // Count the unique players
-          $count: "playerCount" 
-      }
-  ];
+        // Count the unique players
+        $count: 'playerCount',
+      },
+    ];
 
-    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    const result = await this.kiteDatumModel
+      .aggregate(aggregationPipeline)
+      .exec();
     return result.length > 0 ? result[0].playerCount : 0;
-}
+  }
 
-
-async getCurrentWeekPlayersCount() {
-  try {
+  async getCurrentWeekPlayersCount() {
+    try {
       // Define the start and end of the current week
       const startOfCurrentWeek = moment().startOf('week').toDate();
       const endOfCurrentWeek = moment().endOf('week').toDate();
 
       const aggregationPipeline = [
-          {
-              $match: {
-                  "metadata.attempt_timestamp": {
-                      $gte: startOfCurrentWeek,
-                      $lte: endOfCurrentWeek,
-                  },
-              },
+        {
+          $match: {
+            'metadata.attempt_timestamp': {
+              $gte: startOfCurrentWeek,
+              $lte: endOfCurrentWeek,
+            },
           },
-          {
-              $group: {
-                  _id: "$metadata.kite_player_id", 
-              },
+        },
+        {
+          $group: {
+            _id: '$metadata.kite_player_id',
           },
-          {
-              $count: "current_week_player_count" 
-          }
+        },
+        {
+          $count: 'current_week_player_count',
+        },
       ];
 
-      const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+      const result = await this.kiteDatumModel
+        .aggregate(aggregationPipeline)
+        .exec();
       return result.length > 0 ? result[0].current_week_player_count : 0; // Return the count or 0 if none
-  } catch (error) {
-      console.error("Error in getCurrentWeekPlayersCount:", error);
+    } catch (error) {
+      console.error('Error in getCurrentWeekPlayersCount:', error);
       throw error;
+    }
   }
-}
-
 
   async getTotalHeightByAllKitePlayers(): Promise<number> {
     const aggregationPipeline: any[] = [
       {
         $group: {
           _id: {
-            kite_player_id: "$metadata.kite_player_id",
-            attempt_timestamp: "$metadata.attempt_timestamp"
+            kite_player_id: '$metadata.kite_player_id',
+            attempt_timestamp: '$metadata.attempt_timestamp',
           },
-          max_altitude: { $max: "$altitude" },
-          min_altitude: { $min: "$altitude" }
-        }
+          max_altitude: { $max: '$altitude' },
+          min_altitude: { $min: '$altitude' },
+        },
       },
       {
         $addFields: {
-          height: { $subtract: ["$max_altitude", "$min_altitude"] }
-        }
+          height: { $subtract: ['$max_altitude', '$min_altitude'] },
+        },
       },
       {
         $group: {
-          _id: "$_id.kite_player_id",
-          total_height: { $sum: "$height" }
-        }
+          _id: '$_id.kite_player_id',
+          total_height: { $sum: '$height' },
+        },
       },
       {
         $group: {
           _id: null,
-          total_height: { $sum: "$total_height" }
-        }
+          total_height: { $sum: '$total_height' },
+        },
       },
       {
         $project: {
           _id: 0,
-          total_height: 1
-        }
-      }
+          total_height: 1,
+        },
+      },
     ];
 
-    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    const result = await this.kiteDatumModel
+      .aggregate(aggregationPipeline)
+      .exec();
     return result.length > 0 ? result[0].total_height : 0;
   }
 
@@ -574,32 +593,34 @@ async getCurrentWeekPlayersCount() {
       {
         $group: {
           _id: {
-            kite_player_id: "$metadata.kite_player_id",
-            attempt_timestamp: "$metadata.attempt_timestamp"
-          }
-        }
+            kite_player_id: '$metadata.kite_player_id',
+            attempt_timestamp: '$metadata.attempt_timestamp',
+          },
+        },
       },
       {
         $group: {
-          _id: "$_id.kite_player_id",
-          count_attempt_timestamp: { $sum: 1 }
-        }
+          _id: '$_id.kite_player_id',
+          count_attempt_timestamp: { $sum: 1 },
+        },
       },
       {
         $group: {
           _id: null,
-          total_attempts: { $sum: "$count_attempt_timestamp" }
-        }
+          total_attempts: { $sum: '$count_attempt_timestamp' },
+        },
       },
       {
         $project: {
           _id: 0,
-          total_attempts: 1
-        }
-      }
+          total_attempts: 1,
+        },
+      },
     ];
 
-    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    const result = await this.kiteDatumModel
+      .aggregate(aggregationPipeline)
+      .exec();
     return result.length > 0 ? result[0].total_attempts : 0;
   }
 
@@ -608,68 +629,69 @@ async getCurrentWeekPlayersCount() {
       {
         $group: {
           _id: {
-            kite_player_id: "$metadata.kite_player_id",
-            attempt_timestamp: "$metadata.attempt_timestamp"
+            kite_player_id: '$metadata.kite_player_id',
+            attempt_timestamp: '$metadata.attempt_timestamp',
           },
           data: {
             $push: {
-              timestamp: "$timestamp",
-              altitude: "$altitude"
-            }
+              timestamp: '$timestamp',
+              altitude: '$altitude',
+            },
           },
-          min_altitude: { $min: "$altitude" }
-        }
+          min_altitude: { $min: '$altitude' },
+        },
       },
       {
         $addFields: {
           filteredData: {
             $filter: {
-              input: "$data",
-              as: "entry",
-              cond: { $gte: ["$$entry.altitude", { $add: ["$min_altitude", 10] }] }
-            }
-          }
-        }
+              input: '$data',
+              as: 'entry',
+              cond: {
+                $gte: ['$$entry.altitude', { $add: ['$min_altitude', 10] }],
+              },
+            },
+          },
+        },
       },
       {
         $addFields: {
-          minTimestamp: { $min: "$filteredData.timestamp" },
-          maxTimestamp: { $max: "$filteredData.timestamp" }
-        }
+          minTimestamp: { $min: '$filteredData.timestamp' },
+          maxTimestamp: { $max: '$filteredData.timestamp' },
+        },
       },
       {
         $addFields: {
           timestampDifference: {
-            $divide: [
-              { $subtract: ["$maxTimestamp", "$minTimestamp"] },
-              60000
-            ]
-          }
-        }
+            $divide: [{ $subtract: ['$maxTimestamp', '$minTimestamp'] }, 60000],
+          },
+        },
       },
       {
         $group: {
-          _id: "$_id.kite_player_id",
-          flying_mins: { $sum: "$timestampDifference" },
-          timestampDifferences: { $push: "$timestampDifference" },
-          attempt_timestamp: { $first: "$_id.attempt_timestamp" }
-        }
+          _id: '$_id.kite_player_id',
+          flying_mins: { $sum: '$timestampDifference' },
+          timestampDifferences: { $push: '$timestampDifference' },
+          attempt_timestamp: { $first: '$_id.attempt_timestamp' },
+        },
       },
       {
         $group: {
           _id: null,
-          total_flying_mins: { $sum: "$flying_mins" }
-        }
+          total_flying_mins: { $sum: '$flying_mins' },
+        },
       },
       {
         $project: {
           _id: 0,
-          total_flying_mins: 1
-        }
-      }
+          total_flying_mins: 1,
+        },
+      },
     ];
 
-    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    const result = await this.kiteDatumModel
+      .aggregate(aggregationPipeline)
+      .exec();
     return result.length > 0 ? result[0].total_flying_mins : 0;
   }
 
@@ -678,42 +700,46 @@ async getCurrentWeekPlayersCount() {
       {
         $group: {
           _id: {
-            kite_player_id: "$metadata.kite_player_id",
-            attempt_timestamp: "$metadata.attempt_timestamp"
+            kite_player_id: '$metadata.kite_player_id',
+            attempt_timestamp: '$metadata.attempt_timestamp',
           },
-          max_altitude: { $max: "$altitude" },
-          min_altitude: { $min: "$altitude" }
-        }
+          max_altitude: { $max: '$altitude' },
+          min_altitude: { $min: '$altitude' },
+        },
       },
       {
         $group: {
-          _id: "$_id.kite_player_id",
+          _id: '$_id.kite_player_id',
           attempts: {
             $push: {
-              attempt_timestamp: "$_id.attempt_timestamp",
-              maxAltitude: "$max_altitude",
-              minAltitude: "$min_altitude",
-              height: { $subtract: ["$max_altitude", "$min_altitude"] }
-            }
+              attempt_timestamp: '$_id.attempt_timestamp',
+              maxAltitude: '$max_altitude',
+              minAltitude: '$min_altitude',
+              height: { $subtract: ['$max_altitude', '$min_altitude'] },
+            },
           },
-          max_height: { $max: { $subtract: ["$max_altitude", "$min_altitude"] } }
-        }
+          max_height: {
+            $max: { $subtract: ['$max_altitude', '$min_altitude'] },
+          },
+        },
       },
       {
         $sort: {
-          max_height: -1
-        }
+          max_height: -1,
+        },
       },
       {
-        $limit: 1
+        $limit: 1,
       },
       {
         $project: {
-          max_height: 1
-        }
-      }
-    ]
-    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+          max_height: 1,
+        },
+      },
+    ];
+    const result = await this.kiteDatumModel
+      .aggregate(aggregationPipeline)
+      .exec();
     return result.length > 0 ? result[0].max_height : 0;
   }
 
@@ -721,73 +747,74 @@ async getCurrentWeekPlayersCount() {
     const aggregationPipeline: any[] = [
       {
         $match: {
-          "metadata.kite_player_id": kitePlayerId
-        }
+          'metadata.kite_player_id': kitePlayerId,
+        },
       },
       {
         $group: {
           _id: {
-            kite_player_id: "$metadata.kite_player_id",
-            attempt_timestamp: "$metadata.attempt_timestamp"
+            kite_player_id: '$metadata.kite_player_id',
+            attempt_timestamp: '$metadata.attempt_timestamp',
           },
           data: {
             $push: {
-              timestamp: "$timestamp",
-              altitude: "$altitude"
-            }
+              timestamp: '$timestamp',
+              altitude: '$altitude',
+            },
           },
-          min_altitude: { $min: "$altitude" }
-        }
+          min_altitude: { $min: '$altitude' },
+        },
       },
       {
         $addFields: {
           filteredData: {
             $filter: {
-              input: "$data",
-              as: "entry",
-              cond: { $gte: ["$$entry.altitude", { $add: ["$min_altitude", 10] }] }
-            }
-          }
-        }
+              input: '$data',
+              as: 'entry',
+              cond: {
+                $gte: ['$$entry.altitude', { $add: ['$min_altitude', 10] }],
+              },
+            },
+          },
+        },
       },
       {
         $addFields: {
           minTimestamp: {
-            $min: "$filteredData.timestamp"
+            $min: '$filteredData.timestamp',
           },
           maxTimestamp: {
-            $max: "$filteredData.timestamp"
-          }
-        }
+            $max: '$filteredData.timestamp',
+          },
+        },
       },
       {
         $addFields: {
           timestampDifference: {
-            $divide: [
-              { $subtract: ["$maxTimestamp", "$minTimestamp"] },
-              60000
-            ]
-          }
-        }
+            $divide: [{ $subtract: ['$maxTimestamp', '$minTimestamp'] }, 60000],
+          },
+        },
       },
       {
         $group: {
-          _id: "$_id.kite_player_id",
-          flying_mins: { $sum: "$timestampDifference" },
-          timestampDifferences: { $push: "$timestampDifference" },
-          attempt_timestamp: { $first: "$_id.attempt_timestamp" }
-        }
+          _id: '$_id.kite_player_id',
+          flying_mins: { $sum: '$timestampDifference' },
+          timestampDifferences: { $push: '$timestampDifference' },
+          attempt_timestamp: { $first: '$_id.attempt_timestamp' },
+        },
       },
       {
         $project: {
           _id: 0,
-          kite_player_id: "$_id",
-          flying_mins: 1
-        }
-      }
+          kite_player_id: '$_id',
+          flying_mins: 1,
+        },
+      },
     ];
 
-    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    const result = await this.kiteDatumModel
+      .aggregate(aggregationPipeline)
+      .exec();
     return result.length > 0 ? result[0].flying_mins : 0;
   }
 
@@ -795,41 +822,45 @@ async getCurrentWeekPlayersCount() {
     const aggregationPipeline: any[] = [
       {
         $match: {
-          "metadata.kite_player_id": kitePlayerId
-        }
+          'metadata.kite_player_id': kitePlayerId,
+        },
       },
       {
         $group: {
           _id: {
-            kite_player_id: "$metadata.kite_player_id",
-            attempt_timestamp: "$metadata.attempt_timestamp"
+            kite_player_id: '$metadata.kite_player_id',
+            attempt_timestamp: '$metadata.attempt_timestamp',
           },
-          max_altitude: { $max: "$altitude" },
-          min_altitude: { $min: "$altitude" }
-        }
+          max_altitude: { $max: '$altitude' },
+          min_altitude: { $min: '$altitude' },
+        },
       },
       {
         $group: {
-          _id: "$_id.kite_player_id",
+          _id: '$_id.kite_player_id',
           attempts: {
             $push: {
-              attempt_timestamp: "$_id.attempt_timestamp",
-              maxAltitude: "$max_altitude",
-              minAltitude: "$min_altitude",
-              height: { $subtract: ["$max_altitude", "$min_altitude"] }
-            }
+              attempt_timestamp: '$_id.attempt_timestamp',
+              maxAltitude: '$max_altitude',
+              minAltitude: '$min_altitude',
+              height: { $subtract: ['$max_altitude', '$min_altitude'] },
+            },
           },
-          max_height: { $max: { $subtract: ["$max_altitude", "$min_altitude"] } }
-        }
+          max_height: {
+            $max: { $subtract: ['$max_altitude', '$min_altitude'] },
+          },
+        },
       },
       {
         $project: {
-          max_height: 1
-        }
-      }
+          max_height: 1,
+        },
+      },
     ];
 
-    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    const result = await this.kiteDatumModel
+      .aggregate(aggregationPipeline)
+      .exec();
     return result.length > 0 ? result[0].max_height : 0;
   }
 
@@ -837,31 +868,33 @@ async getCurrentWeekPlayersCount() {
     const aggregationPipeline = [
       {
         $match: {
-          "metadata.kite_player_id": kitePlayerId
-        }
+          'metadata.kite_player_id': kitePlayerId,
+        },
       },
       {
         $group: {
           _id: {
-            attempt_timestamp: "$metadata.attempt_timestamp"
-          }
-        }
+            attempt_timestamp: '$metadata.attempt_timestamp',
+          },
+        },
       },
       {
         $group: {
           _id: null,
-          attempts: { $sum: 1 }
-        }
+          attempts: { $sum: 1 },
+        },
       },
       {
         $project: {
           _id: 0,
-          attempts: 1
-        }
-      }
+          attempts: 1,
+        },
+      },
     ];
 
-    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+    const result = await this.kiteDatumModel
+      .aggregate(aggregationPipeline)
+      .exec();
     return result.length > 0 ? result[0].attempts : 0;
   }
 
@@ -869,44 +902,46 @@ async getCurrentWeekPlayersCount() {
     const aggregationPipeline = [
       {
         $match: {
-          "metadata.kite_player_id": kitePlayerId
-        }
+          'metadata.kite_player_id': kitePlayerId,
+        },
       },
       {
         $group: {
           _id: {
-            kite_player_id: "$metadata.kite_player_id",
-            attempt_timestamp: "$metadata.attempt_timestamp"
+            kite_player_id: '$metadata.kite_player_id',
+            attempt_timestamp: '$metadata.attempt_timestamp',
           },
-          max_altitude: { $max: "$altitude" },
-          min_altitude: { $min: "$altitude" }
-        }
+          max_altitude: { $max: '$altitude' },
+          min_altitude: { $min: '$altitude' },
+        },
       },
       {
         $addFields: {
-          height: { $subtract: ["$max_altitude", "$min_altitude"] }
-        }
+          height: { $subtract: ['$max_altitude', '$min_altitude'] },
+        },
       },
       {
         $group: {
-          _id: "$_id.kite_player_id",
-          total_height: { $sum: "$height" }
-        }
+          _id: '$_id.kite_player_id',
+          total_height: { $sum: '$height' },
+        },
       },
       {
         $group: {
           _id: null,
-          total_height: { $sum: "$total_height" }
-        }
+          total_height: { $sum: '$total_height' },
+        },
       },
       {
         $project: {
           _id: 0,
-          total_height: 1
-        }
-      }
-    ]
-    const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+          total_height: 1,
+        },
+      },
+    ];
+    const result = await this.kiteDatumModel
+      .aggregate(aggregationPipeline)
+      .exec();
     return result.length > 0 ? result[0].total_height : 0;
   }
 
@@ -918,7 +953,7 @@ async getCurrentWeekPlayersCount() {
       const aggregationPipeline = [
         {
           $match: {
-            "metadata.attempt_timestamp": {
+            'metadata.attempt_timestamp': {
               $gte: startOfCurrentWeek,
               $lte: endOfCurrentWeek,
             },
@@ -926,27 +961,27 @@ async getCurrentWeekPlayersCount() {
         },
         {
           $project: {
-            kite_player_id: "$metadata.kite_player_id",
-            attempt_timestamp: "$metadata.attempt_timestamp",
+            kite_player_id: '$metadata.kite_player_id',
+            attempt_timestamp: '$metadata.attempt_timestamp',
           },
         },
         {
           $group: {
-            _id: "$kite_player_id",
-            unique_attempts: { $addToSet: "$attempt_timestamp" },
+            _id: '$kite_player_id',
+            unique_attempts: { $addToSet: '$attempt_timestamp' },
           },
         },
         {
           $project: {
             _id: 0,
-            kite_player_id: "$_id",
-            unique_attempts_count: { $size: "$unique_attempts" },
+            kite_player_id: '$_id',
+            unique_attempts_count: { $size: '$unique_attempts' },
           },
         },
         {
           $group: {
             _id: null,
-            total_attempts_for_week: { $sum: "$unique_attempts_count" },
+            total_attempts_for_week: { $sum: '$unique_attempts_count' },
           },
         },
         {
@@ -957,10 +992,12 @@ async getCurrentWeekPlayersCount() {
         },
       ];
 
-      const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+      const result = await this.kiteDatumModel
+        .aggregate(aggregationPipeline)
+        .exec();
       return result.length > 0 ? result[0].total_attempts_for_week : 0;
     } catch (error) {
-      console.error("Error in getTotalAttemptsForCurrentWeek:", error);
+      console.error('Error in getTotalAttemptsForCurrentWeek:', error);
       throw error;
     }
   }
@@ -973,7 +1010,7 @@ async getCurrentWeekPlayersCount() {
       const aggregationPipeline = [
         {
           $match: {
-            "metadata.attempt_timestamp": {
+            'metadata.attempt_timestamp': {
               $gte: startOfCurrentWeek,
               $lte: endOfCurrentWeek,
             },
@@ -982,45 +1019,49 @@ async getCurrentWeekPlayersCount() {
         {
           $group: {
             _id: {
-              kite_player_id: "$metadata.kite_player_id",
-              attempt_timestamp: "$metadata.attempt_timestamp"
+              kite_player_id: '$metadata.kite_player_id',
+              attempt_timestamp: '$metadata.attempt_timestamp',
             },
-            max_altitude: { $max: "$altitude" },
-            min_altitude: { $min: "$altitude" }
+            max_altitude: { $max: '$altitude' },
+            min_altitude: { $min: '$altitude' },
           },
         },
         {
           $group: {
-            _id: "$_id.kite_player_id",
+            _id: '$_id.kite_player_id',
             attempts: {
               $push: {
-                attempt_timestamp: "$_id.attempt_timestamp",
-                maxAltitude: "$max_altitude",
-                minAltitude: "$min_altitude",
-                height: { $subtract: ["$max_altitude", "$min_altitude"] }
-              }
+                attempt_timestamp: '$_id.attempt_timestamp',
+                maxAltitude: '$max_altitude',
+                minAltitude: '$min_altitude',
+                height: { $subtract: ['$max_altitude', '$min_altitude'] },
+              },
             },
-            max_height: { $max: { $subtract: ["$max_altitude", "$min_altitude"] } }
+            max_height: {
+              $max: { $subtract: ['$max_altitude', '$min_altitude'] },
+            },
           },
         },
         {
           $group: {
             _id: null,
-            max_height_for_week: { $max: "$max_height" }
+            max_height_for_week: { $max: '$max_height' },
           },
         },
         {
           $project: {
             _id: 0,
-            max_height_for_week: 1
+            max_height_for_week: 1,
           },
         },
       ];
 
-      const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+      const result = await this.kiteDatumModel
+        .aggregate(aggregationPipeline)
+        .exec();
       return result.length > 0 ? result[0].max_height_for_week : 0;
     } catch (error) {
-      console.error("Error in getMaxHeightForCurrentWeek:", error);
+      console.error('Error in getMaxHeightForCurrentWeek:', error);
       throw error;
     }
   }
@@ -1033,7 +1074,7 @@ async getCurrentWeekPlayersCount() {
       const aggregationPipeline = [
         {
           $match: {
-            "metadata.attempt_timestamp": {
+            'metadata.attempt_timestamp': {
               $gte: startOfCurrentWeek,
               $lte: endOfCurrentWeek,
             },
@@ -1042,45 +1083,49 @@ async getCurrentWeekPlayersCount() {
         {
           $group: {
             _id: {
-              kite_player_id: "$metadata.kite_player_id",
-              attempt_timestamp: "$metadata.attempt_timestamp"
+              kite_player_id: '$metadata.kite_player_id',
+              attempt_timestamp: '$metadata.attempt_timestamp',
             },
-            max_altitude: { $max: "$altitude" },
-            min_altitude: { $min: "$altitude" }
+            max_altitude: { $max: '$altitude' },
+            min_altitude: { $min: '$altitude' },
           },
         },
         {
           $group: {
-            _id: "$_id.kite_player_id",
+            _id: '$_id.kite_player_id',
             attempts: {
               $push: {
-                attempt_timestamp: "$_id.attempt_timestamp",
-                maxAltitude: "$max_altitude",
-                minAltitude: "$min_altitude",
-                height: { $subtract: ["$max_altitude", "$min_altitude"] }
-              }
+                attempt_timestamp: '$_id.attempt_timestamp',
+                maxAltitude: '$max_altitude',
+                minAltitude: '$min_altitude',
+                height: { $subtract: ['$max_altitude', '$min_altitude'] },
+              },
             },
-            min_height: { $min: { $subtract: ["$max_altitude", "$min_altitude"] } }
+            min_height: {
+              $min: { $subtract: ['$max_altitude', '$min_altitude'] },
+            },
           },
         },
         {
           $group: {
             _id: null,
-            min_height_for_week: { $min: "$min_height" }
+            min_height_for_week: { $min: '$min_height' },
           },
         },
         {
           $project: {
             _id: 0,
-            min_height_for_week: 1
+            min_height_for_week: 1,
           },
         },
       ];
 
-      const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+      const result = await this.kiteDatumModel
+        .aggregate(aggregationPipeline)
+        .exec();
       return result.length > 0 ? result[0].min_height_for_week : 0;
     } catch (error) {
-      console.error("Error in getMinHeightForCurrentWeek:", error);
+      console.error('Error in getMinHeightForCurrentWeek:', error);
       throw error;
     }
   }
@@ -1093,7 +1138,7 @@ async getCurrentWeekPlayersCount() {
       const aggregationPipeline = [
         {
           $match: {
-            "metadata.attempt_timestamp": {
+            'metadata.attempt_timestamp': {
               $gte: startOfCurrentWeek,
               $lte: endOfCurrentWeek,
             },
@@ -1102,71 +1147,75 @@ async getCurrentWeekPlayersCount() {
         {
           $group: {
             _id: {
-              kite_player_id: "$metadata.kite_player_id",
-              attempt_timestamp: "$metadata.attempt_timestamp"
+              kite_player_id: '$metadata.kite_player_id',
+              attempt_timestamp: '$metadata.attempt_timestamp',
             },
             data: {
               $push: {
-                timestamp: "$timestamp",
-                altitude: "$altitude"
-              }
+                timestamp: '$timestamp',
+                altitude: '$altitude',
+              },
             },
-            min_altitude: { $min: "$altitude" }
+            min_altitude: { $min: '$altitude' },
           },
         },
         {
           $addFields: {
             filteredData: {
               $filter: {
-                input: "$data",
-                as: "entry",
-                cond: { $gte: ["$$entry.altitude", { $add: ["$min_altitude", 10] }] }
-              }
-            }
-          }
+                input: '$data',
+                as: 'entry',
+                cond: {
+                  $gte: ['$$entry.altitude', { $add: ['$min_altitude', 10] }],
+                },
+              },
+            },
+          },
         },
         {
           $addFields: {
-            minTimestamp: { $min: "$filteredData.timestamp" },
-            maxTimestamp: { $max: "$filteredData.timestamp" }
-          }
+            minTimestamp: { $min: '$filteredData.timestamp' },
+            maxTimestamp: { $max: '$filteredData.timestamp' },
+          },
         },
         {
           $addFields: {
             timestampDifference: {
               $divide: [
-                { $subtract: ["$maxTimestamp", "$minTimestamp"] },
-                60000  // Convert milliseconds to minutes
-              ]
-            }
-          }
+                { $subtract: ['$maxTimestamp', '$minTimestamp'] },
+                60000, // Convert milliseconds to minutes
+              ],
+            },
+          },
         },
         {
           $group: {
-            _id: "$_id.kite_player_id",
-            flying_mins: { $sum: "$timestampDifference" },
-            timestampDifferences: { $push: "$timestampDifference" },
-            attempt_timestamp: { $first: "$_id.attempt_timestamp" }
-          }
+            _id: '$_id.kite_player_id',
+            flying_mins: { $sum: '$timestampDifference' },
+            timestampDifferences: { $push: '$timestampDifference' },
+            attempt_timestamp: { $first: '$_id.attempt_timestamp' },
+          },
         },
         {
           $group: {
             _id: null,
-            total_flying_mins_for_week: { $sum: "$flying_mins" }
-          }
+            total_flying_mins_for_week: { $sum: '$flying_mins' },
+          },
         },
         {
           $project: {
             _id: 0,
-            total_flying_mins_for_week: 1
-          }
-        }
+            total_flying_mins_for_week: 1,
+          },
+        },
       ];
 
-      const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+      const result = await this.kiteDatumModel
+        .aggregate(aggregationPipeline)
+        .exec();
       return result.length > 0 ? result[0].total_flying_mins_for_week : 0;
     } catch (error) {
-      console.error("Error in getTotalFlyingMinutesForCurrentWeek:", error);
+      console.error('Error in getTotalFlyingMinutesForCurrentWeek:', error);
       throw error;
     }
   }
@@ -1179,7 +1228,7 @@ async getCurrentWeekPlayersCount() {
       const aggregationPipeline = [
         {
           $match: {
-            "metadata.attempt_timestamp": {
+            'metadata.attempt_timestamp': {
               $gte: startOfCurrentWeek,
               $lte: endOfCurrentWeek,
             },
@@ -1188,293 +1237,28 @@ async getCurrentWeekPlayersCount() {
         {
           $group: {
             _id: {
-              kite_player_id: "$metadata.kite_player_id",
-              attempt_timestamp: "$metadata.attempt_timestamp"
+              kite_player_id: '$metadata.kite_player_id',
+              attempt_timestamp: '$metadata.attempt_timestamp',
             },
-            max_altitude: { $max: "$altitude" },
-            min_altitude: { $min: "$altitude" }
+            max_altitude: { $max: '$altitude' },
+            min_altitude: { $min: '$altitude' },
           },
         },
         {
           $addFields: {
-            height: { $subtract: ["$max_altitude", "$min_altitude"] }
-          }
-        },
-        {
-          $group: {
-            _id: "$_id.kite_player_id",
-            total_height: { $sum: "$height" }
-          }
-        },
-        {
-          $group: {
-            _id: null,
-            total_height_for_week: { $sum: "$total_height" }
-          }
-        },
-        {
-          $project: {
-            _id: 0,
-            total_height_for_week: 1
-          }
-        }
-      ];
-
-      const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
-      return result.length > 0 ? result[0].total_height_for_week : 0;
-    } catch (error) {
-      console.error("Error in getTotalHeightForCurrentWeek:", error);
-      throw error;
-    }
-  }
-
-  async getTotalAttemptsForCurrentWeekByPlayerId(kitePlayerId: string): Promise<number> {
-    try {
-      const startOfCurrentWeek = moment().startOf('week').toDate();
-      const endOfCurrentWeek = moment().endOf('week').toDate();
-
-      const aggregationPipeline = [
-        {
-          $match: {
-            "metadata.kite_player_id": kitePlayerId,
-            "metadata.attempt_timestamp": {
-              $gte: startOfCurrentWeek,
-              $lte: endOfCurrentWeek,
-            },
-          },
-        },
-        {
-          $project: {
-            kite_player_id: "$metadata.kite_player_id",
-            attempt_timestamp: "$metadata.attempt_timestamp",
+            height: { $subtract: ['$max_altitude', '$min_altitude'] },
           },
         },
         {
           $group: {
-            _id: "$kite_player_id",
-            unique_attempts: { $addToSet: "$attempt_timestamp" },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            kite_player_id: "$_id",
-            unique_attempts_count: { $size: "$unique_attempts" },
+            _id: '$_id.kite_player_id',
+            total_height: { $sum: '$height' },
           },
         },
         {
           $group: {
             _id: null,
-            total_attempts_for_week: { $sum: "$unique_attempts_count" },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            total_attempts_for_week: 1,
-          },
-        },
-      ];
-
-      const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
-      return result.length > 0 ? result[0].total_attempts_for_week : 0;
-    } catch (error) {
-      console.error("Error in getTotalAttemptsForCurrentWeek:", error);
-      throw error;
-    }
-  }
-
-  async getMaxHeightForCurrentWeekByPlayerId(kitePlayerId: string): Promise<number> {
-    try {
-      const startOfCurrentWeek = moment().startOf('week').toDate();
-      const endOfCurrentWeek = moment().endOf('week').toDate();
-
-      const aggregationPipeline = [
-        {
-          $match: {
-            "metadata.kite_player_id": kitePlayerId,
-            "metadata.attempt_timestamp": {
-              $gte: startOfCurrentWeek,
-              $lte: endOfCurrentWeek,
-            },
-          },
-        },
-        {
-          $group: {
-            _id: {
-              kite_player_id: "$metadata.kite_player_id",
-              attempt_timestamp: "$metadata.attempt_timestamp",
-            },
-            max_altitude: { $max: "$altitude" },
-            min_altitude: { $min: "$altitude" },
-          },
-        },
-        {
-          $group: {
-            _id: "$_id.kite_player_id",
-            attempts: {
-              $push: {
-                attempt_timestamp: "$_id.attempt_timestamp",
-                maxAltitude: "$max_altitude",
-                minAltitude: "$min_altitude",
-                height: { $subtract: ["$max_altitude", "$min_altitude"] },
-              },
-            },
-            max_height: { $max: { $subtract: ["$max_altitude", "$min_altitude"] } },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            max_height_for_week: { $max: "$max_height" },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            max_height_for_week: 1,
-          },
-        },
-      ];
-
-      const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
-      return result.length > 0 ? result[0].max_height_for_week : 0;
-    } catch (error) {
-      console.error("Error in getMaxHeightForCurrentWeek:", error);
-      throw error;
-    }
-  }
-
-  
-
-  async getTotalFlyingMinsForCurrentWeekByPlayerId(kitePlayerId: string): Promise<number> {
-    try {
-      const startOfCurrentWeek = moment().startOf('week').toDate();
-      const endOfCurrentWeek = moment().endOf('week').toDate();
-
-      const aggregationPipeline = [
-        {
-          $match: {
-            "metadata.kite_player_id": kitePlayerId,
-            "metadata.attempt_timestamp": {
-              $gte: startOfCurrentWeek,
-              $lte: endOfCurrentWeek,
-            },
-          },
-        },
-        {
-          $group: {
-            _id: {
-              kite_player_id: "$metadata.kite_player_id",
-              attempt_timestamp: "$metadata.attempt_timestamp",
-            },
-            data: {
-              $push: {
-                timestamp: "$timestamp",
-                altitude: "$altitude",
-              },
-            },
-            min_altitude: { $min: "$altitude" },
-          },
-        },
-        {
-          $addFields: {
-            filteredData: {
-              $filter: {
-                input: "$data",
-                as: "entry",
-                cond: { $gte: ["$$entry.altitude", { $add: ["$min_altitude", 10] }] },
-              },
-            },
-          },
-        },
-        {
-          $addFields: {
-            minTimestamp: { $min: "$filteredData.timestamp" },
-            maxTimestamp: { $max: "$filteredData.timestamp" },
-          },
-        },
-        {
-          $addFields: {
-            timestampDifference: {
-              $divide: [
-                { $subtract: ["$maxTimestamp", "$minTimestamp"] },
-                60000, // Convert milliseconds to minutes
-              ],
-            },
-          },
-        },
-        {
-          $group: {
-            _id: "$_id.kite_player_id",
-            flying_mins: { $sum: "$timestampDifference" },
-            timestampDifferences: { $push: "$timestampDifference" },
-            attempt_timestamp: { $first: "$_id.attempt_timestamp" },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            total_flying_mins_for_week: { $sum: "$flying_mins" },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            total_flying_mins_for_week: 1,
-          },
-        },
-      ];
-
-      const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
-      return result.length > 0 ? result[0].total_flying_mins_for_week : 0;
-    } catch (error) {
-      console.error("Error in getTotalFlyingMinutesForCurrentWeek:", error);
-      throw error;
-    }
-  }
-
-  async getTotalHeightForCurrentWeekByPlayerId(kitePlayerId: string): Promise<number> {
-    try {
-      const startOfCurrentWeek = moment().startOf('week').toDate();
-      const endOfCurrentWeek = moment().endOf('week').toDate();
-
-
-      const aggregationPipeline = [
-        {
-          $match: {
-            "metadata.kite_player_id": kitePlayerId,
-            "metadata.attempt_timestamp": {
-              $gte: startOfCurrentWeek,
-              $lte: endOfCurrentWeek,
-            },
-          },
-        },
-        {
-          $group: {
-            _id: {
-              kite_player_id: "$metadata.kite_player_id",
-              attempt_timestamp: "$metadata.attempt_timestamp",
-            },
-            max_altitude: { $max: "$altitude" },
-            min_altitude: { $min: "$altitude" },
-          },
-        },
-        {
-          $addFields: {
-            height: { $subtract: ["$max_altitude", "$min_altitude"] },
-          },
-        },
-        {
-          $group: {
-            _id: "$_id.kite_player_id",
-            total_height: { $sum: "$height" },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            total_height_for_week: { $sum: "$total_height" },
+            total_height_for_week: { $sum: '$total_height' },
           },
         },
         {
@@ -1485,126 +1269,412 @@ async getCurrentWeekPlayersCount() {
         },
       ];
 
-      const result = await this.kiteDatumModel.aggregate(aggregationPipeline).exec();
+      const result = await this.kiteDatumModel
+        .aggregate(aggregationPipeline)
+        .exec();
       return result.length > 0 ? result[0].total_height_for_week : 0;
     } catch (error) {
-      console.error("Error in getTotalHeightForDateRange:", error);
+      console.error('Error in getTotalHeightForCurrentWeek:', error);
       throw error;
     }
   }
 
-  async getAttemptsByPlayerId(kitePlayerId: string, sortByHeight?: string, sortByAttempt?: string): Promise<{ attempt_timestamp: string, height: number }[]> {
+  async getTotalAttemptsForCurrentWeekByPlayerId(
+    kitePlayerId: string,
+  ): Promise<number> {
+    try {
+      const startOfCurrentWeek = moment().startOf('week').toDate();
+      const endOfCurrentWeek = moment().endOf('week').toDate();
 
+      const aggregationPipeline = [
+        {
+          $match: {
+            'metadata.kite_player_id': kitePlayerId,
+            'metadata.attempt_timestamp': {
+              $gte: startOfCurrentWeek,
+              $lte: endOfCurrentWeek,
+            },
+          },
+        },
+        {
+          $project: {
+            kite_player_id: '$metadata.kite_player_id',
+            attempt_timestamp: '$metadata.attempt_timestamp',
+          },
+        },
+        {
+          $group: {
+            _id: '$kite_player_id',
+            unique_attempts: { $addToSet: '$attempt_timestamp' },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            kite_player_id: '$_id',
+            unique_attempts_count: { $size: '$unique_attempts' },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total_attempts_for_week: { $sum: '$unique_attempts_count' },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            total_attempts_for_week: 1,
+          },
+        },
+      ];
+
+      const result = await this.kiteDatumModel
+        .aggregate(aggregationPipeline)
+        .exec();
+      return result.length > 0 ? result[0].total_attempts_for_week : 0;
+    } catch (error) {
+      console.error('Error in getTotalAttemptsForCurrentWeek:', error);
+      throw error;
+    }
+  }
+
+  async getMaxHeightForCurrentWeekByPlayerId(
+    kitePlayerId: string,
+  ): Promise<number> {
+    try {
+      const startOfCurrentWeek = moment().startOf('week').toDate();
+      const endOfCurrentWeek = moment().endOf('week').toDate();
+
+      const aggregationPipeline = [
+        {
+          $match: {
+            'metadata.kite_player_id': kitePlayerId,
+            'metadata.attempt_timestamp': {
+              $gte: startOfCurrentWeek,
+              $lte: endOfCurrentWeek,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              kite_player_id: '$metadata.kite_player_id',
+              attempt_timestamp: '$metadata.attempt_timestamp',
+            },
+            max_altitude: { $max: '$altitude' },
+            min_altitude: { $min: '$altitude' },
+          },
+        },
+        {
+          $group: {
+            _id: '$_id.kite_player_id',
+            attempts: {
+              $push: {
+                attempt_timestamp: '$_id.attempt_timestamp',
+                maxAltitude: '$max_altitude',
+                minAltitude: '$min_altitude',
+                height: { $subtract: ['$max_altitude', '$min_altitude'] },
+              },
+            },
+            max_height: {
+              $max: { $subtract: ['$max_altitude', '$min_altitude'] },
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            max_height_for_week: { $max: '$max_height' },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            max_height_for_week: 1,
+          },
+        },
+      ];
+
+      const result = await this.kiteDatumModel
+        .aggregate(aggregationPipeline)
+        .exec();
+      return result.length > 0 ? result[0].max_height_for_week : 0;
+    } catch (error) {
+      console.error('Error in getMaxHeightForCurrentWeek:', error);
+      throw error;
+    }
+  }
+
+  async getTotalFlyingMinsForCurrentWeekByPlayerId(
+    kitePlayerId: string,
+  ): Promise<number> {
+    try {
+      const startOfCurrentWeek = moment().startOf('week').toDate();
+      const endOfCurrentWeek = moment().endOf('week').toDate();
+
+      const aggregationPipeline = [
+        {
+          $match: {
+            'metadata.kite_player_id': kitePlayerId,
+            'metadata.attempt_timestamp': {
+              $gte: startOfCurrentWeek,
+              $lte: endOfCurrentWeek,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              kite_player_id: '$metadata.kite_player_id',
+              attempt_timestamp: '$metadata.attempt_timestamp',
+            },
+            data: {
+              $push: {
+                timestamp: '$timestamp',
+                altitude: '$altitude',
+              },
+            },
+            min_altitude: { $min: '$altitude' },
+          },
+        },
+        {
+          $addFields: {
+            filteredData: {
+              $filter: {
+                input: '$data',
+                as: 'entry',
+                cond: {
+                  $gte: ['$$entry.altitude', { $add: ['$min_altitude', 10] }],
+                },
+              },
+            },
+          },
+        },
+        {
+          $addFields: {
+            minTimestamp: { $min: '$filteredData.timestamp' },
+            maxTimestamp: { $max: '$filteredData.timestamp' },
+          },
+        },
+        {
+          $addFields: {
+            timestampDifference: {
+              $divide: [
+                { $subtract: ['$maxTimestamp', '$minTimestamp'] },
+                60000, // Convert milliseconds to minutes
+              ],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: '$_id.kite_player_id',
+            flying_mins: { $sum: '$timestampDifference' },
+            timestampDifferences: { $push: '$timestampDifference' },
+            attempt_timestamp: { $first: '$_id.attempt_timestamp' },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total_flying_mins_for_week: { $sum: '$flying_mins' },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            total_flying_mins_for_week: 1,
+          },
+        },
+      ];
+
+      const result = await this.kiteDatumModel
+        .aggregate(aggregationPipeline)
+        .exec();
+      return result.length > 0 ? result[0].total_flying_mins_for_week : 0;
+    } catch (error) {
+      console.error('Error in getTotalFlyingMinutesForCurrentWeek:', error);
+      throw error;
+    }
+  }
+
+  async getTotalHeightForCurrentWeekByPlayerId(
+    kitePlayerId: string,
+  ): Promise<number> {
+    try {
+      const startOfCurrentWeek = moment().startOf('week').toDate();
+      const endOfCurrentWeek = moment().endOf('week').toDate();
+
+      const aggregationPipeline = [
+        {
+          $match: {
+            'metadata.kite_player_id': kitePlayerId,
+            'metadata.attempt_timestamp': {
+              $gte: startOfCurrentWeek,
+              $lte: endOfCurrentWeek,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              kite_player_id: '$metadata.kite_player_id',
+              attempt_timestamp: '$metadata.attempt_timestamp',
+            },
+            max_altitude: { $max: '$altitude' },
+            min_altitude: { $min: '$altitude' },
+          },
+        },
+        {
+          $addFields: {
+            height: { $subtract: ['$max_altitude', '$min_altitude'] },
+          },
+        },
+        {
+          $group: {
+            _id: '$_id.kite_player_id',
+            total_height: { $sum: '$height' },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total_height_for_week: { $sum: '$total_height' },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            total_height_for_week: 1,
+          },
+        },
+      ];
+
+      const result = await this.kiteDatumModel
+        .aggregate(aggregationPipeline)
+        .exec();
+      return result.length > 0 ? result[0].total_height_for_week : 0;
+    } catch (error) {
+      console.error('Error in getTotalHeightForDateRange:', error);
+      throw error;
+    }
+  }
+
+  async getAttemptsByPlayerId(
+    kitePlayerId: string,
+    sortByHeight?: string,
+    sortByAttempt?: string,
+  ): Promise<{ attempt_timestamp: string; height: number }[]> {
     const pipeline: any[] = [
       {
         $match: {
-          "metadata.kite_player_id": kitePlayerId
-        }
+          'metadata.kite_player_id': kitePlayerId,
+        },
       },
       {
         $group: {
           _id: {
-            kite_player_id: "$metadata.kite_player_id",
-            attempt_timestamp: "$metadata.attempt_timestamp"
+            kite_player_id: '$metadata.kite_player_id',
+            attempt_timestamp: '$metadata.attempt_timestamp',
           },
-          max_altitude: { $max: "$altitude" },
-          min_altitude: { $min: "$altitude" }
-        }
+          max_altitude: { $max: '$altitude' },
+          min_altitude: { $min: '$altitude' },
+        },
       },
       {
         $addFields: {
-          height: { $subtract: ["$max_altitude", "$min_altitude"] }
-        }
+          height: { $subtract: ['$max_altitude', '$min_altitude'] },
+        },
       },
       {
         $project: {
           _id: 0,
-          attempt_timestamp: "$_id.attempt_timestamp",
-          height: 1
-        }
-      }
+          attempt_timestamp: '$_id.attempt_timestamp',
+          height: 1,
+        },
+      },
     ];
 
     if (sortByHeight === 'desc') {
       pipeline.push({
-        $sort: { height: -1 } as any
+        $sort: { height: -1 } as any,
       });
     } else if (sortByHeight === 'asc') {
       pipeline.push({
-        $sort: { height: 1 } as any
+        $sort: { height: 1 } as any,
       });
     }
 
     if (sortByAttempt === 'desc') {
       pipeline.push({
-        $sort: { attempt_timestamp: -1 } as any
+        $sort: { attempt_timestamp: -1 } as any,
       });
     } else if (sortByAttempt === 'asc') {
       pipeline.push({
-        $sort: { attempt_timestamp: 1 } as any
+        $sort: { attempt_timestamp: 1 } as any,
       });
     }
 
     const results = await this.kiteDatumModel.aggregate(pipeline).exec();
-    return results.map(result => ({
+    return results.map((result) => ({
       // attempt_timestamp: moment(result.attempt_timestamp).tz('Asia/Colombo').format('YYYY-MM-DDTHH:mm:ss'),
       attempt_timestamp: result.attempt_timestamp,
-      height: result.height
+      height: result.height,
     }));
   }
 
   async attemptsByKitePlayerIdAndAttemptTimestamp(
     kitePlayerId: string,
-    attemptTimestamp: Date
-  ): Promise<{ data: { timestamp: string, height: number }[] }> {
-
+    attemptTimestamp: Date,
+  ): Promise<{ data: { timestamp: string; height: number }[] }> {
     const pipeline: any[] = [
       {
         $match: {
-          "metadata.kite_player_id": kitePlayerId,
-          "metadata.attempt_timestamp": attemptTimestamp
-        }
+          'metadata.kite_player_id': kitePlayerId,
+          'metadata.attempt_timestamp': attemptTimestamp,
+        },
       },
       {
         $group: {
-          _id: "$metadata.kite_player_id",
-          min_altitude: { $min: "$altitude" },
+          _id: '$metadata.kite_player_id',
+          min_altitude: { $min: '$altitude' },
           data: {
             $push: {
-              timestamp: "$timestamp",
-              altitude: "$altitude",
-            }
-          }
-        }
+              timestamp: '$timestamp',
+              altitude: '$altitude',
+            },
+          },
+        },
       },
       {
         $addFields: {
           data: {
             $map: {
-              input: "$data",
-              as: "pair",
+              input: '$data',
+              as: 'pair',
               in: {
-                timestamp: "$$pair.timestamp",
-                altitude: "$$pair.altitude",
-                height: { $subtract: ["$$pair.altitude", "$min_altitude"] }
-              }
-            }
-          }
-        }
+                timestamp: '$$pair.timestamp',
+                altitude: '$$pair.altitude',
+                height: { $subtract: ['$$pair.altitude', '$min_altitude'] },
+              },
+            },
+          },
+        },
       },
       {
         $project: {
           _id: 0,
           data: {
             timestamp: 1,
-            height: 1
-          }
-        }
-      }
+            height: 1,
+          },
+        },
+      },
     ];
     const result = await this.kiteDatumModel.aggregate(pipeline).exec();
     return {
-      data: result.length > 0 ? result[0].data : []
+      data: result.length > 0 ? result[0].data : [],
     };
   }
 }

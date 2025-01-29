@@ -8,7 +8,7 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
@@ -40,14 +40,17 @@ export class KitePlayersController {
       gaveshaUserApiKey,
     );
   }
-  
+
   @Get('age-group')
   async getKitePlayerStatsByAgeRange(): Promise<any> {
     try {
-      const stats = await this.kiteplayersService.getKitePlayerStatsByAgeRange();
+      const stats =
+        await this.kiteplayersService.getKitePlayerStatsByAgeRange();
       return stats;
     } catch (error) {
-      throw new Error('Failed to retrieve kite player statistics by age group.');
+      throw new Error(
+        'Failed to retrieve kite player statistics by age group.',
+      );
     }
   }
 
@@ -62,22 +65,33 @@ export class KitePlayersController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Query('sortByHeight') sortByHeight?: string, @Query('sortByAttempt') sortByAttempt?: string) {
+  async findOne(
+    @Param('id') id: string,
+    @Query('sortByHeight') sortByHeight?: string,
+    @Query('sortByAttempt') sortByAttempt?: string,
+  ) {
     const kitePlayer = await this.kiteplayersService.findOne(id);
-    const attempts = await this.kiteDataService.getAttemptsByPlayerId(id, sortByHeight, sortByAttempt);
+    const attempts = await this.kiteDataService.getAttemptsByPlayerId(
+      id,
+      sortByHeight,
+      sortByAttempt,
+    );
     return {
       kitePlayer,
-      attempts
+      attempts,
     };
   }
 
   @Get(':id/attempts/:attempt_timestamp')
   async getAttemptsByKitePlayerIdAndAttemptTimestamp(
     @Param('id') id: string,
-    @Param('attempt_timestamp') attempt_timestamp: string
+    @Param('attempt_timestamp') attempt_timestamp: string,
   ) {
-    const attemptTimestamp = new Date(attempt_timestamp); 
-    return this.kiteDataService.attemptsByKitePlayerIdAndAttemptTimestamp(id, attemptTimestamp);
+    const attemptTimestamp = new Date(attempt_timestamp);
+    return this.kiteDataService.attemptsByKitePlayerIdAndAttemptTimestamp(
+      id,
+      attemptTimestamp,
+    );
   }
 
   @UseGuards(ValidateGaveshaClientGuard)
@@ -96,7 +110,9 @@ export class KitePlayersController {
   }
 
   @Get('users/:userId')
-  async getKitePlayerByUserId(@Param('userId') userId: string): Promise<KitePlayer> {
+  async getKitePlayerByUserId(
+    @Param('userId') userId: string,
+  ): Promise<KitePlayer> {
     return this.kiteplayersService.findKitePlayerByUserId(userId);
   }
 }

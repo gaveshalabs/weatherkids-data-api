@@ -1,4 +1,11 @@
-import { BadRequestException, Controller, Get, Param, Req, Res } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Param,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { DownloadsService } from './downloads.service';
 

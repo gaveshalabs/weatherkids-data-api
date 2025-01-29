@@ -17,7 +17,7 @@ import { SessionService } from './session.service';
     WeatherStationsModule,
     TokenModule,
     ClientsModule,
-    KitePlayersModule
+    KitePlayersModule,
   ],
   controllers: [SessionController],
   providers: [SessionService, OAuth2Client, AuthService],

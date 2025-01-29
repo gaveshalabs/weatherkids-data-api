@@ -26,7 +26,6 @@ import { CreateWeatherComBulkWeatherDataDto } from './dto/create-weathercom-bulk
 import { GetWeatherDatumDto } from './dto/get-weather-datum.dto';
 import { WeatherDataService } from './weather-data.service';
 
-
 @Controller('weather-data')
 @ApiTags('weather-data')
 export class WeatherDataController {
@@ -83,7 +82,7 @@ export class WeatherDataController {
     };
 
     let res;
-    try {    
+    try {
       res = await this.weatherDataService.bulkCommit(dto);
       console.info(res.length, 'data committed from weathercom', station.id);
     } catch (err) {
@@ -104,9 +103,9 @@ export class WeatherDataController {
     });
 
     const returnObject = {
-       _id:null,
-       timestamp_iso: moment().toISOString(true),
-    }  as BulkCreateWeatherDataResponseDto;  
+      _id: null,
+      timestamp_iso: moment().toISOString(true),
+    } as BulkCreateWeatherDataResponseDto;
     finalResponse.push(returnObject);
     return finalResponse;
   }

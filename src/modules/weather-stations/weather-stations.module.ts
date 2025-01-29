@@ -19,14 +19,14 @@ import { WeatherStationsService } from './weather-stations.service';
 @Module({
   imports: [
     PointsModule,
-    forwardRef(()=>WeatherDataModule),
+    forwardRef(() => WeatherDataModule),
     UsersModule,
     TokenModule,
     DownloadsModule,
     MongooseModule.forFeature([
       { name: WeatherStation.name, schema: WeatherStationSchema },
       { name: 'SyncData', schema: SyncDataSchema },
-      {name:'GeoJsonHexagonCoordinates', schema: GeoJsonHexagonSchema}
+      { name: 'GeoJsonHexagonCoordinates', schema: GeoJsonHexagonSchema },
     ]),
   ],
   controllers: [WeatherStationsController],

@@ -9,20 +9,26 @@ export class GeoJsonHexagon {
   };
 }
 
-export const GeoJsonHexagonSchema = new Schema({
-  hexagon_name: { type: String },
-  location: {
-    type: {
-      type: String,
-      enum: ['Polygon'],
-    },
-    coordinates: {
-      type: [[[Number]]],
+export const GeoJsonHexagonSchema = new Schema(
+  {
+    hexagon_name: { type: String },
+    location: {
+      type: {
+        type: String,
+        enum: ['Polygon'],
+      },
+      coordinates: {
+        type: [[[Number]]],
+      },
     },
   },
-},{collection: 'geo_json_hexagon_coordinates'});
+  { collection: 'geo_json_hexagon_coordinates' },
+);
 
 GeoJsonHexagonSchema.index({ location: '2dsphere' });
 
 export type GeoJsonHexagonDocument = GeoJsonHexagon & Document;
-export const GeoJsonHexagonCoordinatesModel = model<GeoJsonHexagonDocument>('GeoJsonHexagonCoordinates', GeoJsonHexagonSchema,);
+export const GeoJsonHexagonCoordinatesModel = model<GeoJsonHexagonDocument>(
+  'GeoJsonHexagonCoordinates',
+  GeoJsonHexagonSchema,
+);

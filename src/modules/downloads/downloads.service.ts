@@ -5,10 +5,9 @@ import * as path from 'path';
 
 @Injectable()
 export class DownloadsService {
-
   private readonly crc32Table: number[];
 
-  // Add new version to the top of this array. Because sync endpoint get the version number and crc from here. 
+  // Add new version to the top of this array. Because sync endpoint get the version number and crc from here.
   private firmwareFiles = [
     {
       version_number: '1002006',
@@ -108,13 +107,17 @@ export class DownloadsService {
     }
   }
 
-  async streamFile(filePath: string, res: Response, range: string | undefined): Promise<void> {
+  async streamFile(
+    filePath: string,
+    res: Response,
+    range: string | undefined,
+  ): Promise<void> {
     const stat = fs.statSync(filePath);
     const fileSize = stat.size;
     let crc32Value = '';
 
     if (range) {
-      const parts = range.replace(/bytes=/, "").split("-");
+      const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
 
@@ -123,9 +126,9 @@ export class DownloadsService {
         return;
       }
 
-      const chunksize = (end - start) + 1;
+      const chunksize = end - start + 1;
       crc32Value = await this.calculateCrc32ForRange(filePath, start, end);
-      
+
       const fileStream = fs.createReadStream(filePath, { start, end });
       const head = {
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
@@ -140,7 +143,10 @@ export class DownloadsService {
     } else {
       crc32Value = await this.calculateCrc32ForRange(filePath, 0, fileSize - 1);
 
-      res.setHeader('Content-Disposition', `attachment; filename=${path.basename(filePath)}`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=${path.basename(filePath)}`,
+      );
       res.setHeader('Content-Type', 'application/octet-stream');
       res.setHeader('X-CRC32', `"${crc32Value}"`);
 
@@ -149,11 +155,11 @@ export class DownloadsService {
     }
   }
 
-  findCrcByVersion(version_number: string): { file_size: string; crc: string }{
+  findCrcByVersion(version_number: string): { file_size: string; crc: string } {
     const firmware = this.firmwareFiles.find(
       (file) => file.version_number === version_number,
     );
-  
+
     if (firmware) {
       return {
         file_size: firmware.file_size,
@@ -164,7 +170,7 @@ export class DownloadsService {
 
   private generateCrc32Table(): number[] {
     const table = new Array(256);
-    const polynomial = 0x04C11DB7;
+    const polynomial = 0x04c11db7;
 
     for (let i = 0; i < 256; i++) {
       let crc = i << 24;
@@ -180,21 +186,25 @@ export class DownloadsService {
     return table;
   }
 
-  async calculateCrc32ForRange(filePath: string, start: number, end: number): Promise<string> {
+  async calculateCrc32ForRange(
+    filePath: string,
+    start: number,
+    end: number,
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
       const fileStream = fs.createReadStream(filePath, { start, end });
-      let crc32Sum = 0xFFFFFFFF; 
+      let crc32Sum = 0xffffffff;
 
       fileStream.on('data', (chunk) => {
         for (let i = 0; i < chunk.length; i++) {
-          const byte = chunk[i] as number; 
+          const byte = chunk[i] as number;
           const tableIndex = (crc32Sum >>> 24) ^ byte;
           crc32Sum = (crc32Sum << 8) ^ this.crc32Table[tableIndex];
         }
       });
 
       fileStream.on('end', () => {
-        crc32Sum = crc32Sum >>> 0; 
+        crc32Sum = crc32Sum >>> 0;
         const crc32Value = crc32Sum.toString(16).toUpperCase().padStart(8, '0');
         resolve(crc32Value);
       });

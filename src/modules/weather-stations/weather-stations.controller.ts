@@ -12,7 +12,7 @@ import {
   Req,
   UseGuards,
   UsePipes,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ValidateGaveshaClientGuard } from '../common/guards/gavesha-client.guard';
@@ -34,7 +34,7 @@ export class WeatherStationsController {
     private readonly weatherStationsService: WeatherStationsService,
     private readonly weatherDataService: WeatherDataService,
     private readonly pointsService: PointsService,
-    private readonly downloadsService: DownloadsService
+    private readonly downloadsService: DownloadsService,
   ) {}
 
   @UseGuards(ValidateGaveshaClientGuard, ValidateGaveshaUserGuard)
@@ -55,10 +55,17 @@ export class WeatherStationsController {
   }
 
   @Get('hexagon/:hexagonName')
-  async findWeatherStationByHexagonId(@Param('hexagonName') hexagonName: string) {
-    const weatherStationData = await this.weatherStationsService.findWeatherStationByHexagonName(hexagonName);
+  async findWeatherStationByHexagonId(
+    @Param('hexagonName') hexagonName: string,
+  ) {
+    const weatherStationData =
+      await this.weatherStationsService.findWeatherStationByHexagonName(
+        hexagonName,
+      );
     if (!weatherStationData) {
-      return { message: `No weather stations found for hexagon name: ${hexagonName}` };
+      return {
+        message: `No weather stations found for hexagon name: ${hexagonName}`,
+      };
     }
     return weatherStationData;
   }
@@ -129,24 +136,37 @@ export class WeatherStationsController {
     return this.weatherStationsService.remove(+id);
   }
 
-@UseGuards(ValidateGaveshaClientGuard)
-@Post('/sync')
-@UsePipes(
-  new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    forbidNonWhitelisted: true,
-  }),
-)
-async syncWeatherStation(
-  @Req() req: any,
-  @Body() syncWeatherStationDto?: { update_begin?: boolean; update_version?: string; update_done?: boolean },
-): Promise<{ server_timestamp?: string; version_number?: string; crc32?: string }> {
-  const clientId = req.clientId;
-  const station = await this.weatherStationsService.findByClientId(clientId);
-  if (!station) {
-    throw new NotFoundException('Weather station not found');
+  @UseGuards(ValidateGaveshaClientGuard)
+  @Post('/sync')
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  )
+  async syncWeatherStation(
+    @Req() req: any,
+    @Body()
+    syncWeatherStationDto?: {
+      update_begin?: boolean;
+      update_version?: string;
+      update_done?: boolean;
+    },
+  ): Promise<{
+    server_timestamp?: string;
+    version_number?: string;
+    crc32?: string;
+  }> {
+    const clientId = req.clientId;
+    const station = await this.weatherStationsService.findByClientId(clientId);
+    if (!station) {
+      throw new NotFoundException('Weather station not found');
+    }
+    return this.weatherStationsService.handleSyncRequest(
+      syncWeatherStationDto,
+      clientId,
+      station._id,
+    );
   }
-  return this.weatherStationsService.handleSyncRequest(syncWeatherStationDto, clientId, station._id);
-}
 }

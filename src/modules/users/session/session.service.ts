@@ -16,7 +16,7 @@ export class SessionService {
     private usersService: UsersService,
     private tokenService: TokenService,
     private weatherStationsService: WeatherStationsService,
-    private kitePlayersService: KitePlayersService, 
+    private kitePlayersService: KitePlayersService,
   ) {}
 
   private createUserResponse(
@@ -108,10 +108,10 @@ export class SessionService {
         const updatedUser = await this.usersService.update(user._id, {
           gavesha_user_api_key: newApiKey,
         });
-  
+
         return this.createUserResponse(updatedUser, newUserFlag);
       }
-  
+
       return this.createUserResponse(user, newUserFlag);
     }
 
