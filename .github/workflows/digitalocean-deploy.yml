@@ -39,8 +39,14 @@ jobs:
                   cd "$TARGET_DIR"
                 fi
                 nvm use 20
-                npm ci --only=production
+                npm ci
+
+                # increase node memory
+                export NODE_OPTIONS="--max-old-space-size=2048"
+
                 npm run build
+                npm prune --omit=dev
+                
                 #node dist/index.js
                 pm2 restart data-api.gavesha.space
                 echo 'Deployment Done!'
