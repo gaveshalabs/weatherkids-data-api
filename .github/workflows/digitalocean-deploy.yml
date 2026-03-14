@@ -17,6 +17,12 @@ jobs:
               username: ${{ secrets.DROPLET_SSH_USERNAME }}
               key: ${{ secrets.DROPLET_SSH_KEY }}
               script: |
+                set -e
+
+                # Load NVM manually
+                export NVM_DIR="$HOME/.nvm"
+                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                
                 # Variables
                 REPO_URL="https://github.com/gaveshalabs/weatherkids-data-api"
                 TARGET_DIR="weatherkids-data-api"
@@ -35,5 +41,6 @@ jobs:
                 nvm use 20
                 npm ci --only=production
                 npm run build
-                node dist/index.js
+                #node dist/index.js
+                pm2 restart data-api.gavesha.space
                 echo 'Deployment Done!'
